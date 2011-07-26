@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 
+import json
+
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
 from actions import give 
 from lowlevel import ActionPerformer
 
-
-#symbolic_places = json.load("../share/novela_places.json")
+json_data=open("../share/novela_places.json").read()
+symbolic_places = json.loads(json_data)
 
 robot = ActionPerformer(tclserv = "...", rosmaster = "...")
 
