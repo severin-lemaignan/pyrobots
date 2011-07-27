@@ -5,16 +5,32 @@ import json
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
-from actions import give 
+sys.path.append('../hri-scripts/share/')
+f = open('../novela_places.json','rb')
+json_data=f.read()
+#print json_data
+symbolic_places = json.loads(json_data)
+
+from actions import give ros_nav
 from lowlevel import ActionPerformer
 
-json_data=open("../share/novela_places.json").read()
-symbolic_places = json.loads(json_data)
 
 robot = ActionPerformer(tclserv = "...", rosmaster = "...")
 
+###############################################################################
+#	GAZE
+
 #robot.execute(lookat("BOTTLE"))
-#robot.execute(recorded_goto(symbolic_places["TABLE"]))
-robot.execute(give,"PR2", "BOTTLE", "XAVIER")
+
+###############################################################################
+#	NAVIGATION
+
+robot.execute(ros_nav(symbolic_places["TABLE"])
+
+
+###############################################################################
+#	BODY MOVEMENTS
+
+robot.execute(give("PR2", "BOTTLE", "XAVIER"))
 
 
