@@ -8,12 +8,15 @@ import actionlib
 # goal message and the result message.
 import actionlib_tutorials.msg
 
-
+from action import action, ros_request
 
 ###############################################################################
 ###############################################################################
 
-def move_base_action_client(x, y, z, qx, qy, qz, qw):
+@action
+def ros_nav(target):
+
+    x, y, z, qx, qy, qz, qw = target.values()
 
 	# Creates the SimpleActionClient, passing the type of the action
 	# (FibonacciAction) to the constructor.
@@ -39,28 +42,7 @@ def move_base_action_client(x, y, z, qx, qy, qz, qw):
 	goal.target_pose.pose.orientation.z = qz
 	goal.target_pose.pose.orientation.w = qw
 	
-	return client, goal
+	return [ros_request(client, goal)]
 	
 ###############################################################################
 
-def ros_nav(target):
-
-	try:
-		# Initializes a rospy node so that the SimpleActionClient can
-		# publish and subscribe over ROS.
-		rospy.init_node('move_base_action_client_py')
-		
-		x = target.get('x', "NEVER")
-		y = target.get('y', "NEVER")
-		z = target.get('z', "NEVER")
-		
-		qx = target.get('qx', "NEVER")
-		qy = target.get('qy', "NEVER")
-		qz = target.get('qz', "NEVER")
-		qw = target.get('qw', "NEVER")
-		
-		result = move_base_action_client(x, y, z, qx, qy, qz, qw)
-			print "Result:", ', '.join([str(n) for n in result.sequence])
-
-	except rospy.ROSInterruptException:
-			print "program interrupted before completion"

@@ -12,3 +12,8 @@ def genom_request(module, request, args = None):
             "module": module,
             "request": request,
             "args": args}
+
+def ros_request(client, goal):
+    return {"middleware": "ros",
+            "client": client,
+            "goal": goal}
