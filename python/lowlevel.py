@@ -9,7 +9,7 @@ class ActionPerformer:
         servers, self.poco_modules = pypoco.discover(tclserv)
 
         if use_ros:
-            import roslib; roslib.load_manifest('actionlib_tutorials')
+            import roslib; roslib.load_manifest('navigation_actionlib')
             import rospy
             rospy.init_node('python_supervisor')
 

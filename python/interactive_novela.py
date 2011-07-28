@@ -15,19 +15,11 @@ choice = raw_input()
 
 if choice == '1':
 
-	print('Which symbolic places?')
-
+	print('Which symbolic places? You have the choice between \
+			\n-TABLE \n-DOOR \n-REST \n-SHELF')
 	target = raw_input()
 
-	for key, value in symbolic_places.items():
-	
-		if key == target:
-			#print ('%s is at (%d, %d, %d, %d, %d, %d, %d,)' % (key, value['a'], value['b'], value['c'], value['d'], value['e'], value['f'], value['g']))
-			 position, x, y, z, qx, qy, qz, qw = 
-                    [ key , \
-					value['a'], value['b'], value['c'], \
-                    value['d'], value['e'], value['f'], value['g']
-                    ]
+
 
 		else:
 			print('This position doesn\'t exist')

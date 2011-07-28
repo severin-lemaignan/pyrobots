@@ -5,7 +5,7 @@ import json
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
-f = open('share/novela_places.json','rb')
+f = open('../share/novela_places.json','rb')
 json_data=f.read()
 symbolic_places = json.loads(json_data)
 
