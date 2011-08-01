@@ -1,12 +1,14 @@
 import logging; logger = logging.getLogger("lowlevel")
-
-#import pypoco
+logger.setLevel = logging.DEBUG
+import rospy
+import pypoco
+import actionlib
 
 class ActionPerformer:
 
-    def __init__(self, tclserv, use_ros = True):
+    def __init__(self, host, port, use_ros = True):
 
-        servers, self.poco_modules = pypoco.discover(tclserv)
+        servers, self.poco_modules = pypoco.discover(host, port)
 
         if use_ros:
             import roslib; roslib.load_manifest('navigation_actionlib')
@@ -32,15 +34,34 @@ class ActionPerformer:
     def _execute_ros(self, action):
 
         client = action["client"]
-        logger.info("Sending goal " + str(action["goal"]) + " to " + str(client))
+
+	ok = client.wait_for_server(rospy.Duration(5.0))
+	if not ok:
+		#logger.error("Could not connect to the ROS client! Aborting action")
+		print("Could not connect to the ROS client! Aborting action")
+		return
+
+        #logger.info("Sending goal " + str(action["goal"]) + " to " + str(client))
+        print("Sending goal " + str(action["goal"]) + " to " + str(client))
 
         try:
             client.send_goal(action["goal"])
         except rospy.ROSInterruptException:
 			print "program interrupted before completion"
 
-        client.wait_for_result()
+	print 'ok1'
+        client.wait_for_result(rospy.Duration.from_sec(5.0))
 
+	if not client.get_state() == actionlib.GoalStatus.SUCCEEDED:
+		print('ok2: ' + str(client.get_result()))
+	else:
+		#logger.error("Action failed!")
+		print("Action failed!")
+	
+	#if (getState() == actionlib.SimpleClientGoalState.SUCCEEDED):
+		#ROS_INFO('PR2 is arrived at the destination')
+	#else:
+		#ROS_INFO('PR2 isn\'t arrived at the destination for some reason')
 
     def execute(self, module, *args, **kwargs):
 

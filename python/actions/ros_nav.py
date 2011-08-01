@@ -12,22 +12,24 @@ from action import action, ros_request
 @action
 def ros_nav(target):
 
-	x, y, z, qx, qy, qz, qw = target.values()
-
+	x = target['x']
+	y = target['y']
+	z = target['z']
+	qx = target['qx']
+	qy = target['qy']
+	qz = target['qz']
+	qw = target['qw']
+	print x, y , z, qx, qy, qz, qw
 	# Creates the SimpleActionClient, passing the type of the action
 	# (FibonacciAction) to the constructor.
-	client = actionlib.SimpleActionClient('navigation_action', navigation_actionlib.msg.NavigationAction)
-
-	# Waits until the action server has started up and started
-	# listening for goals.
-	client.wait_for_server()
-
+	client = actionlib.SimpleActionClient('move_base', navigation_actionlib.msg.NavigationAction)
+		
 	# Creates a goal to send to the action server.  
-	goal = navigation_actionlib.msg.NavigationActionGoal()
+	goal = navigation_actionlib.msg.NavigationGoal()
 
 	# Definition of the goal
 	goal.target_pose.header.frame_id = "base_link"
-	goal.target_pose.header.stamp = ros.Time.now()
+	goal.target_pose.header.stamp = rospy.Time.now()
 
 	goal.target_pose.pose.position.x = x
 	goal.target_pose.pose.position.y = y
