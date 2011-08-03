@@ -10,7 +10,7 @@ f = open('../share/novela_places.json','rb')
 json_data=f.read()
 symbolic_places = json.loads(json_data)
 
-from actions import give, ros_nav
+from actions import give, ros_nav, look_at 
 from lowlevel import ActionPerformer
 
 
@@ -19,7 +19,7 @@ robot = ActionPerformer('pr2c1', 1235)
 ###############################################################################
 #	GAZE
 
-#robot.execute(lookat("BOTTLE"))
+robot.execute(look_at, symbolic_places["TABLE"])
 
 ###############################################################################
 #	NAVIGATION
