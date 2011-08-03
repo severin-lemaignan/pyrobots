@@ -24,7 +24,7 @@ robot = ActionPerformer('pr2c1', 1235)
 ###############################################################################
 #	NAVIGATION
 
-robot.execute(ros_nav, symbolic_places["TABLE"])
+#robot.execute(ros_nav, symbolic_places["TABLE"])
 
 ####Recorded navigation
 ##To create a new one

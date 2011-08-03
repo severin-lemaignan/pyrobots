@@ -1,4 +1,4 @@
-import roslib; roslib.load_manifest('ros_nav')
+import roslib; roslib.load_manifest('novela_actionlib')
 import rospy
 
 import actionlib
