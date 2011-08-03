@@ -1,17 +1,17 @@
-import roslib; roslib.load_manifest('navigation_actionlib')
+import roslib; roslib.load_manifest('ros_nav')
 import rospy
 
 import actionlib
-from navigation_actionlib.msg import *
+import move_base_msgs.msg
 
-from action import action, ros_request
+import action
+
 
 ###############################################################################
 ###############################################################################
 
-@action
+@action.action
 def ros_nav(target):
-
 	x = target['x']
 	y = target['y']
 	z = target['z']
@@ -19,17 +19,30 @@ def ros_nav(target):
 	qy = target['qy']
 	qz = target['qz']
 	qw = target['qw']
+
+      
+
 	print x, y , z, qx, qy, qz, qw
 	# Creates the SimpleActionClient, passing the type of the action
-	# (FibonacciAction) to the constructor.
-	client = actionlib.SimpleActionClient('move_base', navigation_actionlib.msg.NavigationAction)
-		
+	# (Navigationction) to the constructor.
+	client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
+	
+	client.wait_for_server()
+
+	ok = client.wait_for_server()
+	if not ok:
+		#logger.error("Could not connect to the ROS client! Aborting action")
+		print("Could not connect to the ROS client! Aborting action")
+		return
+
+
+
 	# Creates a goal to send to the action server.  
-	goal = navigation_actionlib.msg.NavigationGoal()
+	goal = move_base_msgs.msg.MoveBaseGoal()
 
 	# Definition of the goal
-	goal.target_pose.header.frame_id = "base_link"
-	goal.target_pose.header.stamp = rospy.Time.now()
+	goal.target_pose.header.frame_id = 'map'
+	goal.target_pose.header.stamp = rospy.Time.now();
 
 	goal.target_pose.pose.position.x = x
 	goal.target_pose.pose.position.y = y
@@ -40,7 +53,10 @@ def ros_nav(target):
 	goal.target_pose.pose.orientation.z = qz
 	goal.target_pose.pose.orientation.w = qw
 	
-	return [ros_request(client, goal)]
+	
+
+	return [action.ros_request(client, goal)]
+
 	
 ###############################################################################
 
