@@ -1,0 +1,18 @@
+<package>
+  <description brief="novela_actionlib">
+
+     novela_actionlib
+
+  </description>
+  <author>Nicolas CourbetInconnuInconnu</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/novela_actionlib</url>
+  <depend package="move_base_msgs"/>
+  <depend package="actionlib"/>
+  <depend package="rospy"/>
+  <depend package="pr2_controllers_msgs"/>
+
+</package>
+
+

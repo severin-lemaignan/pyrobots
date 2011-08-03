@@ -1,8 +1,9 @@
 import logging; logger = logging.getLogger("lowlevel")
 logger.setLevel = logging.DEBUG
 import rospy
-import pypoco
 import actionlib
+import pypoco
+
 
 class ActionPerformer:
 
@@ -11,11 +12,10 @@ class ActionPerformer:
 		servers, self.poco_modules = pypoco.discover(host, port)
 
 		if use_ros:
-			import roslib; roslib.load_manifest('ros_nav')
-			import rospy
-			rospy.init_node('ros_nav')
-
-			
+			import roslib; roslib.load_manifest('novela_actionlib')
+			#import rospy
+			rospy.init_node('novela_actionlib')
+			#import actionlib
 
 	def _execute_pocolibs(self, action):
 		""" Execute a set of request.
