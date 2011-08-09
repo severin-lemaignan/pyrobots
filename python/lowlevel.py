@@ -9,13 +9,17 @@ class ActionPerformer:
 
 	def __init__(self, host, port, use_ros = True):
 
-		servers, self.poco_modules = pypoco.discover(host, port)
+		self.servers, self.poco_modules = pypoco.discover(host, port)
 
 		if use_ros:
 			import roslib; roslib.load_manifest('novela_actionlib')
 			#import rospy
 			rospy.init_node('novela_actionlib')
 			#import actionlib
+
+    def __del__(self):
+        for s in self.servers:
+            s.close()
 
 	def _execute_pocolibs(self, action):
 		""" Execute a set of request.
