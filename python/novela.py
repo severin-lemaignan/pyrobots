@@ -10,7 +10,7 @@ f = open('../share/novela_places.json','rb')
 json_data=f.read()
 symbolic_places = json.loads(json_data)
 
-from actions import give, ros_nav, look_at 
+from actions import give, ros_nav, look_at_genom 
 from lowlevel import ActionPerformer
 
 
