@@ -10,7 +10,7 @@ def look_at(place):
     """
     try:
 	frame = place['frame']
-    catch KeyError:
+    except KeyError:
 	frame = "/map"
 
     return look_at_xyz(place['x'], place['y'], place['z'], frame)

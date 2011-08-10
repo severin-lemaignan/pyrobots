@@ -4,6 +4,6 @@ from sensor_msgs.msg import JointState
 
 def getjoint(name):
         data = rospy.wait_for_message("/joint_states", JointState)
-        idx = find(name, data.name)
-        return data.postion[idx]
+        idx = data.name.index(name)
+        return data.position[idx]
 

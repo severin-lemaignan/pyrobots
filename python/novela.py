@@ -5,7 +5,7 @@ import json
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
-from actions import give, ros_nav, look_at_genom, postures
+from actions import  glance_to, look_at, give, nav
 from lowlevel import ActionPerformer
 
 
@@ -25,20 +25,20 @@ def getpr2():
 
 
 if __name__=="__main__":
+	symbolic_places = getplaces()
+
+	robot = getpr2()
 
 	###############################################################################
 	#	GAZE
 
 	#robot.execute(look_at, symbolic_places["SHELF"])
-	#robot.execute(object_tracking, symbolic_places["SHELF"])
+	robot.execute(glance_to.glance_to, symbolic_places["SHELF"])
 
 	###############################################################################
 	#	NAVIGATION
 
-	symbolic_places = getplaces()
-
-	robot = getpr2()
-	robot.execute(nav.goto, symbolic_places["TABLE"])
+	#robot.execute(ros_nav.ros_nav, symbolic_places["TABLE"])
 
 	####Recorded navigation
 	##To create a new one
