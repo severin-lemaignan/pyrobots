@@ -21,7 +21,12 @@ class ActionPerformer:
 		logger.info('Closing the lowlevel!')
 		for s in self.servers:
 			self.servers[s].close()
-	
+
+	def _ack(self, evt):
+                """ NOP function that serves as fallback callback
+                """
+		pass	
+
 	def _execute_pocolibs(self, action):
 		""" Execute a set of request.
 
@@ -35,7 +40,11 @@ class ActionPerformer:
 		logger.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(action["args"]))
 		module = self.poco_modules[action["module"]]
 		method = getattr(module, action["request"])
+
 		args = action["args"]
+		if not action['wait_for_completion']:
+			# asynchronous mode! we pass a (dummy) callback
+			args = [self._ack] + args
 		method(*args)
 		logger.info("Execution done.")
 
@@ -54,15 +63,16 @@ class ActionPerformer:
         	print("Sending goal " + str(action["goal"]) + " to " + str(client))
                 # Sends the goal to the action server 
                 client.send_goal(goal)
-        	
-                # Waits for the server to finish performing the action
-        	client.wait_for_result()
+        
+		if action['wait_for_completion']:	
+			# Waits for the server to finish performing the action
+			client.wait_for_result()
 
-		# Checks if the goal was achieved
-		if client.get_state() == self.GoalStatus.SUCCEEDED:
-			print('Action succeeded')
-		else:
-			print("Action failed!")
+			# Checks if the goal was achieved
+			if client.get_state() == self.GoalStatus.SUCCEEDED:
+				print('Action succeeded')
+			else:
+				print("Action failed!")
 	
 	def _execute_special(self, action):
 		if action["action"] == "wait":
@@ -72,14 +82,15 @@ class ActionPerformer:
 	def execute(self, fn, *args, **kwargs):
 
 		actions = fn(*args, **kwargs)
-		for action in actions:
-			logger.info("Executing " + str(action))
-			if action["middleware"] == "pocolibs":
-				self._execute_pocolibs(action)
-			elif action["middleware"] == "ros":
-				self._execute_ros(action)
-			elif action["middleware"] == "special":
-				self._execute_special(action)
-			else:
-				logger.warning("Unsupported middleware. Skipping the action.")
+		if actions:
+			for action in actions:
+				logger.info("Executing " + str(action))
+				if action["middleware"] == "pocolibs":
+					self._execute_pocolibs(action)
+				elif action["middleware"] == "ros":
+					self._execute_ros(action)
+				elif action["middleware"] == "special":
+					self._execute_special(action)
+				else:
+					logger.warning("Unsupported middleware. Skipping the action.")
 

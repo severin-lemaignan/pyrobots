@@ -28,8 +28,6 @@ def goto(target):
 	# Creates the SimpleActionClient, passing the type of the action
 	# (Navigationction) to the constructor.
 	client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
-	
-	client.wait_for_server()
 
 	ok = client.wait_for_server()
 	if not ok:
@@ -57,7 +55,7 @@ def goto(target):
 	
 	
 
-	return [action.ros_request(client, goal)]
+	return [action.ros_request(client, goal, wait_for_completion = False)] # REturn a non-blocking action. Useful to be able to cancel it later!
 
 	
 ###############################################################################
@@ -68,8 +66,6 @@ def cancel():
 	"""
 	client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
 	
-	client.wait_for_server()
-
 	ok = client.wait_for_server()
 	if not ok:
 		#logger.error("Could not connect to the ROS client! Aborting action")
