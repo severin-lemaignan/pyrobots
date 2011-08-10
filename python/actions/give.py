@@ -1,6 +1,8 @@
 import random
 from action import action, genom_request
 
+from actions import postures
+
 used_plan_id = []
 
 def getplanid():
@@ -14,7 +16,57 @@ def getplanid():
     return plan_id
 
 @action
-def give(performer, obj, receiver):
+def pick(obj, use_cartesian = "GEN_FALSE"):
+
+    # Open gripper
+    actions = postures.open_gripper()
+
+    # Plan trajectory to object and execute it
+    actions += [
+	genom_request("mhp", "ArmPlanTask",
+    	    [0,
+    	    'GEN_TRUE',
+    	    'MHP_ARM_PICK_GOTO',
+    	    0,
+    	    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    	    obj,
+    	    'NO_NAME',
+    	    'NO_NAME',
+    	    use_cartesian,
+    	    0,
+    	    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+        genom_request("mhp", "ArmSelectTraj", [0]),
+        genom_request("pr2SoftMotion", "TrackQ", ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM'])
+    ]
+
+    # Close gripper
+    actions += postures.close_gripper()
+    return actions
+
+@action
+def give(obj, receiver):
+    """ The basic GIVE, using Moki planner to grasp and precomputed positions
+    to give.
+    """
+    
+    actions += pick(obj)
+    actions += postures.rightarmgoto(obj, PR2_RARM_GIVE)
+    actions += [["wait",2]]
+
+    actions += postures.release_gripper()
+    
+    actions += ipostures.gotopostureraw(PR2_RARM_REST)
+    actions += [["wait", 2]]
+
+    actions += postures.close_gripper()
+        
+    return actions
+
+
+
+
+@action
+def amit_give(performer, obj, receiver):
     """ The 'Amit' GIVE.
     """
     plan_id = getplanid()
