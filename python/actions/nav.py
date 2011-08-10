@@ -11,7 +11,9 @@ import action
 ###############################################################################
 
 @action.action
-def ros_nav(target):
+def goto(target):
+	""" Moves the robot base to a given target, using ROS 2D navigation stack.
+	"""
 	x = target['x']
 	y = target['y']
 	z = target['z']
@@ -59,4 +61,23 @@ def ros_nav(target):
 
 	
 ###############################################################################
+
+@action.action
+def cancel():
+	""" Interrupt a navigation task.
+	"""
+	client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
+	
+	client.wait_for_server()
+
+	ok = client.wait_for_server()
+	if not ok:
+		#logger.error("Could not connect to the ROS client! Aborting action")
+		print("Could not connect to the ROS client! Aborting action")
+		return
+
+	# Creates a goal to send to the action server.  
+	goal = move_base_msgs.msg.MoveBaseGoal()
+
+	return [action.ros_request(client, goal)]
 
