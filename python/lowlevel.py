@@ -14,7 +14,8 @@ class ActionPerformer:
 			import rospy
 			rospy.init_node('novela_actionlib')
 			import actionlib
-			import actionlib_msgs.msg
+			from actionlib_msgs.msg import GoalStatus
+			self.GoalStatus = GoalStatus
 
 	def close(self):
 		logger.info('Closing the lowlevel!')
@@ -58,8 +59,8 @@ class ActionPerformer:
         	client.wait_for_result()
 
 		# Checks if the goal was achieved
-		if client.get_state() == actionlib_msgs.msg.GoalStatus.SUCCEEDED:
-			print(str(client.get_result()))
+		if client.get_state() == self.GoalStatus.SUCCEEDED:
+			print('Action succeeded')
 		else:
 			print("Action failed!")
 	
