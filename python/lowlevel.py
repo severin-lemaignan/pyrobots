@@ -1,7 +1,5 @@
 import logging; logger = logging.getLogger("lowlevel")
 logger.setLevel = logging.DEBUG
-import rospy
-import actionlib
 import pypoco
 
 
@@ -13,13 +11,14 @@ class ActionPerformer:
 
 		if use_ros:
 			import roslib; roslib.load_manifest('novela_actionlib')
-			#import rospy
+			import rospy
 			rospy.init_node('novela_actionlib')
-			#import actionlib
+			import actionlib
+			import actionlib_msgs.msg
 
-    def __del__(self):
-        for s in self.servers:
-            s.close()
+	def __del__(self):
+		for s in self.servers:
+			s.close()
 
 	def _execute_pocolibs(self, action):
 		""" Execute a set of request.
@@ -30,6 +29,7 @@ class ActionPerformer:
 		- an (optinal) set of parameters
 		- an optional flag to decide if the request must be blocking or not.
 		"""
+		
 		logger.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(action["args"]))
 		module = self.poco_modules[action["module"]]
 		method = getattr(module, action["request"])
@@ -41,8 +41,14 @@ class ActionPerformer:
 
 		client = action['client']
                 goal = action['goal']
+
+		""" Execute a ros action.
+
+                :param reqs: 
+                - an action name
+
+                """
 		
-        	#logger.info("Sending goal " + str(action["goal"]) + " to " + str(client))
         	print("Sending goal " + str(action["goal"]) + " to " + str(client))
                 # Sends the goal to the action server 
                 client.send_goal(goal)
@@ -50,15 +56,12 @@ class ActionPerformer:
                 # Waits for the server to finish performing the action
         	client.wait_for_result()
 
-		# Prints out the result of executing the action
-		return client.get_client_result() # A MoveBaseResult
-		
-		if client.get_state() == actionlib.GoalStatus.SUCCEEDED:
+		# Checks if the goal was achieved
+		if client.get_state() == actionlib_msgs.msg.GoalStatus.SUCCEEDED:
 			print(str(client.get_result()))
 		else:
-			#logger.error("Action failed!")
 			print("Action failed!")
-	
+		
 	def execute(self, module, *args, **kwargs):
 
 		actions = module.main_action(*args, **kwargs)

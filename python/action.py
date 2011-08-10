@@ -18,7 +18,4 @@ def ros_request(client, goal):
             "client": client,
             "goal": goal}
 
-#def pr2SoftMotion_request(module, trajectory)
-	#return {"middleware":"...",
-		#"module" : module,
-		#"trajectory", trajectory}
+

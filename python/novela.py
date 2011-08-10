@@ -19,12 +19,13 @@ robot = ActionPerformer('pr2c1', 1235)
 ###############################################################################
 #	GAZE
 
-robot.execute(look_at, symbolic_places["TABLE"])
+#robot.execute(look_at, symbolic_places["SHELF"])
+#robot.execute(object_tracking, symbolic_places["SHELF"])
 
 ###############################################################################
 #	NAVIGATION
 
-#robot.execute(ros_nav, symbolic_places["TABLE"])
+robot.execute(ros_nav, symbolic_places["TABLE"])
 
 ####Recorded navigation
 ##To create a new one
@@ -37,5 +38,4 @@ robot.execute(look_at, symbolic_places["TABLE"])
 #	BODY MOVEMENTS
 
 #robot.execute(give, "PR2", "BOTTLE", "XAVIER")
-
-
+#robot.execute(play_planned_traj, symbolic_traj["GYM"])
