@@ -38,7 +38,7 @@ if __name__=="__main__":
 	symbolic_places = getplaces()
 
 	robot = getpr2()
-	robot.execute(ros_nav, symbolic_places["TABLE"])
+	robot.execute(ros_nav.ros_nav, symbolic_places["TABLE"])
 
 	####Recorded navigation
 	##To create a new one

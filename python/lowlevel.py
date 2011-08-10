@@ -69,10 +69,11 @@ class ActionPerformer:
 			logger.info("Waiting for " + str(action["args"]))
 			time.sleep(action["args"])
 
-	def execute(self, module, *args, **kwargs):
+	def execute(self, fn, *args, **kwargs):
 
-		actions = module.main_action(*args, **kwargs)
+		actions = fn(*args, **kwargs)
 		for action in actions:
+			logger.info("Executing " + str(action))
 			if action["middleware"] == "pocolibs":
 				self._execute_pocolibs(action)
 			elif action["middleware"] == "ros":

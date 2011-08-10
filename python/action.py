@@ -2,9 +2,6 @@
 def action(fn):
 	"""The @action decorator
 	"""
-	import sys
-	sys.modules[fn.__module__].main_action = fn
-
 	return fn
 
 def genom_request(module, request, args = None):
