@@ -18,4 +18,11 @@ def ros_request(client, goal):
             "client": client,
             "goal": goal}
 
+def wait(seconds):
+	""" This special action simply waits for a given amount of second before 
+	sending the next action.
+	"""
+	return {"middleware": "special",
+            "action": "wait",
+            "args": seconds}
 

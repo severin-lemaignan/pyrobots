@@ -1,7 +1,7 @@
+import time
 import logging; logger = logging.getLogger("lowlevel")
 logger.setLevel = logging.DEBUG
 import pypoco
-
 
 class ActionPerformer:
 
@@ -17,7 +17,7 @@ class ActionPerformer:
 			import actionlib_msgs.msg
 
 	def __del__(self):
-		for s in self.servers:
+        	for s in self.servers:
 			s.close()
 
 	def _execute_pocolibs(self, action):
@@ -61,7 +61,12 @@ class ActionPerformer:
 			print(str(client.get_result()))
 		else:
 			print("Action failed!")
-		
+	
+	def _execute_special(self, action):
+		if action["action"] == "wait":
+			logger.info("Waiting for " + str(action["args"]))
+			time.sleep(action["args"])
+
 	def execute(self, module, *args, **kwargs):
 
 		actions = module.main_action(*args, **kwargs)
@@ -70,5 +75,7 @@ class ActionPerformer:
 				self._execute_pocolibs(action)
 			elif action["middleware"] == "ros":
 				self._execute_ros(action)
+			elif action["middleware"] == "special":
+				self._execute_special(action)
 			else:
 				logger.warning("Unsupported middleware. Skipping the action.")
