@@ -4,6 +4,8 @@ from action import action, genom_request, ros_request
 def look_at(place):
     """ A simple 'look at' method that uses pr2SoftMotion.
 
+	Uses look_at_xyz underneath.
+
 	:param place: a dictionary with the x,y,z position of objects in space.
 		      If a 'frame' key is found, use it as reference frame. Else
 		      the world frame '/map' is assumed.
@@ -18,6 +20,11 @@ def look_at(place):
 @action
 def look_at_xyz(x,y,z, frame = "/map"):
     """ Look at via pr2SoftMotion.
+	
+	:param x: the x coordinate
+	:param y: the y coordinate
+	:param z: the z coordinate
+	:param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
     print("Looking at " + str([x,y,z]) + " in " + frame)
     actions = [
@@ -32,11 +39,11 @@ def look_at_xyz(x,y,z, frame = "/map"):
 ###############################################################################
 
 @action
-def look_at_ros(target):
+def look_at_ros(place):
         """ Create the client and the goal.
 
-        :param reqs:
-	- a dictionnary name which contains object position parameters
+        :param place: a dictionary which contains object position parameters. 
+	Cf look_at for details.
         """
 
 	import roslib; roslib.load_manifest('novela_actionlib')
@@ -47,10 +54,14 @@ def look_at_ros(target):
 	import geometry_msgs.msg
 
 
-	x = target['x']
-	y = target['y']
-	z = target['z']
+	x = place['x']
+	y = place['y']
+	z = place['z']
 
+	try:
+	   frame = place['frame']
+	except KeyError:
+	   frame = "/map"
 
         # Creates the SimpleActionClient, passing the type of the action
         # (MoveBaseAction) to the constructor.
@@ -68,7 +79,7 @@ def look_at_ros(target):
 
         # Definition of the goal
 	point = geometry_msgs.msg.PointStamped()
-	point.header.frame_id = 'map'
+	point.header.frame_id = frame
 	point.point.x = x
 	point.point.y = y
 	point.point.z = z

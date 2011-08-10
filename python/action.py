@@ -1,6 +1,7 @@
 def action(fn):
 	"""The @action decorator
 	"""
+	fn._action = True
 	return fn
 
 def genom_request(module, request, args = None, wait_for_completion = True):

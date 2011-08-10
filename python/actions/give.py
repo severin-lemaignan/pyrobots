@@ -55,7 +55,7 @@ def give(obj, receiver):
 
     actions += postures.release_gripper()
     
-    actions += ipostures.gotopostureraw(PR2_RARM_REST)
+    actions += postures.gotopostureraw(PR2_RARM_REST)
     actions += [["wait", 2]]
 
     actions += postures.close_gripper()
