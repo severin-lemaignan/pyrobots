@@ -3,7 +3,7 @@ from action import action, genom_request
 
 @action
 def look_at(place):
-    look_at(place['x'], place['y'], place['z'])
+    return look_at_xyz(place['x'], place['y'], place['z'])
 
 @action
 def look_at_xyz(x,y,z, frame = "/map"):
