@@ -5,17 +5,19 @@ import json
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
-
-f = open('../share/novela_places.json','r')
-json_data=f.read()
-symbolic_places = json.loads(json_data)
-
-f = open('../share/pr2_postures.json','r')
-json_data=f.read()
-pr2_postures = json.loads(json_data)
-
 from actions import give, ros_nav, look_at_genom, postures
 from lowlevel import ActionPerformer
+
+
+def getplaces():
+	f = open('../share/novela_places.json','r')
+	json_data=f.read()
+	return json.loads(json_data)
+
+def getpostures():
+	f = open('../share/pr2_postures.json','r')
+	json_data=f.read()
+	return json.loads(json_data)
 
 
 def getpr2():
@@ -32,6 +34,8 @@ if __name__=="__main__":
 
 	###############################################################################
 	#	NAVIGATION
+
+	symbolic_places = getplaces()
 
 	robot = getpr2()
 	robot.execute(ros_nav, symbolic_places["TABLE"])
