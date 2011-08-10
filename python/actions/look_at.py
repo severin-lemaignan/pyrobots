@@ -1,22 +1,51 @@
-import roslib; roslib.load_manifest('novela_actionlib')
-import rospy
+from action import action, genom_request, ros_request
 
-import actionlib
-import pr2_controllers_msgs.msg
-import geometry_msgs.msg
-import action
+@action
+def look_at(place):
+    """ A simple 'look at' method that uses pr2SoftMotion.
 
+	:param place: a dictionary with the x,y,z position of objects in space.
+		      If a 'frame' key is found, use it as reference frame. Else
+		      the world frame '/map' is assumed.
+    """
+    try:
+	frame = place['frame']
+    catch KeyError:
+	frame = "/map"
+
+    return look_at_xyz(place['x'], place['y'], place['z'], frame)
+
+@action
+def look_at_xyz(x,y,z, frame = "/map"):
+    """ Look at via pr2SoftMotion.
+    """
+    print("Looking at " + str([x,y,z]) + " in " + frame)
+    actions = [
+        genom_request(	"pr2SoftMotion",
+            "MoveHead",
+            [x,y,z,frame]
+        )
+    ]
+
+    return actions
 ###############################################################################
 ###############################################################################
 
-@action.action
-def look_at(target):
-
+@action
+def look_at_ros(target):
         """ Create the client and the goal.
 
         :param reqs:
 	- a dictionnary name which contains object position parameters
         """
+
+	import roslib; roslib.load_manifest('novela_actionlib')
+	import rospy
+
+	import actionlib
+	import pr2_controllers_msgs.msg
+	import geometry_msgs.msg
+
 
 	x = target['x']
 	y = target['y']
@@ -49,7 +78,7 @@ def look_at(target):
 	goal.min_duration = rospy.Duration(0.5)
 	goal.max_velocity = 1.0
 
-	return [action.ros_request(client, goal)]
+	return [ros_request(client, goal)]
 
 ###############################################################################
 
