@@ -16,10 +16,11 @@ class ActionPerformer:
 			import actionlib
 			import actionlib_msgs.msg
 
-	def __del__(self):
-        	for s in self.servers:
-			s.close()
-
+	def close(self):
+		logger.info('Closing the lowlevel!')
+		for s in self.servers:
+			self.servers[s].close()
+	
 	def _execute_pocolibs(self, action):
 		""" Execute a set of request.
 
@@ -79,3 +80,4 @@ class ActionPerformer:
 				self._execute_special(action)
 			else:
 				logger.warning("Unsupported middleware. Skipping the action.")
+

@@ -39,3 +39,5 @@ robot.execute(ros_nav, symbolic_places["TABLE"])
 
 #robot.execute(give, "PR2", "BOTTLE", "XAVIER")
 #robot.execute(play_planned_traj, symbolic_traj["GYM"])
+
+robot.close()
