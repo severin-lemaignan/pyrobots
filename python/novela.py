@@ -6,38 +6,47 @@ import logging
 logging.basicConfig(level = logging.DEBUG)
 
 
-f = open('../share/novela_places.json','rb')
+f = open('../share/novela_places.json','r')
 json_data=f.read()
 symbolic_places = json.loads(json_data)
 
-from actions import give, ros_nav, look_at_genom 
+f = open('../share/pr2_postures.json','r')
+json_data=f.read()
+pr2_postures = json.loads(json_data)
+
+from actions import give, ros_nav, look_at_genom, postures
 from lowlevel import ActionPerformer
 
 
-robot = ActionPerformer('pr2c1', 1235)
+def getpr2():
+	return ActionPerformer('pr2c1', 1235)
 
-###############################################################################
-#	GAZE
 
-#robot.execute(look_at, symbolic_places["SHELF"])
-#robot.execute(object_tracking, symbolic_places["SHELF"])
+if __name__=="__main__":
 
-###############################################################################
-#	NAVIGATION
+	###############################################################################
+	#	GAZE
 
-robot.execute(ros_nav, symbolic_places["TABLE"])
+	#robot.execute(look_at, symbolic_places["SHELF"])
+	#robot.execute(object_tracking, symbolic_places["SHELF"])
 
-####Recorded navigation
-##To create a new one
-#robot.execute(new_recorded_nav, "file_name")
+	###############################################################################
+	#	NAVIGATION
 
-##To execute an exisiting one
-#robot.execute(recorded_nav, "file_name")
+	robot = getpr2()
+	robot.execute(ros_nav, symbolic_places["TABLE"])
 
-###############################################################################
-#	BODY MOVEMENTS
+	####Recorded navigation
+	##To create a new one
+	#robot.execute(new_recorded_nav, "file_name")
 
-#robot.execute(give, "PR2", "BOTTLE", "XAVIER")
-#robot.execute(play_planned_traj, symbolic_traj["GYM"])
+	##To execute an exisiting one
+	#robot.execute(recorded_nav, "file_name")
 
-robot.close()
+	###############################################################################
+	#	BODY MOVEMENTS
+
+	#robot.execute(give, "PR2", "BOTTLE", "XAVIER")
+	#robot.execute(play_planned_traj, symbolic_traj["GYM"])
+
+	robot.close()
