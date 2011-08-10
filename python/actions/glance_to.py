@@ -1,5 +1,3 @@
-import getQ
-import json
 from action import action, genom_request, wait
 from helpers.jointstate import getjoint
 
