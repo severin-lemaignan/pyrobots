@@ -35,6 +35,60 @@ def look_at_xyz(x,y,z, frame = "/map"):
     ]
 
     return actions
+
+@action
+def track(place):
+    """ Tracks an object with the head.
+
+	This uses pr2SoftMotion.
+
+	This is a background action. Can be cancelled with stop_tracking .
+
+	:param place: a dictionary with the x,y,z position of objects in space.
+		      If a 'frame' key is found, use it as reference frame. Else
+		      the world frame '/map' is assumed.
+    """
+    try:
+	frame = place['frame']
+    except KeyError:
+	frame = "/map"
+
+    return track_xyz(place['x'], place['y'], place['z'], frame)
+
+@action
+def track_xyz(x,y,z, frame = "/map"):
+    """ Tracks a position in space at via pr2SoftMotion.
+	
+	This is a background action. Can be cancelled with stop_tracking .
+
+	:param x: the x coordinate
+	:param y: the y coordinate
+	:param z: the z coordinate
+	:param frame: the frame in which coordinates are interpreted. By default, '/map'
+    """
+    print("Tracking " + str([x,y,z]) + " in " + frame)
+    actions = [
+        genom_request(	"pr2SoftMotion",
+            "HeadTrack",
+            [x,y,z,frame],
+	    wait_for_completion = False
+        )
+    ]
+
+    return actions
+
+@action
+def stop_tracking():
+	""" If running, interrupt a current track action.
+	"""
+	actions = [
+		genom_request(	"pr2SoftMotion",
+		    "HeadTrack",
+		    abort = True
+		)
+	]
+
+
 ###############################################################################
 ###############################################################################
 
