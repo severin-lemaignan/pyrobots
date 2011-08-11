@@ -4,11 +4,12 @@ def action(fn):
 	fn._action = True
 	return fn
 
-def genom_request(module, request, args = None, wait_for_completion = True):
+def genom_request(module, request, args = None, wait_for_completion = True, abort = False):
 	return {"middleware": "pocolibs",
             "module": module,
             "request": request,
             "args": args,
+	    "abort": abort,
 	    "wait_for_completion": wait_for_completion}
 
 def ros_request(client, goal, wait_for_completion = True):

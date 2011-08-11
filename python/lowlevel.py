@@ -9,6 +9,8 @@ class ActionPerformer:
 
 		self.servers, self.poco_modules = pypoco.discover(host, port)
 
+		self._pending_pocolibs_requests = {}
+
 		if use_ros:
 			import roslib; roslib.load_manifest('novela_actionlib')
 			import rospy
@@ -25,6 +27,8 @@ class ActionPerformer:
 	def _ack(self, evt):
                 """ NOP function that serves as fallback callback
                 """
+		#TODO: We should here remove the corresponding entry in pocolibs_pending_request.
+		#To do so, we need to construct special callbacks that unset the correct entry.
 		pass	
 
 	def _execute_pocolibs(self, action):
@@ -37,6 +41,12 @@ class ActionPerformer:
 		- an optional flag to decide if the request must be blocking or not.
 		"""
 		
+		if action["abort"]:
+			# We want to abort a previous request.
+			self._pending_pocolibs_requests[action["module"] + "." + action["request"]].abort()
+			logger.warning("Aborted " + action["module"] + "." + action["request"])
+			return
+
 		logger.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(action["args"]))
 		module = self.poco_modules[action["module"]]
 		method = getattr(module, action["request"])
@@ -45,7 +55,12 @@ class ActionPerformer:
 		if not action['wait_for_completion']:
 			# asynchronous mode! we pass a (dummy) callback
 			args = [self._ack] + args
-		method(*args)
+
+		rqst = method(*args)
+		if not action["wait_for_completion"]:
+			# For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
+			self._pending_pocolibs_requests[action["module"] + "." + action["request"]] = rqst
+
 		logger.info("Execution done.")
 
 	def _execute_ros(self, action):
