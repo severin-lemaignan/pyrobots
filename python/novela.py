@@ -5,7 +5,7 @@ import json
 import logging
 logging.basicConfig(level = logging.DEBUG)
 
-from actions import  glance_to, look_at, give, nav
+from actions import  glance_to, look_at, give, nav, games
 from lowlevel import ActionPerformer
 
 
@@ -51,6 +51,14 @@ if __name__=="__main__":
 	#	BODY MOVEMENTS
 
 	#robot.execute(give, "PR2", "BOTTLE", "XAVIER")
-	#robot.execute(play_planned_traj, symbolic_traj["GYM"])
-
+	robot.execute(games.gym)
+	#robot.execute(games.handsup)
+	#robot.execute(games.arms_against_torso)
+	#robot.execute(games.handsup_folded)
+	#robot.execute(games.alternative_handsup_folded)
+	#robot.execute(games.move_head)
+	#robot.execute(games.larm_swinging)
+        #robot.execute(games.rarm_swinging)  
+	#robot.execute(games.slow_arms_swinging)
+	#robot.execute(games.speed_arms_swinging)
 	robot.close()
