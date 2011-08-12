@@ -1,0 +1,8 @@
+#!/bin/csh
+
+killmymodules
+
+rosnode kill create_poster
+
+echo "pr2SoftMotion module killed"
+
