@@ -1,7 +1,6 @@
 from helpers import trajectory
 from action import action, genom_request, wait
 
-import random
 
 @action
 def gym():
@@ -102,48 +101,6 @@ def gym():
 		]
 	
 	return action
-
-@action
-def rest():
-	
-	n = random.randint(1,3)
-
-	if n == 1 :
-		traj = trajectory.Trajectory('rest_position')
-
-	elif n == 2 :
-		traj = trajectory.Trajectory('rest_position2')
-
-	elif n == 3 :
-		traj = trajectory.Trajectory('rest_position3')
-	
-	actions = [genom_request( 'pr2SoftMotion', 'GotoQ', 
-			['PR2', 0] + traj.initcoords())
-		  ]
-
-	return actions
-
-def rest_without_head():
-
-        n = random.randint(1,3)
-
-        if n == 1 :
-                traj = trajectory.Trajectory('rest_position')
-
-        elif n == 2 :
-                traj = trajectory.Trajectory('rest_position2')
-
-        elif n == 3 :
-                traj = trajectory.Trajectory('rest_position3')
-
-	actions = [genom_request( 'pr2SoftMotion', 'GotoQ',
-                        ['ARMS', 0] + traj.initcoords(),
-			wait_for_completion = False )
-                  ]
-
-        return actions
-
-
 
 @action
 def handsup():

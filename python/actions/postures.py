@@ -1,5 +1,6 @@
 import random
 from action import action, genom_request
+from helpers import trajectory
 
 @action
 def release_gripper():
@@ -72,4 +73,44 @@ def gotopostureraw(posture, part = 'RARM', r_wrist_angle = 0.0):
     		 0.73, 0.86, 0.06, -2.09, 2.42, -1.29, -2.95, 0.0, 0.0]) # Left arm (ignored)
     ]
     return actions
+
+@action
+def rest():
+
+        n = random.randint(1,3)
+
+        if n == 1 :
+                traj = trajectory.Trajectory('rest_position')
+
+        elif n == 2 :
+                traj = trajectory.Trajectory('rest_position2')
+
+        elif n == 3 :
+                traj = trajectory.Trajectory('rest_position3')
+
+        actions = [genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + traj.initcoords())
+                  ]
+
+        return actions
+
+def rest_without_head():
+
+        n = random.randint(1,3)
+
+        if n == 1 :
+                traj = trajectory.Trajectory('rest_position')
+
+        elif n == 2 :
+                traj = trajectory.Trajectory('rest_position2')
+
+        elif n == 3 :
+                traj = trajectory.Trajectory('rest_position3')
+
+        actions = [genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['ARMS', 0] + traj.initcoords(),
+                        wait_for_completion = False )
+                  ]
+
+        return actions
 
