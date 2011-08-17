@@ -1,7 +1,7 @@
 import time
-import logging; logger = logging.getLogger("lowlevel")
-logger.setLevel = logging.DEBUG
 import pypoco
+
+import logging; logger = logging.getLogger("novela." + __name__)
 
 class ActionPerformer:
 
@@ -21,8 +21,7 @@ class ActionPerformer:
 
 	def close(self):
 		logger.info('Closing the lowlevel!')
-		for s in self.servers:
-			self.servers[s].close()
+		pypoco.close()
 
 	def _ack(self, evt):
                 """ NOP function that serves as fallback callback

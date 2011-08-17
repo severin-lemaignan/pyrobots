@@ -1,13 +1,32 @@
 #! /usr/bin/env python
+import logging
 
 import json
-
-import logging
-logging.basicConfig(level = logging.DEBUG)
-
-from actions import  glance_to, look_at, give, nav, games
 from lowlevel import ActionPerformer
 
+# create logger
+logger = logging.getLogger('novela')
+logger.setLevel(logging.DEBUG)
+
+pypoco_logger = logging.getLogger('pypoco')
+pypoco_logger.setLevel(logging.DEBUG)
+
+# create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+# create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# add formatter to ch
+ch.setFormatter(formatter)
+
+# add ch to logger
+logger.addHandler(ch)
+pypoco_logger.addHandler(ch)
+
+
+from actions import  glance_to, look_at, give, nav, games
 
 def getplaces():
 	f = open('../share/novela_places.json','r')
@@ -21,6 +40,7 @@ def getpostures():
 
 
 def getpr2():
+	logger.debug("Returning action performer for TCL serv on pr2c1:1235")
 	return ActionPerformer('pr2c1', 1235)
 
 

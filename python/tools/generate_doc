@@ -45,7 +45,7 @@ for m in actions.keys():
 		print("\n")
 		print("Example:\n{{{#!highlight python")
 		print("from novela import *")
-		print("from " + m + " import " + name + "\n")
+		print("from " + m + " import *\n")
 		print("pr2 = getpr2()\n")
 		if params:
 			for p,d in params:
