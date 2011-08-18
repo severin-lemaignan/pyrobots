@@ -11,7 +11,7 @@ import action
 ###############################################################################
 
 @action.action
-def goto(target):
+def goto(target, callback = None):
 	""" Moves the robot base to a given target, using ROS 2D navigation stack.
 	"""
 	x = target['x']
@@ -55,7 +55,11 @@ def goto(target):
 	
 	
 
-	return [action.ros_request(client, goal, wait_for_completion = False)] # REturn a non-blocking action. Useful to be able to cancel it later!
+	return [action.ros_request(client, 
+				goal, 
+				wait_for_completion = False if callback else True,
+				callback = callback
+		)] # REturn a non-blocking action. Useful to be able to cancel it later!
 
 	
 ###############################################################################

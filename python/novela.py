@@ -43,6 +43,10 @@ def getpr2():
 	logger.debug("Returning action performer for TCL serv on pr2c1:1235")
 	return ActionPerformer('pr2c1', 1235)
 
+logger.info("*** Novela will rock! ***")
+
+def printer(e):
+	print("End of lookat!! " + str(e))
 
 if __name__=="__main__":
 	symbolic_places = getplaces()
@@ -52,13 +56,33 @@ if __name__=="__main__":
 	###############################################################################
 	#	GAZE
 
-	#robot.execute(look_at, symbolic_places["SHELF"])
-	robot.execute(glance_to.glance_to, symbolic_places["SHELF"])
+	#robot.execute(look_at.look_at, symbolic_places["SHELF"], printer)
+
+	import time
+	#; time.sleep(10)
+	#robot.execute(glance_to.glance_to, symbolic_places["SHELF"])
 
 	###############################################################################
 	#	NAVIGATION
 
-	#robot.execute(ros_nav.ros_nav, symbolic_places["TABLE"])
+	state = 0
+	reached_place = False
+	destinations = ["SHELF", "TABLE"]	
+
+	def cb(status, result):
+		global state, reached_place, destinations
+		print("Reached " + destinations[state])
+		import pdb; pdb.set_trace()
+		reached_place = True
+		state += 1
+		
+
+	while state < len(destinations):
+		print("Going to " + destinations[state])
+		robot.execute(nav.goto, symbolic_places[destinations[state]], cb)
+		while not reached_place:
+			time.sleep(0.1)
+	reached_place = False
 
 	####Recorded navigation
 	##To create a new one

@@ -1,7 +1,7 @@
 from action import action, genom_request, ros_request
 
 @action
-def look_at(place):
+def look_at(place, callback = None):
     """ A simple 'look at' method that uses pr2SoftMotion.
 
 	Uses look_at_xyz underneath.
@@ -15,10 +15,10 @@ def look_at(place):
     except KeyError:
 	frame = "/map"
 
-    return look_at_xyz(place['x'], place['y'], place['z'], frame)
+    return look_at_xyz(place['x'], place['y'], place['z'], frame, callback)
 
 @action
-def look_at_xyz(x,y,z, frame = "/map"):
+def look_at_xyz(x,y,z, frame = "/map", callback = None):
     """ Look at via pr2SoftMotion.
 	
 	:param x: the x coordinate
@@ -30,7 +30,9 @@ def look_at_xyz(x,y,z, frame = "/map"):
     actions = [
         genom_request(	"pr2SoftMotion",
             "MoveHead",
-            [x,y,z,frame]
+            [x,y,z,frame],
+	    wait_for_completion = False if callback else True,
+	    callback = callback
         )
     ]
 
@@ -87,6 +89,7 @@ def stop_tracking():
 		    abort = True
 		)
 	]
+    	return actions
 
 
 ###############################################################################

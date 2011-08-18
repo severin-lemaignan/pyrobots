@@ -52,8 +52,12 @@ class ActionPerformer:
 
 		args = action["args"]
 		if not action['wait_for_completion']:
-			# asynchronous mode! we pass a (dummy) callback
-			args = [self._ack] + args
+			# asynchronous mode! 
+			if action["callback"]:
+				args = [action["callback"]] + args
+			else:
+				# we pass a (dummy) callback
+				args = [self._ack] + args
 
 		rqst = method(*args)
 		if not action["wait_for_completion"]:
@@ -76,7 +80,7 @@ class ActionPerformer:
 		
         	print("Sending goal " + str(action["goal"]) + " to " + str(client))
                 # Sends the goal to the action server 
-                client.send_goal(goal)
+                client.send_goal(goal, done_cb = action["callback"])
         
 		if action['wait_for_completion']:	
 			# Waits for the server to finish performing the action
@@ -92,6 +96,11 @@ class ActionPerformer:
 		if action["action"] == "wait":
 			logger.info("Waiting for " + str(action["args"]))
 			time.sleep(action["args"])
+
+	def test(self):
+		print("Test")
+		logger.info("Test INFO")
+		logger.debug("Test DEBUG")
 
 	def execute(self, fn, *args, **kwargs):
 
