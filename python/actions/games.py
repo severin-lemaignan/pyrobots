@@ -100,7 +100,7 @@ def gym():
 
 		]
 	
-	return action
+	return actions
 
 @action
 def handsup():
