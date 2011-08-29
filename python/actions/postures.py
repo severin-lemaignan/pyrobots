@@ -94,6 +94,7 @@ def rest():
 
         return actions
 
+@action
 def rest_without_head():
 
         n = random.randint(1,3)
@@ -114,3 +115,9 @@ def rest_without_head():
 
         return actions
 
+@action
+def manip_conf():
+	return [genom_request("pr2SoftMotion", 
+							"GotoQ", 
+							['PR2', 0, 0.2, 0.0, 0.6, 0.0, -0.48157, 0.91579, 0.05525, -2.27493, -2.60623, -1.38896, 3.00473, 0.0, 0.0, 0.55276, 1.27965, 2.02007, -1.95238, 0.0, 0.0, 0.0, 0.0, 0.0]
+			)]
