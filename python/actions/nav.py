@@ -4,7 +4,7 @@ import rospy
 import actionlib
 import move_base_msgs.msg
 
-import action
+from action import action, ros_request
 
 
 ###############################################################################
@@ -22,9 +22,6 @@ def goto(target, callback = None):
 	qz = target['qz']
 	qw = target['qw']
 
-      
-
-	print x, y , z, qx, qy, qz, qw
 	# Creates the SimpleActionClient, passing the type of the action
 	# (Navigationction) to the constructor.
 	client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
@@ -64,7 +61,7 @@ def goto(target, callback = None):
 	
 ###############################################################################
 
-@action.action
+@action
 def cancel():
 	""" Interrupt a navigation task.
 	"""
@@ -79,5 +76,5 @@ def cancel():
 	# Creates a goal to send to the action server.  
 	goal = move_base_msgs.msg.MoveBaseGoal()
 
-	return [action.ros_request(client, goal)]
+	return [ros_request(client, goal)]
 

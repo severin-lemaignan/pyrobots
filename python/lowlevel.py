@@ -2,6 +2,7 @@ import time
 import pypoco
 
 import logging; logger = logging.getLogger("novela." + __name__)
+logger.setLevel(logging.DEBUG)
 
 class ActionPerformer:
 
@@ -66,10 +67,16 @@ class ActionPerformer:
 
 		logger.info("Execution done.")
 
+		logger.debug(str(rqst))
+		return rqst 
+
 	def _execute_ros(self, action):
 
 		client = action['client']
                 goal = action['goal']
+		
+		#state = self.GoalStatus
+		#result = client.get_result()
 
 		""" Execute a ros action.
 
@@ -81,7 +88,7 @@ class ActionPerformer:
         	print("Sending goal " + str(action["goal"]) + " to " + str(client))
                 # Sends the goal to the action server 
                 client.send_goal(goal, done_cb = action["callback"])
-        
+               
 		if action['wait_for_completion']:	
 			# Waits for the server to finish performing the action
 			client.wait_for_result()
@@ -92,6 +99,10 @@ class ActionPerformer:
 			else:
 				print("Action failed!")
 	
+		
+
+
+
 	def _execute_special(self, action):
 		if action["action"] == "wait":
 			logger.info("Waiting for " + str(action["args"]))
@@ -103,17 +114,21 @@ class ActionPerformer:
 		logger.debug("Test DEBUG")
 
 	def execute(self, fn, *args, **kwargs):
-
+	
+		logger.debug(str(fn))	
 		actions = fn(*args, **kwargs)
+		res = []
 		if actions:
+			logger.debug(str(actions))
 			for action in actions:
 				logger.info("Executing " + str(action))
 				if action["middleware"] == "pocolibs":
-					self._execute_pocolibs(action)
+					res+= self._execute_pocolibs(action)
 				elif action["middleware"] == "ros":
 					self._execute_ros(action)
 				elif action["middleware"] == "special":
-					self._execute_special(action)
+					res+= self._execute_special(action)
 				else:
 					logger.warning("Unsupported middleware. Skipping the action.")
+		return res
 
