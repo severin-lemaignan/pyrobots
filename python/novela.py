@@ -1,11 +1,21 @@
 #! /usr/bin/env python
 
 import json
-from action import wait
+import sys
+import time
+from random import *
+
 import logging
 logging.basicConfig(level = logging.DEBUG)
-from actions import  glance_to, look_at, give, nav, games
+
+
 from lowlevel import ActionPerformer
+
+from action import *
+from helpers.abspose import *
+from helpers.spark_replace import *
+from actions.nav_line import *
+from actions.nav import *
 
 
 def getplaces():
@@ -20,70 +30,82 @@ def getpostures():
 
 
 def getpr2():
-	return ActionPerformer('pr2c1', 1235)
+	return ActionPerformer('pr2c2', 1235)
 
-logger.info("*** Novela will rock! ***")
+#logger.info("*** Novela will rock! ***")
 
 def printer(e):
 	print("End of lookat!! " + str(e))
 
 if __name__=="__main__":
-	symbolic_places = getplaces()
 
-	robot = getpr2()
 
-	###############################################################################
-	#	GAZE
+	if (len(sys.argv) > 1):
 
-	#robot.execute(look_at.look_at, symbolic_places["SHELF"], printer)
+		robot = getpr2()
+		print (sys.argv[1])
 
-	import time
-	#; time.sleep(10)
-	#robot.execute(glance_to.glance_to, symbolic_places["SHELF"])
+		if sys.argv[1] == 'Basket':
+			print("####### GAMES - BASKET #######")
+			
+			robot.execute(place_agent, 'HERAKLES_HUMAN1', 5.0, -5.0)
+			x_prec, y_prec = 5.0, -5.0
 
-	###############################################################################
-	#	NAVIGATION
+			j = 0
+			i = sys.argv[2]
+			while j < i:
 
-	state = 0
-	reached_place = False
-	destinations = ["SHELF", "TABLE"]	
+				# Where is the human?
+				robot.execute(getabspose, 'HERAKLES_HUMAN1', 'Pelvis')
+				x, y, z = setabspose()
 
-	def cb(status, result):
-		global state, reached_place, destinations
-		print("Reached " + destinations[state])
-		import pdb; pdb.set_trace()
-		reached_place = True
-		state += 1
+				# Evaluation of the distance that he is moved
+				delta_x = x - x_prec
+				delta_y = y - y_prec
+
+				print("#######  DELTA_X AND DELTA_Y #######")
+				print delta_x, delta_y
+
+				# Mirror moving of the robot
+				if (((delta_x > 0.2) or (delta_x < -0.2)) and (delta_y > 0.2) and (delta_y < -0.2)):
+					nav_line(-delta_x, 0, 0.2)
+				if (((delta_y > 0.2) or (delta_y < -0.2)) and (delta_x < 0.2) and (delta_x > -0.2)):
+					nav_line(0, -delta_y, 0.2)
+				if (((delta_x > 0.2) or (delta_x < -0.2)) and ((delta_y < 0.2) or (delta_y > -0.2 ))):
+					nav_line(-delta_x, -delta_y, 0.2)
+				else:
+					pass
+
+				# Moving of the human
+				x_new = randint(-80, 80)/200 + x
+				y_new = randint(-80, 80)/200 + y
+				robot.execute(place_agent, 'HERAKLES_HUMAN1', x_new, y_new)
+				
+				time.sleep(2.0)
+				x_prec, y_prec = x, y
+				j += 1
 		
 
-	while state < len(destinations):
-		print("Going to " + destinations[state])
-		robot.execute(nav.goto, symbolic_places[destinations[state]], cb)
-		while not reached_place:
-			time.sleep(0.1)
-	reached_place = False
+		if sys.argv[1] == 'Multi_nav':
+			
+			print("####### MULTI NAV #######")
+			reached_place = False
+			destinations = ["SHELF", "TABLE"]	
+			
+			# Definition of the call back
+			def cb(status, result):
+				global state, reached_place, destinations
+				print("Reached " + destinations[state])
+				#import pdb; pdb.set_trace()
+				reached_place = True
+				state += 1
 
-	####Recorded navigation
-	##To create a new one
-	#robot.execute(new_recorded_nav, "file_name")
+			while state < len(destinations):
+				print("Going to " + destinations[state])
+				robot.execute(nav.goto, symbolic_places[destinations[state]], cb)
+				while not reached_place:
+					time.sleep(0.1)
 
-	##To execute an exisiting one
-	#robot.execute(recorded_nav, "file_name")
+			reached_place = False
 
-	###############################################################################
-	#	BODY MOVEMENTS
-
-	#robot.execute(give, "PR2", "BOTTLE", "XAVIER")
-	robot.execute(games.gym)
-	#robot.execute(games.rest)
-	#robot.execute(games.rest_without_head)
-	#robot.execute(games.handsup)
-	#robot.execute(games.arms_against_torso)
-	#robot.execute(games.handsup_folded)
-	#robot.execute(games.alternative_handsup_folded)
-	#robot.execute(games.move_head)
-	#robot.execute(games.larm_swinging)
-        #robot.execute(games.rarm_swinging)  
-	#robot.execute(games.slow_arms_swinging)
-	#robot.execute(games.speed_arms_swinging)
-	#robot.close()
+	robot.close()
