@@ -4,6 +4,10 @@ import pypoco
 import logging; logger = logging.getLogger("novela." + __name__)
 logger.setLevel(logging.DEBUG)
 
+
+from helpers.saveans import *
+from helpers.rosnode_list import *
+
 class ActionPerformer:
 
 	def __init__(self, host, port, use_ros = True):
@@ -15,7 +19,12 @@ class ActionPerformer:
 		if use_ros:
 			import roslib; roslib.load_manifest('novela_actionlib')
 			import rospy
-			rospy.init_node('novela_actionlib')
+			node_list = rosnode_list('novela_actionlib')
+			for node in node_list:
+				if not node == "novela_actionlib\n":
+					rospy.init_node('novela_actionlib')
+				else:
+					pass
 			import actionlib
 			from actionlib_msgs.msg import GoalStatus
 			self.GoalStatus = GoalStatus
@@ -66,9 +75,10 @@ class ActionPerformer:
 			self._pending_pocolibs_requests[action["module"] + "." + action["request"]] = rqst
 
 		logger.info("Execution done.")
-
 		logger.debug(str(rqst))
-		return rqst 
+		
+		# We are save the answer of the rqst if you want use it for the next action		
+		saveans(rqst)		
 
 	def _execute_ros(self, action):
 
@@ -99,15 +109,11 @@ class ActionPerformer:
 			else:
 				print("Action failed!")
 	
-		
-
-
-
 	def _execute_special(self, action):
 		if action["action"] == "wait":
 			logger.info("Waiting for " + str(action["args"]))
 			time.sleep(action["args"])
-
+		
 	def test(self):
 		print("Test")
 		logger.info("Test INFO")
@@ -123,12 +129,11 @@ class ActionPerformer:
 			for action in actions:
 				logger.info("Executing " + str(action))
 				if action["middleware"] == "pocolibs":
-					res+= self._execute_pocolibs(action)
+					self._execute_pocolibs(action)
 				elif action["middleware"] == "ros":
 					self._execute_ros(action)
 				elif action["middleware"] == "special":
-					res+= self._execute_special(action)
+					self._execute_special(action)
 				else:
 					logger.warning("Unsupported middleware. Skipping the action.")
-		return res
 
