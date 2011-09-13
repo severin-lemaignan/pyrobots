@@ -31,6 +31,7 @@ def gotoposture(posture, obj, part = 'RARM', support = 'HRP2TABLE', use_cartesia
     if part not in ['RARM', 'LARM']:
 	print("'Go to' for part " + part + " is not implemented.")
 
+    print (posture)
     q1, q2, q3, q4, q5, q6, q7 = posture
     actions = [
 	genom_request("mhp", "ArmPlanTask",
@@ -63,6 +64,7 @@ def gotopostureraw(posture, part = 'RARM', r_wrist_angle = 0.0):
     if part not in ['RARM']:
 	print("'Go to posture raw' for part " + part + " is not implemented.")
 
+    print (posture)
     q1, q2, q3, q4, q5, q6, q7 = posture
     actions = [
 	genom_request("pr2SoftMotion", "GotoQ",
