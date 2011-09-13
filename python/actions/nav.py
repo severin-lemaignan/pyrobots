@@ -122,6 +122,11 @@ def cancel():
 
 ###############################################################################
 
+def nop(void):
+	""" An useless function, when we do not care about the callback
+	"""	
+	pass
+
 @action
 def carry(target, callback = None):
     """ Moves to a place, taking into account door crossing.
@@ -159,19 +164,19 @@ def carry(target, callback = None):
         if i_am_in:
             print("I'm in, I want to go out")
             # I'm in, I want to go out
+            actions += configuration.tucked(nop)
             actions += goto(places.read()["JARDIN_EXIT_IN"], callback)
-            actions += configuration.rdytonav()
             actions += goto(places.read()["JARDIN_EXIT_OUT"], callback)
-            actions += configuration.manip_conf()
+            actions += configuration.manip(nop)
             actions += goto(target, callback)
 
         else:
             print("I'm out, I want to go in")
             # I'm out, I want to go in
+            actions += configuration.tucked(nop)
             actions += goto(places.read()["JARDIN_ENTER_OUT"], callback)
-            actions += configuration.rdytonav()
             actions += goto(places.read()["JARDIN_ENTER_IN"], callback)
-            actions += configuration.manip_conf()
+            actions += configuration.manip(nop)
             actions += goto(target, callback)
 
         return actions

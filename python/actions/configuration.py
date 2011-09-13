@@ -57,7 +57,7 @@ def gotoposture(posture, obj, part = 'RARM', support = 'HRP2TABLE', use_cartesia
     return actions
 
 @action
-def gotopostureraw(posture, part = 'RARM', r_wrist_angle = 0.0):
+def gotopostureraw(posture, part = 'RARM', r_wrist_angle = 0.0, callback = None):
     """
     Like gotoposture except it does not plan (no collision avoidance)
     """
@@ -72,7 +72,10 @@ def gotopostureraw(posture, part = 'RARM', r_wrist_angle = 0.0):
     		 0,
     		 0.2, 0.0, 0.6, 0.0,
     		 q1, q2, q3, q4, q5, q6, q7, r_wrist_angle, 0.0, # Right arm
-    		 0.73, 0.86, 0.06, -2.09, 2.42, -1.29, -2.95, 0.0, 0.0]) # Left arm (ignored)
+    		 0.73, 0.86, 0.06, -2.09, 2.42, -1.29, -2.95, 0.0, 0.0], # Left arm (ignored)
+		wait_for_completion = False if callback else True,
+		callback = callback
+	)	
     ]
     return actions
 
@@ -118,7 +121,7 @@ def rest_without_head():
         return actions
 
 @action
-def manip_conf():
+def manip(callback = None):
 	return [genom_request("pr2SoftMotion", 
 				"GotoQ", 
 				['PR2', 0,
@@ -126,11 +129,13 @@ def manip_conf():
 				 -0.48157, 0.91579, 0.05525, -2.27493, -2.60623, -1.38896, 3.00473,
 				 0.0, 0.0,
 				 0.55276, 1.27965, 2.02007, -1.4, 0.0, 0.0, 0.0,
-				 0.0, 0.0]
-			)]
+				 0.0, 0.0],
+				wait_for_completion = False if callback else True,
+				callback = callback
+				)]
 
 @action
-def rdytonav():
+def tucked(callback = None):
         return [genom_request("mhp", "ArmPlanTask", 
                        [0,
 			'GEN_TRUE',
@@ -147,6 +152,11 @@ def rdytonav():
 		 	0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] 
                         ),
 		genom_request("mhp", "ArmSelectTraj", [0]),
-		genom_request("pr2SoftMotion", "TrackQ", ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM'])
+		genom_request(	"pr2SoftMotion", 
+				"TrackQ", 
+				['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM'],
+				wait_for_completion = False if callback else True,
+				callback = callback)
+
 		]
 		
