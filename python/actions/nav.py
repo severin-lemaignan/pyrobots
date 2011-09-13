@@ -1,3 +1,6 @@
+import logging; logger = logging.getLogger("novela." + __name__)
+logger.setLevel(logging.DEBUG)
+
 import roslib; roslib.load_manifest('novela_actionlib')
 import rospy
 
@@ -137,7 +140,7 @@ def carry(target, callback = None):
 
     from helpers import position
     from helpers import places
-    from actions import posture
+    from actions import configuration
 
     mypos = position.mypose()
 
@@ -151,21 +154,24 @@ def carry(target, callback = None):
         actions = []
 
         logger.info("I need to cross a door!!")
+        print("I need to cross a door!!")
         
         if i_am_in:
+            print("I'm in, I want to go out")
             # I'm in, I want to go out
             actions += goto(places.read()["JARDIN_EXIT_IN"], callback)
-            actions += posture.rdytonav()
+            actions += configuration.rdytonav()
             actions += goto(places.read()["JARDIN_EXIT_OUT"], callback)
-            actions += posture.manip_conf()
+            actions += configuration.manip_conf()
             actions += goto(target, callback)
 
         else:
+            print("I'm out, I want to go in")
             # I'm out, I want to go in
             actions += goto(places.read()["JARDIN_ENTER_OUT"], callback)
-            actions += posture.rdytonav()
+            actions += configuration.rdytonav()
             actions += goto(places.read()["JARDIN_ENTER_IN"], callback)
-            actions += posture.manip_conf()
+            actions += configuration.manip_conf()
             actions += goto(target, callback)
 
         return actions
