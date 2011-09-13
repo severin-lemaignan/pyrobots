@@ -11,20 +11,17 @@ logging.basicConfig(level = logging.DEBUG)
 
 from lowlevel import ActionPerformer
 
-from action import *
-from helpers.abspose import *
+from helpers import places
+from helpers.position import *
 from helpers.spark_replace import *
+
+from action import *
 from actions.nav_line import *
 from actions.nav import *
 from actions.place import *
 from actions.give import *
 from actions.postures import *
 from actions.rotate import *
-
-def getplaces():
-	f = open('../share/novela_places.json','r')
-	json_data=f.read()
-	return json.loads(json_data)
 
 def getpostures():
 	f = open('../share/pr2_postures.json','r')
@@ -46,7 +43,7 @@ if __name__=="__main__":
 	if (len(sys.argv) > 1):
 
 		robot = getpr2()
-		symbolic_places = getplaces()
+		symbolic_places = places.read()
 		print (sys.argv[1])
 
 		if sys.argv[1] == 'PickNavPlace':
