@@ -1,7 +1,7 @@
 import random
-from action import action, genom_request
-
-from actions import postures
+from action import action, genom_request, wait
+from helpers import postures
+from actions import configuration
 
 used_plan_id = []
 
@@ -19,7 +19,7 @@ def getplanid():
 def pick(obj, use_cartesian = "GEN_FALSE"):
 
     # Open gripper
-    actions = postures.open_gripper()
+    actions = configuration.open_gripper()
 
     # Plan trajectory to object and execute it
     actions += [
@@ -40,25 +40,26 @@ def pick(obj, use_cartesian = "GEN_FALSE"):
     ]
 
     # Close gripper
-    actions += postures.close_gripper()
+    actions += configuration.close_gripper()
     return actions
 
 @action
-def give(obj, receiver):
+def giveinfront(obj):
     """ The basic GIVE, using Moki planner to grasp and precomputed positions
     to give.
     """
-    
-    actions += pick(obj)
-    actions += postures.rightarmgoto(obj, PR2_RARM_GIVE)
-    actions += [["wait",2]]
 
-    actions += postures.release_gripper()
+    posture = postures.read()
     
-    actions += postures.gotopostureraw(PR2_RARM_REST)
-    actions += [["wait", 2]]
+    actions = configuration.rightarmgoto(posture["PR2_RARM_GIVE"], obj)
+    actions += [wait(2)]
 
-    actions += postures.close_gripper()
+    actions += configuration.release_gripper()
+    
+    actions += configuration.gotopostureraw(posture["PR2_RARM_REST"], obj)
+    actions += [wait(2)]
+
+    actions += configuration.close_gripper()
         
     return actions
 
