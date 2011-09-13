@@ -118,6 +118,33 @@ def rest_without_head():
 @action
 def manip_conf():
 	return [genom_request("pr2SoftMotion", 
-							"GotoQ", 
-							['PR2', 0, 0.2, 0.0, 0.6, 0.0, -0.48157, 0.91579, 0.05525, -2.27493, -2.60623, -1.38896, 3.00473, 0.0, 0.0, 0.55276, 1.27965, 2.02007, -1.95238, 0.0, 0.0, 0.0, 0.0, 0.0]
+				"GotoQ", 
+				['PR2', 0,
+				 0.2, 0.0, 0.6, 0.0,
+				 -0.48157, 0.91579, 0.05525, -2.27493, -2.60623, -1.38896, 3.00473,
+				 0.0, 0.0,
+				 0.55276, 1.27965, 2.02007, -1.4, 0.0, 0.0, 0.0,
+				 0.0, 0.0]
 			)]
+
+@action
+def rdytonav():
+        return [genom_request("mhp", "ArmPlanTask", 
+                       [0,
+			'GEN_TRUE',
+			'MHP_ARM_FREE',
+			0,
+			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+			0.05842, 1.28695, -0.80267, -2.17115, 3.14000, -1.11226, 3.0,
+			'NO_NAME',
+			'NO_NAME',
+			'NO_NAME',
+			'GEN_FALSE',
+			0,
+			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
+		 	0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] 
+                        ),
+		genom_request("mhp", "ArmSelectTraj", [0]),
+		genom_request("pr2SoftMotion", "TrackQ", ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM'])
+		]
+		
