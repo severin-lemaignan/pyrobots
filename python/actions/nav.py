@@ -13,6 +13,14 @@ from action import action, ros_request
 @action
 def goto(target, callback = None):
 	""" Moves the robot base to a given target, using ROS 2D navigation stack.
+
+        Only (x,y,theta) are considered for the target. All other values are
+        ignored.
+    
+        :param target: the destination, as a dictionary {x,y,z,qx,qy,qz,qw}.
+        :param callback: (optional) a callback to be called when the destination
+        is reached. If nothing is provided, the action blocks until the 
+        destination is reached.
 	"""
 	x = target['x']
 	y = target['y']
@@ -106,4 +114,59 @@ def cancel():
 	goal = move_base_msgs.msg.MoveBaseGoal()
 
 	return [ros_request(client, goal)]
+
+
+
+###############################################################################
+
+@action
+def carry(target, callback = None):
+    """ Moves to a place, taking into account door crossing.
+
+    If the robot needs to cross a door, it will stop in front of the door,
+    tuck its arms, cross the door, untuck the arms and complete its route.
+
+    TODO: This action is currently completely hardcoded, and will work only
+    for the Novela scenario.
+
+    :param target: the destination, as a dictionary {x,y,z,qx,qy,qz,qw}.
+    :param callback: (optional) a callback to be called when the destination
+    is reached. If nothing is provided, the action blocks until the 
+    destination is reached.
+    """
+
+    from helpers import position
+    from helpers import places
+    from actions import posture
+
+    mypos = position.mypose()
+
+    target_is_in = position.isonstage(target)
+    i_am_in = position.isonstage(mypos)
+    if not (target_is_in ^ i_am_in):
+        # No door to cross
+        return goto(target, callback)
+    else:
+        # We need to cross a door!
+        actions = []
+
+        logger.info("I need to cross a door!!")
+        
+        if i_am_in:
+            # I'm in, I want to go out
+            actions += goto(places.read()["JARDIN_EXIT_IN"], callback)
+            actions += posture.rdytonav()
+            actions += goto(places.read()["JARDIN_EXIT_OUT"], callback)
+            actions += posture.manip_conf()
+            actions += goto(target, callback)
+
+        else:
+            # I'm out, I want to go in
+            actions += goto(places.read()["JARDIN_ENTER_OUT"], callback)
+            actions += posture.rdytonav()
+            actions += goto(places.read()["JARDIN_ENTER_IN"], callback)
+            actions += posture.manip_conf()
+            actions += goto(target, callback)
+
+        return actions
 
