@@ -5,24 +5,36 @@ from helpers import trajectory
 @action
 def release_gripper():
 	"""
-	Like gripper_open, except it waits util it senses some effort on the gripper force sensors.
+	Opens the gripper to release something.
+
+	Like gripper_open, except it waits until it senses some effort on the gripper force sensors.
 	"""
         return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
 
 @action
 def grab_gripper():
 	"""
-	Like gripper_open, except it waits util it senses some effort on the gripper force sensors.
+	Closes the gripper to grab something.
+
+	Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
 	"""
         return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
 
 @action
-def open_gripper():
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["OPEN"])]
+def open_gripper(callback = None):
+        return [genom_request("pr2SoftMotion", 
+				"GripperGrabRelease", 
+				["OPEN"],
+				wait_for_completion = False if callback else True,
+				callback = callback)]
 
 @action
-def close_gripper():
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["CLOSE"])]
+def close_gripper(callback = None):
+        return [genom_request("pr2SoftMotion", 
+				"GripperGrabRelease", 
+				["CLOSE"],
+				wait_for_completion = False if callback else True,
+				callback = callback)]
 
 
 @action
