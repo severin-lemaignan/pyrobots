@@ -16,12 +16,9 @@ from helpers.position import *
 from helpers.spark_replace import *
 
 from action import *
-from actions.nav_line import *
 from actions.nav import *
-from actions.place import *
 from actions.give import *
 from actions.postures import *
-from actions.rotate import *
 
 def getpostures():
 	f = open('../share/pr2_postures.json','r')
