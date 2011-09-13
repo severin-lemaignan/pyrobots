@@ -1,9 +1,48 @@
 import random
+
 from action import action, genom_request, wait
+
 from helpers import postures
+from helpers.cb import *
+
 from actions import configuration
 
 used_plan_id = []
+
+@action
+def release_gripper():
+	"""
+	Opens the gripper to release something.
+
+	Like gripper_open, except it waits until it senses some effort on the gripper force sensors.
+	"""
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
+
+@action
+def grab_gripper():
+	"""
+	Closes the gripper to grab something.
+
+	Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
+	"""
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
+
+@action
+def open_gripper(callback = None):
+        return [genom_request("pr2SoftMotion", 
+				"GripperGrabRelease", 
+				["OPEN"],
+				wait_for_completion = False if callback else True,
+				callback = callback)]
+
+@action
+def close_gripper(callback = None):
+        return [genom_request("pr2SoftMotion", 
+				"GripperGrabRelease", 
+				["CLOSE"],
+				wait_for_completion = False if callback else True,
+				callback = callback)]
+
 
 def getplanid():
     """ Returns a random plan id (for Amit planification routines) which is
@@ -44,22 +83,31 @@ def pick(obj, use_cartesian = "GEN_FALSE"):
     return actions
 
 @action
-def giveinfront(obj):
-    """ The basic GIVE, using Moki planner to grasp and precomputed positions
-    to give.
+def basicgive():
+    """ The ultra stupid basic GIVE: simply hand the object in front of the robot.
     """
 
     posture = postures.read()
     
-    actions = configuration.rightarmgoto(posture["PR2_RARM_GIVE"], obj)
-    actions += [wait(2)]
-
+    actions = configuration.gotopostureraw(posture["PR2_RARM_GIVE"])
     actions += configuration.release_gripper()
-    
-    actions += configuration.gotopostureraw(posture["PR2_RARM_REST"], obj)
     actions += [wait(2)]
+    actions += configuration.close_gripper(nop)
+    actions += configuration.gotopostureraw(posture["PR2_RARM_REST"])
+        
+    return actions
 
-    actions += configuration.close_gripper()
+@action
+def basicgrab():
+    """ The ultra stupid basic GRAB: simply take the object in front of the robot.
+    """
+
+    posture = postures.read()
+    
+    actions = configuration.open_gripper(nop)
+    actions += configuration.gotopostureraw(posture["PR2_RARM_GIVE"])
+    actions += configuration.grab_gripper()
+    actions += configuration.gotopostureraw(posture["PR2_RARM_REST"])
         
     return actions
 

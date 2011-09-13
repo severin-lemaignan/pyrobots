@@ -2,40 +2,6 @@ import random
 from action import action, genom_request
 from helpers import trajectory
 
-@action
-def release_gripper():
-	"""
-	Opens the gripper to release something.
-
-	Like gripper_open, except it waits until it senses some effort on the gripper force sensors.
-	"""
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
-
-@action
-def grab_gripper():
-	"""
-	Closes the gripper to grab something.
-
-	Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
-	"""
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
-
-@action
-def open_gripper(callback = None):
-        return [genom_request("pr2SoftMotion", 
-				"GripperGrabRelease", 
-				["OPEN"],
-				wait_for_completion = False if callback else True,
-				callback = callback)]
-
-@action
-def close_gripper(callback = None):
-        return [genom_request("pr2SoftMotion", 
-				"GripperGrabRelease", 
-				["CLOSE"],
-				wait_for_completion = False if callback else True,
-				callback = callback)]
-
 
 @action
 def rightarmgoto(posture, obj, support = 'HRP2TABLE', use_cartesian = 'GEN_FALSE'):
