@@ -16,7 +16,10 @@ from helpers.abspose import *
 from helpers.spark_replace import *
 from actions.nav_line import *
 from actions.nav import *
-
+from actions.place import *
+from actions.give import *
+from actions.postures import *
+from actions.rotate import *
 
 def getplaces():
 	f = open('../share/novela_places.json','r')
@@ -30,7 +33,7 @@ def getpostures():
 
 
 def getpr2():
-	return ActionPerformer('pr2c2', 1235)
+	return ActionPerformer(['pr2c2', 'pr2c1'], 1235)
 
 #logger.info("*** Novela will rock! ***")
 
@@ -43,7 +46,24 @@ if __name__=="__main__":
 	if (len(sys.argv) > 1):
 
 		robot = getpr2()
+		symbolic_places = getplaces()
 		print (sys.argv[1])
+
+		if sys.argv[1] == 'PickNavPlace':
+			print("####### PICK NAV AND PLACE #######")
+
+			robot.execute(pick, 'GREY_TAPE', 'IKEA_SHELF')
+			robot.execute(nav_line, -0.2)
+			robot.execute(rdytonav)
+			robot.execute(rotation, 3.14)
+			robot.execute(goto, symbolic_places["TEST"])
+			robot.execute(manip_conf)
+			robot.execute(nav_line, 0.2)
+			res = robot.execute(getabspose,'PLACEMAT_BLUE')
+			ans = res[1]
+			x, y, z = float(ans[3]), float(ans[4]), float(ans[5])
+			robot.execute(place, 'GREY_TAPE', 'HRP2TABLE', x, y, z)
+	
 
 		if sys.argv[1] == 'Basket':
 			print("####### GAMES - BASKET #######")
@@ -56,8 +76,8 @@ if __name__=="__main__":
 			while j < i:
 
 				# Where is the human?
-				robot.execute(getabspose, 'HERAKLES_HUMAN1', 'Pelvis')
-				x, y, z = setabspose()
+				ok, res = robot.execute(getabspose, 'HERAKLES_HUMAN1', 'Pelvis')
+				x, y, z = sparkcoords2xyz(res)
 
 				# Evaluation of the distance that he is moved
 				delta_x = x - x_prec
@@ -90,8 +110,8 @@ if __name__=="__main__":
 			
 			print("####### MULTI NAV #######")
 			reached_place = False
-			destinations = ["SHELF", "TABLE"]	
-			
+			destinations = ["JARDIN_ENTER_OUT", "JARDIN_ENTER_IN", "AUDIENCE_WATCHING", "COUR_EXIT_IN", "COUR_EXIT_OUT"]	
+			state = 0			
 			# Definition of the call back
 			def cb(status, result):
 				global state, reached_place, destinations
@@ -102,10 +122,16 @@ if __name__=="__main__":
 
 			while state < len(destinations):
 				print("Going to " + destinations[state])
-				robot.execute(nav.goto, symbolic_places[destinations[state]], cb)
+				robot.execute(goto, symbolic_places[destinations[state]], cb)
+				if ("ENTER_OUT" in destinations[state]) or ("EXIT_IN" in destinations[state]):
+					robot.execute(rdytonav)
+				elif ("ENTER_IN" in destinations[state]) or ("EXIT_OUT" in destinations[state]):
+					robot.execute(manip_conf)
+				else:
+						pass
 				while not reached_place:
 					time.sleep(0.1)
 
-			reached_place = False
+				reached_place = False
 
 	robot.close()
