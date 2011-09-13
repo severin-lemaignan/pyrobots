@@ -4,10 +4,6 @@ import pypoco
 import logging; logger = logging.getLogger("novela." + __name__)
 logger.setLevel(logging.DEBUG)
 
-
-from helpers.saveans import *
-from helpers.rosnode_list import *
-
 class ActionPerformer:
 
 	def __init__(self, host, port, use_ros = True):
@@ -71,9 +67,6 @@ class ActionPerformer:
 
 		logger.info("Execution done.")
 		logger.debug(str(rqst))
-		
-		# We are save the answer of the rqst if you want use it for the next action		
-		saveans(rqst)		
 
 	def _execute_ros(self, action):
 
