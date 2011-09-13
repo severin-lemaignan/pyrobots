@@ -1,4 +1,27 @@
+import logging; logger = logging.getLogger("novela." + __name__)
+logger.setLevel(logging.DEBUG)
+
 from action import genom_request
+
+class ROSPositionKeeper:
+	def __init__(self):
+	    import roslib; roslib.load_manifest('novela_actionlib')
+	    import rospy
+	    from tf import TransformListener
+
+	    self.tf = TransformListener()
+	
+	    self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
+
+	def getabspos(self, frame):
+	    if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
+        	    t = self.tf.getLatestCommonTime(frame, "/map")
+		    position, quaternion = self.tf.lookupTransform(frame, "/map", t)
+		    return dict(zip(["x","y","z","qx","qy","qz","qw"], position + quaternion))
+	    logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
+	    return None
+
+_rosposition = None
 
 def getabspose(object_name):
 
@@ -19,16 +42,10 @@ def mypose():
     Returns the current robot base pose in the map frame as a dictionary with
     [x,y,z,qx,qy,qz,qw].
     """
-    import rospy
-    from tf import TransformListener
-
-    mytf = TransformListener()
-
-    mytf.frameExists("/base_link") and mytf.frameExists("/map"):
-            t = mytf.getLatestCommonTime("/base_link", "/map")
-            position, quaternion = mytf.lookupTransform("/base_link", "/map", t)
-            return dict(zip(["x","y","z","qx","qy","qz","qw"], position + quaternion))
-    return None
+    global _rosposition
+    if not _rosposition:
+	_rosposition = ROSPositionKeeper()	
+    return _rosposition.getabspos("/base_link")
     
     
 def isin(point,polygon):
