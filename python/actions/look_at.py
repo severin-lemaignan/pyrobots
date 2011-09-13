@@ -68,7 +68,7 @@ def track(place):
 ###############################################################################
 
 @action
-def track_xyz(x,y,z, frame = "/map"):
+def track_xyz(x,y,z, frame = "/map", wait_for_completion = False):
     """ Tracks a position in space at via pr2SoftMotion.
 	
 	This is a background action. Can be cancelled with stop_tracking .
@@ -83,7 +83,7 @@ def track_xyz(x,y,z, frame = "/map"):
         genom_request(	"pr2SoftMotion",
             "HeadTrack",
             [x,y,z,frame],
-	    wait_for_completion = False
+	    wait_for_completion
         )
     ]
 
@@ -168,14 +168,45 @@ def glance_to(place, frame='/map'):
         head_tilt = getjoint('head_tilt_joint')
         head_pan = getjoint('head_pan_joint')
 
-        actions = [
-                genom_request("pr2SoftMotion", "MoveHead",
-                         [ place['x'], place['y'], place['z'], frame ]
-                        ),
+	actions = look_at_xyz(place['x'], place['y'], place['z'], frame)
+
+	actions += [
                 wait(2),
-                genom_request("pr2SoftMotion", "GotoQ",
+                genom_request("pr2SoftMotion", "GotoQ", 
                         ["HEAD", 0, 0.0, head_pan,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                         )
                 ]
         return actions
+
+###############################################################################
+
+@action
+def sweep_look(amplitude = 120):
+	""" Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
+	
+	:param amplitude: Number of degrees of the sweeping head movement
+	"""
+	import math
+	actions =[]
+	
+	amplitude_rd = math.radians(float(amplitude))
+	
+	head_tilt = getjoint('head_tilt_joint')
+	head_pan = getjoint('head_pan_joint')
+
+	actions +=[
+		genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, 0.5, 1.0, 1.0]),
+		genom_request("pr2SoftMotion", "GotoQ",
+			["HEAD", 0, 0.0, head_pan + amplitude_rd/2,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			),
+		genom_request("pr2SoftMotion", "GotoQ",
+			["HEAD", 0, 0.0, head_pan - amplitude_rd/2,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			),
+		genom_request("pr2SoftMotion", "SetTimeScale",[1.0]*5),
+		genom_request("pr2SoftMotion", "GotoQ", 
+			["HEAD", 0, 0.0, head_pan,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+			)
+		]
+
+	return actions
 
