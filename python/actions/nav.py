@@ -7,6 +7,8 @@ import rospy
 import actionlib
 import move_base_msgs.msg
 
+from helpers.cb import *
+
 from action import action, ros_request
 
 
@@ -121,11 +123,6 @@ def cancel():
 
 
 ###############################################################################
-
-def nop(void):
-	""" An useless function, when we do not care about the callback
-	"""	
-	pass
 
 @action
 def carry(target, callback = None):
