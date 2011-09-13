@@ -18,13 +18,7 @@ from helpers.spark_replace import *
 from action import *
 from actions.nav import *
 from actions.give import *
-from actions.postures import *
-
-def getpostures():
-	f = open('../share/pr2_postures.json','r')
-	json_data=f.read()
-	return json.loads(json_data)
-
+from actions.configuration import *
 
 def getpr2():
 	return ActionPerformer(['pr2c2', 'pr2c1'], 1235)
