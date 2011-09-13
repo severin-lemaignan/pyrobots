@@ -10,6 +10,13 @@ def release_gripper():
         return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
 
 @action
+def grab_gripper():
+	"""
+	Like gripper_open, except it waits util it senses some effort on the gripper force sensors.
+	"""
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
+
+@action
 def open_gripper():
         return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["OPEN"])]
 
