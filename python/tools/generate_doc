@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import sys
-from actions import nav, look_at, give, configuration, glance_to
+from actions import nav, look_at, manipulation, configuration, glance_to
 
 def parse_docstring(doc):
 	""" Parses the doc string, and return the doc without :param *:

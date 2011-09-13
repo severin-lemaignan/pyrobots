@@ -17,7 +17,8 @@ from helpers.spark_replace import *
 
 from action import *
 from actions.nav import *
-from actions.give import *
+from actions.look_at import *
+from actions.manipulation import *
 from actions.configuration import *
 
 def getpr2():
@@ -93,6 +94,19 @@ if __name__=="__main__":
 				x_prec, y_prec = x, y
 				j += 1
 		
+
+		if sys.argv[1] == 'carry':
+			
+			print("####### CARRY #######")
+			robot.execute(carry, symbolic_places["HQ"])
+			robot.execute(basicgrab)
+			robot.execute(carry, symbolic_places["TABLE"])
+			robot.execute(basicgive)
+			robot.execute(track, symbolic_places["AUDIENCE"])
+			robot.execute(carry, symbolic_places["AUDIENCE_WATCHING"])
+			robot.execute(stop_tracking)
+			robot.execute(sweep_look)
+			robot.execute(carry, symbolic_places["CENTER"])
 
 		if sys.argv[1] == 'Multi_nav':
 			
