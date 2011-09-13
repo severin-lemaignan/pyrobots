@@ -19,12 +19,7 @@ class ActionPerformer:
 		if use_ros:
 			import roslib; roslib.load_manifest('novela_actionlib')
 			import rospy
-			node_list = rosnode_list('novela_actionlib')
-			for node in node_list:
-				if not node == "novela_actionlib\n":
-					rospy.init_node('novela_actionlib')
-				else:
-					pass
+			rospy.init_node('novela_actionlib')
 			import actionlib
 			from actionlib_msgs.msg import GoalStatus
 			self.GoalStatus = GoalStatus
