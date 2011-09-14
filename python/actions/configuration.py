@@ -50,11 +50,12 @@ def setpose(posture, part = None, callback = None):
     Like gotoposture except it does not plan (no collision avoidance)
     
     :param posture: a posture, ie, a dictionary built as follow:
-    <ul>
-     <li>Key <b>RARM</b>: array of 7 joint angles for the right arm, in radians,</li>
-     <li>Key <b>LARM</b>: array of 7 joint angles for the left arm, in radians,</li>
-     <li>Key <b>TORSO</b>: the height of the torso ([0-30]), in centimeters,</li>
-     <li>Key <b>HEAD</b>: array of pan and tilt values, in radians,</li>
+    
+      * Key '''RARM''': array of 7 joint angles for the right arm, in radians,
+      * Key '''LARM''': array of 7 joint angles for the left arm, in radians,
+      * Key '''TORSO''': the height of the torso ([0-30]), in centimeters,
+      * Key '''HEAD''': array of pan and tilt values, in radians,
+
     :param part: (optional) force only a certain part of the PR2 to execute to posture.
     Allowed values: 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD'
     :param callback: (optional) If given, the action is non-blocking, and the callback is
@@ -77,7 +78,7 @@ def setpose(posture, part = None, callback = None):
     try:
         lq1, lq2, lq3, lq4, lq5, lq6, lq7 = posture['LARM']
         if not forced_part:
-            if part = 'RARM':
+            if part == 'RARM':
                 part = 'ARMS'
             else:
                 part = 'LARM'
@@ -87,7 +88,7 @@ def setpose(posture, part = None, callback = None):
     try:
         torso = posture['TORSO']
         if not forced_part:
-            if part = 'ARMS':
+            if part == 'ARMS':
                 part = 'PR2NOHEAD'
             elif not part:
                 part = 'TORSO'
@@ -99,7 +100,7 @@ def setpose(posture, part = None, callback = None):
     try:
         pan, tilt = posture['HEAD']
         if not forced_part:
-            if part = 'PR2NOHEAD':
+            if part == 'PR2NOHEAD':
                 part = 'PR2'
             elif not part:
                 part = 'HEAD'
