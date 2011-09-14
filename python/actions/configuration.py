@@ -21,9 +21,19 @@ def setpose(posture, part = None, collision_avoidance = False, obj = 'NO_NAME', 
 
     :param part: (optional) force only a certain part of the PR2 to execute to posture.
     Allowed values: 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD'
+    :param collision_avoidance: (optional), If true, the robot will be consider obstacles 
+    in its environment. If true, you have to precise part = 'RARM'.
+    :param obj: (optional) precise which objet the robot has to avoid during the movement. 
+    You can give only one object.
+    :param support: (optional precise which support the robot has to avoid during the movement.
+    You can give only one support.
     :param callback: (optional) If given, the action is non-blocking, and the callback is
     invoked at the activity completion.
     """
+
+    if collision_avoidance and not part == 'RARM':
+	raise RobotError("Can't use collision avoidance with other part than RARM")
+
     if part and part not in ['RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
 	print("'Go to posture raw' for part " + part + " is not implemented.")
 
@@ -73,17 +83,112 @@ def setpose(posture, part = None, collision_avoidance = False, obj = 'NO_NAME', 
          pan, tilt= 0.0, 0.0
 
 
-    actions = [
-	genom_request(
-            "pr2SoftMotion", 
-            "GotoQ",
-    		[forced_part if forced_part else part,
-        	0,
-        	torso, pan, tilt, 0.0,
-    	    	rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
-    		lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
-       		wait_for_completion = False if callback else True,
-	    	callback = callback)
-    ]
+    if not collision_avoidance:
+	    actions = [
+		genom_request(
+            		"pr2SoftMotion", 
+            		"GotoQ",
+    			[forced_part if forced_part else part,
+        		0,
+        		torso, pan, tilt, 0.0,
+    	    		rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
+    			lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
+       			wait_for_completion = False if callback else True,
+	    		callback = callback)
+    		]
+
+    else: #collision_avoidance == True
+	    actions = [
+		genom_request(
+			"mhp",
+			"ArmPlanTask",
+    	 		[0,
+    	 		'GEN_TRUE',
+		    	 'MHP_ARM_TAKE_TO_FREE',
+    	 		0,
+    	 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    	 		rq1, rq2, rq3, rq4, rq5, rq6, rq7,
+    	 		obj,
+    	 		support,
+    	 		'NO_NAME',
+    	 		'GEN_FALSE',
+    	 		0,
+    	 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
+    	 		0, # Rotation type
+    	 		0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), # x y z rx ry rz
+        
+		genom_request("mhp", "ArmSelectTraj", [0]),
+        	genom_request("pr2SoftMotion", 
+			"TrackQ",['mhpArmTraj', 'PR2SM_TRACK_POSTER', part],
+			wait_for_completion = False if callback else True,
+			callback = callback)
+	    ]
+
     return actions
 
+def manipose(nohead = True, callback = None):
+	'''
+	Quick method to set the PR2 joints in manip configuration. 
+	It's useful when the robot to handle objects in in free spaces.
+
+	:param no_head: (optional) If true, only arms and torso will set a new configuration.
+	Very useful if you track an object.
+	:param callback: (optional) If given, the action is non-blocking, and the callback is
+	invoked at the activity completion.
+
+	'''
+	if nohead:
+		part = 'PR2NOHEAD'
+	else:
+		part = 'PR2'
+	
+	pose = postures.read()
+	posture = pose['MANIP']
+	
+	return setpose(posture, part, callback)
+
+def restpose(nohead = True, callback = None):
+	'''
+	Quick method to set the PR2 joints in rest configuration. 
+	You have the choice with three rest configuration. This choice is random.
+	
+	:param no_head: (optional) If true, only arms and torso will set a new configuration.
+	Very useful if you track an object.
+	:param callback: (optional) If given, the action is non-blocking, and the callback is
+	invoked at the activity completion.
+
+	'''
+
+
+	if nohead:
+		part = 'PR2NOHEAD'
+	else:
+		part = 'PR2'
+
+	n = random.randint(1,3)
+	pose = postures.read()
+	posture = pose['REST' + str(n)]
+
+	return setpose(posture, part, callback)
+
+def tuckedpose(callback = None, nohead = True):
+	'''
+	Quick method to set the PR2 joints in rest configuration. 
+	You have the choice with three rest configuration. This choice is random.
+
+	:param no_head: (optional) If true, only arms and torso will set a new configuration.
+	Very useful if you track an object
+	:param callback: (optional) If given, the action is non-blocking, and the callback is
+	invoked at the activity completion.
+
+	'''
+
+	if nohead:
+		part = 'PR2NOHEAD'
+	else:
+		part = 'PR2'
+
+	pose = postures.read()
+	posture = pose['TUCKED']
+
+	return setpose(posture, part, callback)
