@@ -71,36 +71,6 @@ def goto(target, callback = None):
 			callback = callback
 		)] # REturn a non-blocking action. Useful to be able to cancel it later!
 
-	
-###############################################################################
-@action
-def gocloseto (x, y, theta, callback = None):
-	
-	client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
-	
-	if not client_wait_for_server():
-		print ("Could not connect to the ROS client ! Aborting Action")
-		return
-		
-	goal = move_base_msgs.msg.MoveBaseGoal
-	
-	goal.target_pose.header.frame_id = 'base_link'
-	goal.target_pose.header.stamp = rospy.Time.now();
-
-	goal.target_pose.pose.position.x = x
-	goal.target_pose.pose.position.y = y
-
-
-	goal.target_pose.pose.orientation.z = math.sin(theta/2)
-	goal.target_pose.pose.orientation.w = math.cos(theta/2)
-
-	return [ros_request(client,
-			goal,
-			wait_for_completion = False if callback else True,
-			callback = callback
-		)]
-
-
 ###############################################################################
 
 @action
