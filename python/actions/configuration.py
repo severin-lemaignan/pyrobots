@@ -1,53 +1,14 @@
 import random
 from exception import RobotError
 from action import action, genom_request
-from helpers import trajectory
-
-
-@action
-def rightarmgoto(posture, obj, support = 'HRP2TABLE', use_cartesian = 'GEN_FALSE'):
-	return gotoposture(posture, obj, 'RARM', support, use_cartesian)
+from helpers import trajectory, postures
 
 @action
-def gotoposture(posture, obj, part = 'RARM', support = 'HRP2TABLE', use_cartesian = 'GEN_FALSE'):
-    """ Set a posture taking into account
-	collisions.
-    """
-
-    if part not in ['RARM', 'LARM']:
-	print("'Go to' for part " + part + " is not implemented.")
-
-    print (posture)
-    q1, q2, q3, q4, q5, q6, q7 = posture
-    actions = [
-	genom_request("mhp", "ArmPlanTask",
-    	 [0,
-    	 'GEN_TRUE',
-    	 'MHP_ARM_TAKE_TO_FREE',
-    	 0,
-    	 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    	 q1, q2, q3, q4, q5, q6, q7,
-    	 obj,
-    	 support,
-    	 'NO_NAME',
-    	 use_cartesian,
-    	 0,
-    	 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
-    	 0, # Rotation type
-    	 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), # x y z rx ry rz
-        
-	genom_request("mhp", "ArmSelectTraj", [0]),
-        genom_request("pr2SoftMotion", "TrackQ",['mhpArmTraj', 'PR2SM_TRACK_POSTER', part])
-    ]
-
-    return actions
-
-@action
-def setpose(posture, part = None, callback = None):
+def setpose(posture, part = None, collision_avoidance = False, obj = 'NO_NAME', support = 'NO_NAME',callback = None):
     """
     Set the PR2 joints in a given configuration.
 
-    Like gotoposture except it does not plan (no collision avoidance)
+    Set a posture taking or not (depend on collision_avoidance state) into account collisions.
    
     If posture = {} and part = 'PR2', all parameters take 0 for value
  
