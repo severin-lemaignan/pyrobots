@@ -7,10 +7,10 @@ def parse_docstring(doc):
 	""" Parses the doc string, and return the doc without :param *:
 	but with a list of params and their associated doc.
 	"""
-	doc = " ".join([(("[[#" + anchors[word] + "|" + word + "]]") if word in anchors else word) for word in doc.split()])
+	doc = " ".join([(("[[#" + anchors[word] + "|" + word + "]]") if word in anchors else word) for word in doc.split(' ')])
 	r = doc.split(":param ")
 	doc = r[0]
-	params = [param.split(':') for param in r[1:]]
+	params = [param.split(':',1) for param in r[1:]]
 
 	return (doc, params)
 
