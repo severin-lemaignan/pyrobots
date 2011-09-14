@@ -48,7 +48,9 @@ def setpose(posture, part = None, callback = None):
     Set the PR2 joints in a given configuration.
 
     Like gotoposture except it does not plan (no collision avoidance)
-    
+   
+    If posture = {} and part = 'PR2', all parameters take 0 for value
+ 
     :param posture: a posture, ie, a dictionary built as follow:
     
       * Key '''RARM''': array of 7 joint angles for the right arm, in radians,
@@ -61,7 +63,7 @@ def setpose(posture, part = None, callback = None):
     :param callback: (optional) If given, the action is non-blocking, and the callback is
     invoked at the activity completion.
     """
-    if part not in ['RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
+    if part and part not in ['RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
 	print("'Go to posture raw' for part " + part + " is not implemented.")
 
     print (posture)
@@ -107,18 +109,18 @@ def setpose(posture, part = None, callback = None):
             else:
                 raise RobotError("Can not move only one arm or the torso and the head in one call. Please call gotopostureraw twice.")
     except KeyError:
-        torso = 0.0
+         pan, tilt= 0.0, 0.0
 
 
     actions = [
 	genom_request(
             "pr2SoftMotion", 
             "GotoQ",
-    		[    forced_part if forced_part else part,
-        		 0,
-        		 torso, pan, tilt, 0.0,
-    	    	 rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
-    		     lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
+    		[forced_part if forced_part else part,
+        	0,
+        	torso, pan, tilt, 0.0,
+    	    	rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
+    		lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
        		wait_for_completion = False if callback else True,
 	    	callback = callback)
     ]
