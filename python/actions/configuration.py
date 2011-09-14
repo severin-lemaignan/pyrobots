@@ -43,7 +43,7 @@ def gotoposture(posture, obj, part = 'RARM', support = 'HRP2TABLE', use_cartesia
     return actions
 
 @action
-def gotopostureraw(posture, part = None, callback = None):
+def setpose(posture, part = None, callback = None):
     """
     Set the PR2 joints in a given configuration.
 
