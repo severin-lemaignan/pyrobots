@@ -89,11 +89,11 @@ def basicgive():
 
     posture = postures.read()
     
-    actions = configuration.gotopostureraw(posture["PR2_RARM_GIVE"])
+    actions = configuration.setpose(["PR2_RARM_GIVE"])
     actions += release_gripper()
     actions += [wait(2)]
     actions += close_gripper(nop)
-    actions += configuration.gotopostureraw(posture["PR2_RARM_REST"])
+    actions += configuration.setpose(posture["PR2_RARM_REST"])
         
     return actions
 
@@ -105,9 +105,9 @@ def basicgrab():
     posture = postures.read()
     
     actions = open_gripper(nop)
-    actions += configuration.gotopostureraw(posture["PR2_RARM_GIVE"])
+    actions += configuration.setpose(posture["PR2_RARM_GIVE"])
     actions += grab_gripper()
-    actions += configuration.gotopostureraw(posture["PR2_RARM_REST"])
+    actions += configuration.setpose(posture["PR2_RARM_REST"])
         
     return actions
 
