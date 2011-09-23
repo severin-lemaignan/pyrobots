@@ -4,22 +4,32 @@ logger.setLevel(logging.DEBUG)
 from action import genom_request
 
 class ROSPositionKeeper:
-	def __init__(self):
-	    import roslib; roslib.load_manifest('novela_actionlib')
-	    import rospy
-	    from tf import TransformListener
+    def __init__(self):
+        self.isrosconfigured = True
+        
+        try:
+            import roslib; roslib.load_manifest('novela_actionlib')
+            import rospy
+            from tf import TransformListener
+        except ImportError: # Incorrect ROS setup!
+            self.isrosconfigured = False
+            return
+            
+        self.tf = TransformListener()
+    
+        self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
 
-	    self.tf = TransformListener()
-	
-	    self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
-
-	def getabspos(self, frame):
-	    if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
-        	    t = self.tf.getLatestCommonTime("/map", frame)
-		    position, quaternion = self.tf.lookupTransform("/map", frame, t)
-		    return dict(zip(["x","y","z","qx","qy","qz","qw"], position + quaternion))
-	    logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
-	    return None
+    def getabspos(self, frame):
+        if not self.isrosconfigured:
+            return None
+        
+        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
+            t = self.tf.getLatestCommonTime("/map", frame)
+            position, quaternion = self.tf.lookupTransform("/map", frame, t)
+            return dict(zip(["x","y","z","qx","qy","qz","qw"], position + quaternion))
+        
+        logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
+        return None
 
 _rosposition = None
 
@@ -44,7 +54,7 @@ def mypose():
     """
     global _rosposition
     if not _rosposition:
-	_rosposition = ROSPositionKeeper()	
+        _rosposition = ROSPositionKeeper()
     return _rosposition.getabspos("/base_link")
     
     
@@ -86,11 +96,16 @@ def isonstage(target):
     :param target: an object that responses to target["x"] and target["y"]
     """
     
+    if not target:
+        return False
+        
     from helpers import places
+    
     a = places.read()["STAGE_A"]
     b = places.read()["STAGE_B"]
     c = places.read()["STAGE_C"]
     d = places.read()["STAGE_D"]
+    
     poly = [(a["x"], a["y"]), (b["x"], b["y"]), (c["x"], c["y"]), (d["x"], d["y"])]
 
     point = (target["x"], target["y"])

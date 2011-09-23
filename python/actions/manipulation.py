@@ -11,37 +11,37 @@ used_plan_id = []
 
 @action
 def release_gripper():
-	"""
-	Opens the gripper to release something.
+    """
+    Opens the gripper to release something.
 
-	Like gripper_open, except it waits until it senses some effort on the gripper force sensors.
-	"""
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
+    Like gripper_open, except it waits until it senses some effort on the gripper force sensors.
+    """
+    return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
 
 @action
 def grab_gripper():
-	"""
-	Closes the gripper to grab something.
+    """
+    Closes the gripper to grab something.
 
-	Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
-	"""
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
+    Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
+    """
+    return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
 
 @action
 def open_gripper(callback = None):
-        return [genom_request("pr2SoftMotion", 
-				"GripperGrabRelease", 
-				["OPEN"],
-				wait_for_completion = False if callback else True,
-				callback = callback)]
+    return [genom_request("pr2SoftMotion", 
+            "GripperGrabRelease", 
+            ["OPEN"],
+            wait_for_completion = False if callback else True,
+            callback = callback)]
 
 @action
 def close_gripper(callback = None):
-        return [genom_request("pr2SoftMotion", 
-				"GripperGrabRelease", 
-				["CLOSE"],
-				wait_for_completion = False if callback else True,
-				callback = callback)]
+    return [genom_request("pr2SoftMotion", 
+            "GripperGrabRelease", 
+            ["CLOSE"],
+            wait_for_completion = False if callback else True,
+            callback = callback)]
 
 
 def getplanid():
@@ -62,18 +62,18 @@ def pick(obj, use_cartesian = "GEN_FALSE"):
 
     # Plan trajectory to object and execute it
     actions += [
-	genom_request("mhp", "ArmPlanTask",
-    	    [0,
-    	    'GEN_TRUE',
-    	    'MHP_ARM_PICK_GOTO',
-    	    0,
-    	    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    	    obj,
-    	    'NO_NAME',
-    	    'NO_NAME',
-    	    use_cartesian,
-    	    0,
-    	    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+    genom_request("mhp", "ArmPlanTask",
+            [0,
+            'GEN_TRUE',
+            'MHP_ARM_PICK_GOTO',
+            0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            obj,
+            'NO_NAME',
+            'NO_NAME',
+            use_cartesian,
+            0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
         genom_request("mhp", "ArmSelectTraj", [0]),
         genom_request("pr2SoftMotion", "TrackQ", ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM'])
     ]
