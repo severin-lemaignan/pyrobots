@@ -41,6 +41,8 @@ class NovelaCommander:
         self.poses = postures.read()
         self.robot = ActionPerformer(['pr2c2', 'pr2c1'], 1235)
         
+        self.istracking = False
+        
         self.widgets = gtk.glade.XML('ui/novela.glade',"novela_main")
         events = { 'delete': self.delete,
                    'stopnav': self.stopnav,
@@ -49,7 +51,12 @@ class NovelaCommander:
                    'setpose': self.setpose,
                    'tuckedpose': self.tuckedpose,
                    'manippose': self.manippose,
-                   'restpose': self.restpose}
+                   'restpose': self.restpose,
+                   'look': self.look,
+                   'glance': self.glance,
+                   'toggletracking': self.toggletracking,
+                   'give': self.give,
+                   'grab': self.grab}
                    
         self.widgets.signal_autoconnect(events)
         
@@ -57,6 +64,9 @@ class NovelaCommander:
         
         self.setplaces(self.widgets.get_widget("places_combobox1"))
         self.setplaces(self.widgets.get_widget("places_combobox2"))
+        self.setplaces(self.widgets.get_widget("places_combobox3"))
+        self.setplaces(self.widgets.get_widget("places_combobox4"))
+        self.setplaces(self.widgets.get_widget("places_combobox5"))
         
         self.setpostures(self.widgets.get_widget("poses_combobox"))
         
@@ -121,6 +131,33 @@ class NovelaCommander:
         self.robot.execute(configuration.manipose)
     def restpose(self, source=None, event=None):
         self.robot.execute(configuration.restpose)
+    
+    def look(self, source=None, event=None):
+        dest = self.widgets.get_widget("places_combobox3").get_active_text()
+        self.robot.execute(look_at.look_at, self.places[dest])
+        
+    def glance(self, source=None, event=None):
+        dest = self.widgets.get_widget("places_combobox4").get_active_text()
+        self.robot.execute(look_at.glance_to, self.places[dest])
+        
+    def toggletracking(self, source=None, event=None):
+        if self.istracking:
+            self.istracking = False
+            self.widgets.get_widget("places_combobox5").set_sensitive(True)
+            self.widgets.get_widget("start_tracking_button").set_label("Start")
+            self.robot.execute(look_at.stop_tracking)
+        else:
+            self.istracking = True
+            dest = self.widgets.get_widget("places_combobox5").get_active_text()
+            self.widgets.get_widget("places_combobox5").set_sensitive(False)
+            self.widgets.get_widget("start_tracking_button").set_label("Stop") 
+            self.robot.execute(look_at.track, self.places[dest])
+    
+    def grab(self, source=None, event=None):
+        self.robot.execute(manipulation.basicgrab)
+    
+    def give(self, source=None, event=None):
+        self.robot.execute(manipulation.basicgive)
 
        
 if __name__ == '__main__':
