@@ -73,7 +73,7 @@ if __name__=="__main__":
 				delta_y = y - y_prec
 
 				print("#######  DELTA_X AND DELTA_Y #######")
-				print delta_x, delta_y
+				print(delta_x, delta_y)
 
 				# Mirror moving of the robot
 				if (((delta_x > 0.2) or (delta_x < -0.2)) and (delta_y > 0.2) and (delta_y < -0.2)):
