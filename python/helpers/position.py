@@ -3,6 +3,8 @@ logger.setLevel(logging.DEBUG)
 
 from action import genom_request
 
+HUMAN = "XAVIER_HUMAN"
+
 class ROSPositionKeeper:
     def __init__(self):
         self.isrosconfigured = True
@@ -56,7 +58,14 @@ def mypose():
     if not _rosposition:
         _rosposition = ROSPositionKeeper()
     return _rosposition.getabspos("/base_link")
-    
+
+def gethumanpose():
+    # Where is the human?
+	ok, res = robot.execute(getabspose, HUMAN, 'Pelvis')
+	x, y, z = sparkcoords2xyz(res)
+    return {"x":x, "y":y, "z":z, "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
+
+   
     
 def isin(point,polygon):
     """
