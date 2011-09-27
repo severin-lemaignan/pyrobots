@@ -61,8 +61,8 @@ def mypose():
 
 def gethumanpose():
     # Where is the human?
-	ok, res = robot.execute(getabspose, HUMAN, 'Pelvis')
-	x, y, z = sparkcoords2xyz(res)
+    ok, res = robot.execute(getabspose, HUMAN, 'Pelvis')
+    x, y, z = sparkcoords2xyz(res)
     return {"x":x, "y":y, "z":z, "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
 
    
