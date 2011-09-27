@@ -22,7 +22,7 @@ from actions.manipulation import *
 from actions.configuration import *
 
 def getpr2():
-	return ActionPerformer(['pr2c2', 'pr2c1'], 1235)
+	return ActionPerformer(['pr2c2', 'pr2c1'], 9472)
 
 #logger.info("*** Novela will rock! ***")
 

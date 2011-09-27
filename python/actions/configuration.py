@@ -59,7 +59,7 @@ def setpose(posture, part = None, collision_avoidance = False, obj = 'NO_NAME', 
         lq1, lq2, lq3, lq4, lq5, lq6, lq7 = [0.0] * 7
 
     try:
-        torso = posture['TORSO']
+        [torso] = posture['TORSO']
         if not forced_part:
             if part == 'ARMS':
                 part = 'PR2NOHEAD'
@@ -169,7 +169,9 @@ def restpose(nohead = True, callback = None):
 
     n = random.randint(1,3)
     pose = postures.read()
-    posture = pose['REST' + str(n)]
+    #TODO: only one REST pose?
+    #posture = pose['REST' + str(n)]
+    posture = pose['REST']
 
     return setpose(posture, part, callback)
 

@@ -10,8 +10,8 @@ pygtk.require('2.0')
 import gtk
 import gtk.glade
 
-#from lowlevel import ActionPerformer
-from dummylowlevel import ActionPerformer # For testing purposes
+from lowlevel import ActionPerformer
+#from dummylowlevel import ActionPerformer # For testing purposes
 
 from helpers import places, postures
 
@@ -39,7 +39,7 @@ class NovelaCommander:
         
         self.places = places.read()
         self.poses = postures.read()
-        self.robot = ActionPerformer(['pr2c2', 'pr2c1'], 1235)
+        self.robot = ActionPerformer(['pr2c2', 'pr2c1'], 9472)
         
         self.istracking = False
         
@@ -71,7 +71,8 @@ class NovelaCommander:
         self.setpostures(self.widgets.get_widget("poses_combobox"))
         
         self.widgets.get_widget("novela_main").show_all()
-    
+   
+ 
     def setplaces(self, combobox):
         
         p = sorted(self.places.keys())
@@ -100,7 +101,9 @@ class NovelaCommander:
             cb.add_attribute(cell, 'text', 0)
         
     def delete(self, source=None, event=None):
+	self.robot.close()
         gtk.main_quit()
+
     def test(self):
         print("Toto")
     def execute(self, source=None, event=None):
