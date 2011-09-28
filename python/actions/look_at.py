@@ -202,7 +202,7 @@ def glance_to(place, frame='/map'):
 ###############################################################################
 
 @action
-def sweep_look(amplitude = 120):
+def sweep_look(amplitude = 90, speed = 0.2):
     """ Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
     
     :param amplitude: Number of degrees of the sweeping head movement
@@ -215,7 +215,11 @@ def sweep_look(amplitude = 120):
     head_tilt = getjoint('head_tilt_joint')
     head_pan = getjoint('head_pan_joint')
 
+    #TODO: Retrieve the current speed limit to reset it afterwards!! Need a new pr2SoftMotion request
+    current_speed = 0.5
+
     actions +=[
+        genom_request("pr2SoftMotion", "SetSpeedLimit",[speed]),
         genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, 0.5, 1.0, 1.0]),
         genom_request("pr2SoftMotion", "GotoQ",
             ["HEAD", 0, 0.0, head_pan + amplitude_rd/2,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -226,7 +230,8 @@ def sweep_look(amplitude = 120):
         genom_request("pr2SoftMotion", "SetTimeScale",[1.0]*5),
         genom_request("pr2SoftMotion", "GotoQ", 
             ["HEAD", 0, 0.0, head_pan,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            )
+            ),
+        genom_request("pr2SoftMotion", "SetSpeedLimit",[current_speed]),
         ]
 
     return actions
