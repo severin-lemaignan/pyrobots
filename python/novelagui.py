@@ -119,7 +119,8 @@ class NovelaCommander:
         print("Carry")
         dest = self.widgets.get_widget("places_combobox1").get_active_text()
         
-        self.robot.execute(nav.carry, self.places[dest])
+        #self.robot.execute(nav.carry, self.places[dest])
+        self.robot.execute(nav.goto, self.places[dest])
     
     def dock(self, source=None, event=None):
         dest = self.widgets.get_widget("places_combobox2").get_active_text()
@@ -144,7 +145,7 @@ class NovelaCommander:
         dest = self.widgets.get_widget("places_combobox4").get_active_text()
         self.robot.execute(look_at.glance_to, self.places[dest])
 
-     def sweep(self, source=None, event=None):
+    def sweep(self, source=None, event=None):
         self.robot.execute(look_at.sweep_look)
        
     def toggletracking(self, source=None, event=None):
