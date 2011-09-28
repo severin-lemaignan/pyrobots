@@ -1,5 +1,9 @@
-from action import action, genom_request, ros_request, wait
+import logging; logger = logging.getLogger("novela." + __name__)
+logger.setLevel(logging.DEBUG)
+
+from action import action, genom_request, ros_request, background_task, wait
 from helpers.jointstate import getjoint
+from helpers import position
 
 ###############################################################################
 ###############################################################################
@@ -52,22 +56,34 @@ def track(place):
 
     This uses pr2SoftMotion.
 
-    This is a background action. Can be cancelled with stop_tracking .
+    This is a background action. Can be cancelled with cancel_track.
 
     :param place: a dictionary with the x,y,z position of objects in space.
               If a 'frame' key is found, use it as reference frame. Else
               the world frame '/map' is assumed.
     """
-    try:
-        frame = place['frame']
-    except KeyError:
-        frame = "/map"
+    target = place
+    target.setdefault("frame", "/map")
 
-    return track_xyz(place['x'], place['y'], place['z'], frame)
+    return [background_task(TrackAction, [target])]
+
+###############################################################################
+
+@action
+def trackhuman():
+    """ Tracks the human head.
+
+    This uses pr2SoftMotion.
+
+    This is a background action. Can be cancelled with cancel_track.
+
+    """
+    return [background_task(TrackAction, ["HUMANHEAD"])]
 
 ###############################################################################
 
 from threading import Thread
+import time
 
 class TrackAction(Thread):
     def __init__(self, robot, target):
@@ -76,53 +92,38 @@ class TrackAction(Thread):
         self.running = False
 
         self.robot = robot
-        self.target = target
+        self.targettoupdate = False
+        
+        if target == "HUMANHEAD":
+            self.targettoupdate = True
+        else: 
+            self.target = target
+
+    def updatetarget(self):
+        self.target = position.gethumanpose(self.robot, part = "HeadX")
 
     def run(self):
+	logger.info("Starting task " + self.__class__.__name__)
         self.running = True
 
         while self.running:
-            robot.execute(look_at, target)
-            time.sleep(1)
+            if self.targettoupdate:
+                self.updatetarget()
+            self.robot.execute(look_at, self.target)
+            time.sleep(0.2)
     
     def stop(self):
+	logger.info("Stopping task " + self.__class__.__name__)
         self.running = False
 
-
-@action
-def track_xyz(x,y,z, frame = "/map", wait_for_completion = False):
-    """ Tracks a position in space at via pr2SoftMotion.
-    
-    This is a background action. Can be cancelled with stop_tracking .
-
-    :param x: the x coordinate
-    :param y: the y coordinate
-    :param z: the z coordinate
-    :param frame: the frame in which coordinates are interpreted. By default, '/map'
-    """
-    print("Tracking " + str([x,y,z]) + " in " + frame)
-    actions = [
-        genom_request(	"pr2SoftMotion",
-            "HeadTrack",
-            [x,y,z,frame],
-        wait_for_completion
-        )
-    ]
-    return actions
 
 ###############################################################################
 
 @action
-def stop_tracking():
+def cancel_track():
     """ If running, interrupt a current track action.
     """
-    actions = [
-        genom_request(	"pr2SoftMotion",
-            "HeadTrack",
-            abort = True
-        )
-    ]
-    return actions
+    return [background_task(TrackAction, abort=True)]
 
 ###############################################################################
 

@@ -11,6 +11,7 @@ class ActionPerformer:
         self.servers, self.poco_modules = pypoco.discover(host, port)
 
         self._pending_pocolibs_requests = {}
+        self._pending_python_requests = {}
 
         if use_ros:
             import roslib; roslib.load_manifest('novela_actionlib')
@@ -67,6 +68,7 @@ class ActionPerformer:
 
         logger.info("Execution done.")
         logger.debug(str(rqst))
+	return rqst
 
     def _execute_ros(self, action):
         """ Execute a ros action.
@@ -96,7 +98,20 @@ class ActionPerformer:
                 print('Action succeeded')
             else:
                 print("Action failed!")
-    
+
+    def _execute_python(self, action):
+        
+        if action["abort"]:
+            self._pending_python_requests[action["class"]].stop()
+            logger.warning("Aborted Python background task " + action["class"].__name__)
+
+            return
+
+        logger.info("Starting Python background task " + action["class"].__name__ + " with params " + str(action["args"]))
+        instance = action["class"](self, *action["args"])
+        self._pending_python_requests[action["class"]] = instance
+	instance.start()
+        
     def _execute_special(self, action):
         if action["action"] == "wait":
             logger.info("Waiting for " + str(action["args"]))
@@ -111,17 +126,27 @@ class ActionPerformer:
     
         logger.debug(str(fn))	
         actions = fn(*args, **kwargs)
-        res = []
+        result = None
         if actions:
             logger.debug(str(actions))
             for action in actions:
                 logger.info("Executing " + str(action))
                 if action["middleware"] == "pocolibs":
-                    self._execute_pocolibs(action)
+                    res = self._execute_pocolibs(action)
+                    if res:
+                        result = res
                 elif action["middleware"] == "ros":
-                    self._execute_ros(action)
+                    res = self._execute_ros(action)
+                    if res:
+                        result = res
+                elif action["middleware"] == "python":
+                    res = self._execute_python(action)
+                    if res:
+                        result = res
                 elif action["middleware"] == "special":
-                    self._execute_special(action)
+                    res = self._execute_special(action)
+                    if res:
+                        result = res
                 else:
                     logger.warning("Unsupported middleware. Skipping the action.")
-
+        return res

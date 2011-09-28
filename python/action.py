@@ -13,6 +13,14 @@ def genom_request(module, request, args = None, wait_for_completion = True, abor
 	    "wait_for_completion": wait_for_completion,
 	    "callback": callback}
 
+def background_task(taskclass, args = None, wait_for_completion = True, abort = False, callback=None):
+	return {"middleware": "python",
+            "class": taskclass,
+            "args": args,
+	    "abort": abort,
+	    "wait_for_completion": wait_for_completion,
+	    "callback": callback}
+
 def ros_request(client, goal, wait_for_completion = True, callback = None):
 	return {"middleware": "ros",
             "client": client,
