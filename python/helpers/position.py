@@ -59,9 +59,9 @@ def mypose():
         _rosposition = ROSPositionKeeper()
     return _rosposition.getabspos("/base_link")
 
-def gethumanpose():
+def gethumanpose(human = HUMAN, part = 'Pelvis'):
     # Where is the human?
-    ok, res = robot.execute(getabspose, HUMAN, 'Pelvis')
+    ok, res = robot.execute(getabspose, human, part)
     x, y, z = sparkcoords2xyz(res)
     return {"x":x, "y":y, "z":z, "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
 
