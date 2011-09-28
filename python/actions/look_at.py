@@ -67,6 +67,28 @@ def track(place):
 
 ###############################################################################
 
+from threading import Thread
+
+class TrackAction(Thread):
+    def __init__(self, robot, target):
+        Thread.__init__(self)
+
+        self.running = False
+
+        self.robot = robot
+        self.target = target
+
+    def run(self):
+        self.running = True
+
+        while self.running:
+            robot.execute(look_at, target)
+            time.sleep(1)
+    
+    def stop(self):
+        self.running = False
+
+
 @action
 def track_xyz(x,y,z, frame = "/map", wait_for_completion = False):
     """ Tracks a position in space at via pr2SoftMotion.
