@@ -36,9 +36,9 @@ def goto(target, callback = None):
     """
     x = target['x']
     y = target['y']
-    z = target['z']
-    qx = target['qx']
-    qy = target['qy']
+    z = 0.0
+    qx = 0.0
+    qy = 0.0
     qz = target['qz']
     qw = target['qw']
     
