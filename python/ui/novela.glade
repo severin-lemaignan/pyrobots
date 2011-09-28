@@ -409,9 +409,6 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <widget class="GtkHBox" id="hbox6">
                     <property name="visible">True</property>
                     <child>
@@ -454,6 +451,28 @@
                       <packing>
                         <property name="padding">38</property>
                         <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkHButtonBox" id="hbuttonbox5">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkButton" id="sweeplook_button">
+                        <property name="label" translatable="yes">Sweep</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <signal name="clicked" handler="sweep_look"/>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
                       </packing>
                     </child>
                   </widget>

@@ -54,6 +54,7 @@ class NovelaCommander:
                    'restpose': self.restpose,
                    'look': self.look,
                    'glance': self.glance,
+                   'sweep_look': self.sweep,
                    'toggletracking': self.toggletracking,
                    'give': self.give,
                    'grab': self.grab}
@@ -142,7 +143,10 @@ class NovelaCommander:
     def glance(self, source=None, event=None):
         dest = self.widgets.get_widget("places_combobox4").get_active_text()
         self.robot.execute(look_at.glance_to, self.places[dest])
-        
+
+     def sweep(self, source=None, event=None):
+        self.robot.execute(look_at.sweep_look)
+       
     def toggletracking(self, source=None, event=None):
         if self.istracking:
             self.istracking = False
