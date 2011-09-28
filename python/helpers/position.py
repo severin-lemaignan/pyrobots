@@ -2,6 +2,7 @@ import logging; logger = logging.getLogger("novela." + __name__)
 logger.setLevel(logging.DEBUG)
 
 from action import genom_request
+from helpers import places
 
 HUMAN = "XAVIER_HUMAN"
 
@@ -59,13 +60,26 @@ def mypose():
         _rosposition = ROSPositionKeeper()
     return _rosposition.getabspos("/base_link")
 
-def gethumanpose(human = HUMAN, part = 'Pelvis'):
+def gethumanpose(robot, human = HUMAN, part = 'Pelvis'):
+    """
+    Head -> part="HeadX"
+    """
     # Where is the human?
-    ok, res = robot.execute(getabspose, human, part)
-    x, y, z = sparkcoords2xyz(res)
-    return {"x":x, "y":y, "z":z, "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
+    
+    raw = robot.execute(getabspose, [human, part])
+    ok, res = raw
+    yaw, pitch, roll, x, y, z = res
+    return {"x":float(x), "y":float(y), "z":float(z), "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
 
-   
+def poseof(object):
+    
+    p = places.read()
+
+    # Is it a known symbolic place?
+    if object in p.keys():
+        return p[object]
+    
+    # Is it a SPARK object?
     
 def isin(point,polygon):
     """
