@@ -4,7 +4,7 @@ from action import action, genom_request
 from helpers import trajectory, postures
 
 @action
-def setpose(posture, part = None, collision_avoidance = False, obj = 'NO_NAME', support = 'NO_NAME',callback = None):
+def setpose(posture, part = None, callback = None, collision_avoidance = False, obj = 'NO_NAME', support = 'NO_NAME'):
     """
     Set the PR2 joints in a given configuration.
 
