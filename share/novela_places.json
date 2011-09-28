@@ -135,14 +135,25 @@
 		"qw": 0.509
 	},
 	"HQ":{
-		"x": -0.05,
-		"y": -5,
+		"x": 0.21,
+		"y": -3.92,
 		"z": 0.0,
 		"qx": 0.0,
 		"qy": 0.0,
-		"qz": 0.951,
-		"qw": -0.309
+		"qz": 0.992,
+		"qw": -0.126
 	},
+    "HANGER_WATCHING":{
+		"x": 3.41,
+		"y": -2.76,
+		"z": 0.0,
+		"qx": 0.0,
+		"qy": 0.0,
+		"qz": 0.422,
+		"qw": 0.91
+	},
+
+
 	"LOOK_NOWHERE":{
 		"_comment":"A position, relative to base link, used to simply look straight",
 		"x": 1.0, 

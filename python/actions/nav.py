@@ -152,19 +152,19 @@ def carry(target, callback = None):
         if i_am_in:
             print("I'm in, I want to go out")
             # I'm in, I want to go out
-            actions += configuration.tucked(nop)
+            actions += configuration.tuckedpose(nop)
             actions += goto(places.read()["JARDIN_EXIT_IN"], callback)
-            actions += goto(places.read()["JARDIN_EXIT_OUT"], callback)
-            actions += configuration.manip(nop)
+            actions += goto(places.read()["HQ"], callback)
+            actions += configuration.manipose(nop)
             actions += goto(target, callback)
 
         else:
             print("I'm out, I want to go in")
             # I'm out, I want to go in
-            actions += configuration.tucked(nop)
+            actions += configuration.tuckedpose(nop)
             actions += goto(places.read()["JARDIN_ENTER_OUT"], callback)
             actions += goto(places.read()["JARDIN_ENTER_IN"], callback)
-            actions += configuration.manip(nop)
+            actions += configuration.manipose(nop)
             actions += goto(target, callback)
 
         return actions
