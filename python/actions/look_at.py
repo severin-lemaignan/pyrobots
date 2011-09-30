@@ -110,7 +110,8 @@ class TrackAction(Thread):
         while self.running:
             if self.targettoupdate:
                 self.updatetarget()
-            self.robot.execute(look_at, self.target)
+            if self.target:
+                self.robot.execute(look_at, self.target)
             time.sleep(0.2)
     
     def stop(self):

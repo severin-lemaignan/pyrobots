@@ -64,12 +64,21 @@ def gethumanpose(robot, human = HUMAN, part = 'Pelvis'):
     """
     Head -> part="HeadX"
     """
+    
+    epsilon = 0.5 # Min distance in meters from origin to be considered as 'in game'
     # Where is the human?
     
     raw = robot.execute(getabspose, [human, part])
     ok, res = raw
-    yaw, pitch, roll, x, y, z = res
-    return {"x":float(x), "y":float(y), "z":float(z), "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
+    if not ok:
+        # Object probably do not exist
+        return None
+    yaw, pitch, roll, x, y, z = [float(x) for x in res]
+    
+    if abs(x) < epsilon and abs(y) < epsilon and abs(z) < epsilon:
+        # Still at origin
+        return None
+    return {"x":x, "y":y, "z":z, "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
 
 def poseof(object):
     
