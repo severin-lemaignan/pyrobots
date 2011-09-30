@@ -169,9 +169,7 @@ def restpose(nohead = True, callback = None):
 
     n = random.randint(1,3)
     pose = postures.read()
-    #TODO: only one REST pose?
-    #posture = pose['REST' + str(n)]
-    posture = pose['REST']
+    posture = pose['REST' + str(n)]
 
     return setpose(posture, part, callback)
 

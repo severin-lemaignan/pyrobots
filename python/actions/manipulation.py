@@ -93,7 +93,6 @@ def basicgive():
     actions += release_gripper()
     actions += [wait(2)]
     actions += close_gripper(nop)
-    actions += configuration.setpose(posture["REST"])
         
     return actions
 
@@ -107,7 +106,6 @@ def basicgrab():
     actions = open_gripper(nop)
     actions += configuration.setpose(posture["GIVE"])
     actions += grab_gripper()
-    actions += configuration.setpose(posture["REST"])
         
     return actions
 
