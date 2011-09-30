@@ -85,6 +85,9 @@ def pick(obj, use_cartesian = "GEN_FALSE"):
 @action
 def basicgive():
     """ The ultra stupid basic GIVE: simply hand the object in front of the robot.
+    
+    After handing the object, the robot waits for someone to take it, and stay in
+    this posture.
     """
 
     posture = postures.read()
@@ -99,6 +102,9 @@ def basicgive():
 @action
 def basicgrab():
     """ The ultra stupid basic GRAB: simply take the object in front of the robot.
+
+    After handing its gripper, the robot waits for someone to put an object in it, 
+    and stay in this posture.
     """
 
     posture = postures.read()
