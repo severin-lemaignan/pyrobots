@@ -75,7 +75,7 @@ def gethumanpose(robot, human = HUMAN, part = 'Pelvis'):
         return None
     yaw, pitch, roll, x, y, z = [float(x) for x in res]
     
-    if abs(x) < epsilon and abs(y) < epsilon and abs(z) < epsilon:
+    if abs(x) < epsilon and abs(y) < epsilon:
         # Still at origin
         return None
     return {"x":x, "y":y, "z":z, "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
