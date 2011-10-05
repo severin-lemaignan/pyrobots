@@ -70,7 +70,7 @@ def track(place):
 ###############################################################################
 
 @action
-def trackhuman():
+def track_human():
     """ Tracks the human head.
 
     This uses pr2SoftMotion.
