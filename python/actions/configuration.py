@@ -4,7 +4,7 @@ from action import action, genom_request
 from helpers import trajectory, postures
 
 @action
-def setpose(posture, part = None, callback = None, collision_avoidance = False, obj = 'NO_NAME', support = 'NO_NAME'):
+def setpose(posture, callback = None, part = None, collision_avoidance = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
     Set the PR2 joints in a given configuration.
 
@@ -146,7 +146,7 @@ def manipose(nohead = True, callback = None):
     pose = postures.read()
     posture = pose['MANIP']
     
-    return setpose(posture, part, callback)
+    return setpose(posture, callback, part)
 
 @action
 def restpose(nohead = True, callback = None):
@@ -171,7 +171,7 @@ def restpose(nohead = True, callback = None):
     pose = postures.read()
     posture = pose['REST' + str(n)]
 
-    return setpose(posture, part, callback)
+    return setpose(posture, callback, part)
 
 @action
 def tuckedpose(callback = None, nohead = True):
@@ -194,4 +194,4 @@ def tuckedpose(callback = None, nohead = True):
     pose = postures.read()
     posture = pose['TUCKED']
 
-    return setpose(posture, part, callback)
+    return setpose(posture, callback, part)
