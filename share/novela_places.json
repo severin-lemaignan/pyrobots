@@ -113,6 +113,16 @@
                 "qz": -0.513,
                 "qw": 0.858
         },
+	"AUDIENCE_WATCHING_JARDIN":{
+		"_comment":"Place, near the proscenium, where to look at the audience from.",
+                "x": 2.01,
+                "y": -4.569,
+                "z": 0.6,
+                "qx": 0.0,
+                "qy": 0.0,
+                "qz": -0.513,
+                "qw": 0.858
+        },
 	"MONSTER_POSE":{
 		"_comment":"Place where the robot stands when he scaries Xavier",
                 "x": 4.47,
