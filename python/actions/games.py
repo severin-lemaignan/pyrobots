@@ -1,5 +1,79 @@
-from helpers import trajectory
-from action import action, genom_request, wait
+import logging; logger = logging.getLogger("novela." + __name__)
+from helpers import trajectory, position, cb
+from action import action, genom_request
+
+from actions.administration import wait
+
+import math
+
+def norm(vec):
+    return math.sqrt(vec[0] * vec[0] + vec[1] * vec[1])
+
+def ecart(posold, posnew, ref):
+   """
+   Returns the lateral displacement of 'posold' to 'posnew'
+   viewed from 'ref'.
+   
+   :param posold, posnew, ref: [x,y] 2D vectors
+   """
+   vectref = [posold[0] - ref[0], posold[1] - ref[1]]
+   vectnew = [posnew[0] - ref[0], posnew[1] - ref[1]]
+   orthoref = [-vectref[1], vectref[0]]
+   scal = orthoref[0] * vectnew[0] + orthoref[1] * vectnew[1]
+   orthoref = [orthoref[0] / norm(orthoref) * scal, orthoref[1] / norm(orthoref) * scal]
+   return orthoref[0]
+
+@action
+def basket(robot, poses):
+        from actions.configuration import setpose
+        j = 0
+        duration = 5 #in seconds
+
+        # Where is the human?
+	human = None
+	while not human:
+	        human = position.gethumanpose(robot)      
+		if not human:
+			logger.warning("HUMAN not detected!!!")
+			raw_input("Press enter to retry")
+		else:
+		    break
+	
+        oldhumpose = [human["x"], human["y"]]
+
+        robotpose = position.mypose()
+        refpose = [robotpose["x"], robotpose["y"]]
+
+	frequency = 5 #Hz
+
+        while j < duration * frequency:
+
+                # Where is the human?
+                human = position.gethumanpose(robot)
+
+                if not human:
+                    #Human at origin!
+                    logger.warning("HUMAN not detected anymore!!!")
+                    robot.execute(wait, 1/frequency)
+                    j += 1
+                    continue
+
+                newhumpose = [human["x"], human["y"]]
+
+                
+                # Evaluation of the distance that he is moved
+                delta = ecart(oldhumpose, newhumpose, refpose)
+                print(" Basket game: human delta = %.2d" % (delta))
+
+                # Mirror moving of the robot
+                if delta > 0.5:
+                   robot.execute(setpose, poses["TRASHGAME_LEFT"])
+                elif delta < -0.5:
+                   robot.execute(setpose, poses["TRASHGAME_RIGHT"])
+
+                robot.execute(wait, 1/frequency)
+
+                j += 1
 
 
 @action
