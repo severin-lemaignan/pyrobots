@@ -128,7 +128,10 @@ class NovelaCommander:
     
     def setpose(self, source=None, event=None):
         pose = self.widgets.get_widget("poses_combobox").get_active_text()
-        self.robot.execute(configuration.setpose, self.poses[pose])
+        self.robot.execute(configuration.setpose, 
+                           self.poses[pose]) 
+                           #part = "RARM",
+                           #collision_avoidance = True)
         
     def tuckedpose(self, source=None, event=None):
         self.robot.execute(configuration.tuckedpose)
