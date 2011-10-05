@@ -2,6 +2,7 @@ import logging; logger = logging.getLogger("novela." + __name__)
 logger.setLevel(logging.DEBUG)
 
 from action import action, genom_request
+from action import wait as basewait
 
 @action
 def setup_scenario(scenario):
@@ -12,4 +13,10 @@ def setup_scenario(scenario):
     """
     return [genom_request("spark", "LoadSce", scenario)]
 
+@action
+def wait(seconds):
+	""" This special action simply waits for a given amount of second before 
+	sending the next action.
+	"""
+	return [basewait(seconds)]
 
