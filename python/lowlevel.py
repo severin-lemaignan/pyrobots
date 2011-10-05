@@ -149,4 +149,4 @@ class ActionPerformer:
                         result = res
                 else:
                     logger.warning("Unsupported middleware. Skipping the action.")
-        return res
+        return result
