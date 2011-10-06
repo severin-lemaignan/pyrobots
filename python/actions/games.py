@@ -24,10 +24,10 @@ def ecart(posold, posnew, ref):
    return orthoref[0]
 
 @action
-def basket(robot, poses):
+def basket(robot, poses, duration = 5):
+        #duration in seconds
         from actions.configuration import setpose
         j = 0
-        duration = 5 #in seconds
 
         # Where is the human?
 	human = None
