@@ -95,91 +95,51 @@ def gym():
     move_9 = trajectory.Trajectory('speed_arms_swinging')	
 
     
-    actions = [
-		genom_request( 'pr2SoftMotion', 'GotoQ', 
-            		['PR2', 0] + move_1.initcoords() ),
-        	wait(0.2),
-                genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_1.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-        	wait(0.2),
-                genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_1.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                wait(0.2),
-        	genom_request( 'pr2SoftMotion', 'GotoQ', 
-                        ['PR2', 0] + move_2.initcoords() ),
-                wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_2.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-        	#wait(0.2),
-                genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_2.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                wait(0.2),
-        	genom_request( 'pr2SoftMotion', 'GotoQ', 
-                        ['PR2', 0] + move_3.initcoords() ),
-                wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_3.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-        	#wait(0.2),
-        	genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_3.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                wait(0.2),
-        	genom_request( 'pr2SoftMotion', 'GotoQ',
-                        ['PR2', 0] + move_4.initcoords() ),
-                wait(0.2),
-                genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_4.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                wait(0.2),
-        	genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_4.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                wait(0.2),
-                genom_request( 'pr2SoftMotion', 'GotoQ',
-                        ['PR2', 0] + move_5.initcoords() ),
-                wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_5.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                #wait(0.2),
-        	genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_5.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'GotoQ',
-                #        ['PR2', 0] + move_6.initcoords() ),
-                #wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_6.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                #wait(0.2),
-        	#genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_6.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                #wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'GotoQ',
-                #        ['PR2', 0] + move_7.initcoords() ),
-                #wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_7.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                #wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_7.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                #wait(0.2),
-                genom_request( 'pr2SoftMotion', 'GotoQ',
-                        ['PR2', 0] + move_8.initcoords() ),
-                wait(0.2),
-                genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_8.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                wait(0.2),
-        	genom_request( 'pr2SoftMotion', 'TrackQ',
-                       [ move_8.abspath(),"PR2SM_TRACK_FILE", "PR2"])
-                #wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'GotoQ',
-                #        ['PR2', 0] + move_9.initcoords() ),
-                #wait(0.2),
-                #genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_9.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                #wait(0.2),
-        	#genom_request( 'pr2SoftMotion', 'TrackQ',
-                #       [ move_9.abspath(),"PR2SM_TRACK_FILE", "PR2"]),
-                #wait(0.2)
-
-        ]
-    
+    actions = [	genom_request( 'pr2SoftMotion', 'GotoQ', 
+            		['PR2', 0] + move_1.initcoords() ) ] +\
+        	wait(0.2) +\
+               [ genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_1.abspath(),"PR2SM_TRACK_FILE", "PR2"])] +\
+        	wait(0.2) +\
+               [ genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_1.abspath(),"PR2SM_TRACK_FILE", "PR2"])] +\
+                wait(0.2) +\
+        	[ genom_request( 'pr2SoftMotion', 'GotoQ', 
+                        ['PR2', 0] + move_2.initcoords() )] +\
+                wait(0.2) +\
+                [genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_2.abspath(),"PR2SM_TRACK_FILE", "PR2"])] +\
+                wait(0.2) +\
+        	[genom_request( 'pr2SoftMotion', 'GotoQ', 
+                        ['PR2', 0] + move_3.initcoords() )] +\
+                wait(0.2) +\
+        	[genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_3.abspath(),"PR2SM_TRACK_FILE", "PR2"])] +\
+                wait(0.2) +\
+        	[genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + move_4.initcoords() )] +\
+                wait(0.2) +\
+                [genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_4.abspath(),"PR2SM_TRACK_FILE", "PR2"])] +\
+                wait(0.2) +\
+        	[genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_4.abspath(),"PR2SM_TRACK_FILE", "PR2"])] +\
+                wait(0.2) +\
+                [genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + move_5.initcoords() )] +\
+                wait(0.2) +\
+        	[genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_5.abspath(),"PR2SM_TRACK_FILE", "PR2"])]+\
+                wait(0.2) +\
+               [genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + move_8.initcoords() )] +\
+                wait(0.2)+\
+                [genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_8.abspath(),"PR2SM_TRACK_FILE", "PR2"])] +\
+                wait(0.2) +\
+        	[genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ move_8.abspath(),"PR2SM_TRACK_FILE", "PR2"])]
+   
     return actions
 
 @action
