@@ -1,5 +1,5 @@
 import logging; logger = logging.getLogger("novela." + __name__)
-from helpers import trajectory, position, cb
+from helpers import trajectory, position, cb, postures
 from action import action, genom_request
 
 from actions.administration import wait
@@ -24,7 +24,8 @@ def ecart(posold, posnew, ref):
    return orthoref[0]
 
 @action
-def basket(robot, poses, duration = 5):
+def basket(robot, duration = 20):
+        poses = postures.read()
         #duration in seconds
         from actions.configuration import setpose
         j = 0
@@ -45,6 +46,8 @@ def basket(robot, poses, duration = 5):
         refpose = [robotpose["x"], robotpose["y"]]
 
 	frequency = 5 #Hz
+   
+        state = "NONE"
 
         while j < duration * frequency:
 
@@ -63,13 +66,15 @@ def basket(robot, poses, duration = 5):
                 
                 # Evaluation of the distance that he is moved
                 delta = ecart(oldhumpose, newhumpose, refpose)
-                print(" Basket game: human delta = %.2d" % (delta))
+                print(" Basket game: human delta = " + str(delta))
 
                 # Mirror moving of the robot
-                if delta > 0.5:
-                   robot.execute(setpose, poses["TRASHGAME_LEFT"])
-                elif delta < -0.5:
+                if delta > 0.5 and state != "RIGHT":
                    robot.execute(setpose, poses["TRASHGAME_RIGHT"])
+                   state = "RIGHT"
+                elif delta < -0.5 and state != "LEFT":
+                   robot.execute(setpose, poses["TRASHGAME_LEFT"])
+                   state = "LEFT"
 
                 robot.execute(wait, 1/frequency)
 
