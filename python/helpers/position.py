@@ -36,6 +36,12 @@ class ROSPositionKeeper:
 
 _rosposition = None
 
+def getrelativepose(robot_name1, robot_name2):
+
+    actions = [ genom_request("spark", "GetRobotPoseRelativeToAnotherRobot", [robot_name1, robot_name2]) ]
+
+    return actions
+
 def getabspose(object_name):
 
     actions = [ genom_request("spark", "GetJointAbsPose", object_name) ]
