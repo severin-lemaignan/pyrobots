@@ -1,5 +1,6 @@
 import time
 import pypoco
+from pypoco import PocoRemoteError
 
 import logging; logger = logging.getLogger("novela." + __name__)
 logger.setLevel(logging.DEBUG)
@@ -61,7 +62,12 @@ class ActionPerformer:
                 # we pass a (dummy) callback
                 args = [self._ack] + args
 
-        rqst = method(*args)
+        try:
+            rqst = method(*args)
+        except PocoRemoteError:
+            print(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
+            print(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<", action["request"], str(action["args"]))
+            return None
         if not action["wait_for_completion"]:
             # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
             self._pending_pocolibs_requests[action["module"] + "." + action["request"]] = rqst
