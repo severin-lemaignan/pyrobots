@@ -36,10 +36,13 @@ def printer(e):
 
 # If true, will do all the trackings. Else, avoid the trackings that
 # take place during other actions
-fulltrack = False
+fulltrack = True
 
 def gotoniche():
-    robot.execute(track, p["NICHE"])
+    if fulltrack:
+        robot.execute(track, p["NICHE"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["NICHE"])
     robot.execute(cancel_track)
     robot.execute(look_at, p["AUDIENCE"])
@@ -60,7 +63,7 @@ def s1p1():
     robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["BACKSTAGE_JARDIN"])
     robot.execute(goto, p["JARDIN_ENTER_OUT"])
-    robot.execute(look_at, p["AUDIENCE"])
+    robot.execute(look_at, p["LOOK_NOWHERE"])
 
 def s2p1():
     robot.execute(track_human)
@@ -70,6 +73,8 @@ def s2p2():
     robot.execute(cancel_track)
     if fulltrack:
         robot.execute(track, p["TABLE_CENTER"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["TABLE"])
     robot.execute(cancel_track)
     robot.execute(track_human, "lWristX")
@@ -77,28 +82,34 @@ def s2p2():
     robot.execute(lock_object, "PHONE_RED")
     raw_input("Press enter to lock the lamp")
     robot.execute(lock_object, "LAMP")
+
 def s2p22():
     robot.execute(cancel_track)
     if fulltrack:
         robot.execute(track, p["HANGER"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["HANGER_WATCHING"])
     robot.execute(wait, 2)
     robot.execute(sweep_look, 10, 0.1)
+
 def s2p23():
     robot.execute(lock_object, "HANGER")
     if fulltrack:
         robot.execute(track, p["NICHE"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["NICHE_WATCHING"])
-    robot.execute(wait, 2)
     robot.execute(cancel_track)
+    robot.execute(look_at, p["NICHE"])
     robot.execute(wait, 2)
     robot.execute(sweep_look, 10, 0.1)
+
 def s2p24():
     robot.execute(lock_object, "SHELTER")
-    robot.execute(setup_scenario, [SCE_PATH + "object_positions.sce"])
     gotoniche()
     robot.execute(wait, 5)
-    robot.execute(idle, 3) 
+    robot.execute(idle, 3)
 
 def s2p3():
     """ Amene bouteille
@@ -107,6 +118,8 @@ def s2p3():
     robot.execute(wait, 2)
     if fulltrack:
         robot.execute(track, p["HQ"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(manipose, nop)
     robot.execute(goto, p["JARDIN_EXIT_IN"])
     robot.execute(wait, 2)
@@ -120,18 +133,22 @@ def s2p3():
     robot.execute(wait, 2)
     robot.execute(look_at, p["AUDIENCE"])
     robot.execute(wait, 2)
-    robot.execute(look_at, p["TABLE_CENTER"]) #TODO: track human?
+    robot.execute(look_at, p["TABLE_CENTER"])
 
 def s3p1():
+    robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["AUDIENCE_WATCHING_JARDIN"])
     robot.execute(look_at, p["AUDIENCE"])
-    robot.execute(wait, 5)
-    #robot.execute(idle, 2)
+    robot.execute(wait, 3)
+    robot.execute(idle, 6)
 
 def s4p1():
-    #TODO: tracking ARMCHAIR tag
+    """ tracking ARMCHAIR tag
+    """
     if fulltrack:
         robot.execute(track_human)
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["TABLE"])
     robot.execute(wait, 2)
     robot.execute(cancel_track)
@@ -147,6 +164,8 @@ def s4p2():
     poses = postures.read()
     if fulltrack:
         robot.execute(track, p["HQ"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["JARDIN_EXIT_IN"])
     robot.execute(cancel_track)
     robot.execute(basicgrab)
@@ -154,26 +173,26 @@ def s4p2():
     robot.execute(goto, p["FLYING_PAPER"], nop)
     robot.execute(wait, 5)
     robot.execute(setpose, poses["GIVE"], nop)
-    #TODO: making the paper fly
 
 def s4p21():
     """Geste desespoir milieu scene
     """
     poses = postures.read()
     robot.execute(release_gripper)
+    robot.execute(wait, 2)
     robot.execute(tuckedpose, nop)
     robot.execute(goto, p["CENTER_FACE"])
     robot.execute(setpose, poses["TRANSITION"])
     robot.execute(setpose, poses["DECEPTION"], nop)
     robot.execute(sweep_look, speed = 0.5)
     robot.execute(close_gripper)
-    #TODO head movement
 
 def s4p22():
     """Retour niche
     """
+    robot.execute(setpose, poses["TRANSITION"])
+    robot.execute(tuckedpose, nop)
     gotoniche()
-    robot.execute(tuckedpose)
 
 def s4p3():
     """
@@ -193,25 +212,29 @@ def s4p4():
     #TODO:regarder le sol devant proscenium
     if fulltrack:
         robot.execute(track, p["TABLE_CENTER"])
+    else:
+        robot.execute(look_at, p["LOOK_FEET"])
     robot.execute(enabledevileye)
     robot.execute(goto, p["CENTER_TABLE"])
     robot.execute(cancel_track)
+    robot.execute(look_at, p["TABLE_CENTER"])
     robot.execute(sweep_look, 50)
-    #robot.execute(disabledevileye)
 
     if fulltrack:
         robot.execute(track, p["HANGER_LOW"])
+    else:
+        robot.execute(look_at, p["LOOK_FEET"])
     robot.execute(goto, p["TABLE"])
-    #robot.execute(enabledevileye)
     robot.execute(cancel_track)
+    robot.execute(look_at, p["HANGER_LOW"])
     robot.execute(sweep_look)
 
-    robot.execute(setup_scenario, [SCE_PATH + "bazar.sce"])
     robot.execute(look_at, p["LOOK_FEET"])
     robot.execute(goto, p["NICHE"])
     robot.execute(disabledevileye)
 
 def s5p1():
+    robot.execute(setup_scenario, [SCE_PATH + "bazar.sce"])
     robot.execute(track_human)
 
 def s5p2():
@@ -221,13 +244,16 @@ def s5p2():
     poses = postures.read()
     robot.execute(cancel_track)
     robot.execute(setup_scenario, [SCE_PATH + "clean.sce"])
+    robot.execute(wait, 3)
     if fulltrack:
         robot.execute(track, p["HQ"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["JARDIN_EXIT_IN"])
     robot.execute(cancel_track)
     robot.execute(setpose, poses["TOP_PICK"], nop)
     robot.execute(open_gripper)
-    robot.execute(wait, 3)
+    robot.execute(wait, 2)
     robot.execute(grab_gripper)
     robot.execute(tuckedpose)
     robot.execute(goto, p["JARDIN_ENTER_IN"]) 
@@ -236,21 +262,26 @@ def s5p3():
     poses = postures.read()
     if fulltrack:
         robot.execute(track_human)
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     basket(robot)
     robot.execute(setpose, poses["TRASHGAME_BACK"], nop)
-    robot.execute(cancel_track)
 
 
 def s5p4():
-    """ Rend la corbeille au HQ 
+    """ Rend la corbeille au HQ
     """
+    poses = postures.read()
+    robot.execute(cancel_track)
     if fulltrack:
         robot.execute(track, p["HQ"])
+    else:
+        robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(setpose, poses["TRASHGAME_FRONT"])
     robot.execute(goto, p["JARDIN_EXIT_IN"])
     robot.execute(cancel_track)
     robot.execute(release_gripper)
-    robot.execute(wait, 3)
+    robot.execute(wait, 2)
     robot.execute(close_gripper)
 
 def s6p1():
@@ -268,6 +299,14 @@ def s6p3():
     robot.execute(setpose, poses["TRANSITION"])
     robot.execute(tuckedpose, nop)
     robot.execute(goto, p["AUDIENCE_WATCHING"])
+    robot.execute(look_at, p["AUDIENCE"])
+    raw_input("Press enter to look at the table")
+    robot.execute(look_at, p["TABLE_CENTER"])
+    raw_input("Press enter to look at the jacket")
+    robot.execute(look_at, p["HANGER"])
+    raw_input("Press enter to look at the shelter")
+    robot.execute(look_at, p["NICHE"])
+    raw_input("Press enter to look back at the audience")
     robot.execute(look_at, p["AUDIENCE"])
  
 if __name__=="__main__":
@@ -303,7 +342,7 @@ if __name__=="__main__":
 	      s2p1()
       if getch("Press enter when Xavier in place...") != chr(27):
 	      s2p2()
-      if getch("Press enter to look at the hanger") != chr(27):
+      if getch("Press enter AFTER THE ELEPHANT to look at the hanger") != chr(27):
               s2p22()
       if getch("Press enter to lock hanger and go niche") != chr(27):
               s2p23()
@@ -335,7 +374,7 @@ if __name__=="__main__":
      
       if getch("Press enter when Xavier is kinected...") != chr(27):
 	      s5p1() 
-      if getch("Press enter to get the basket...") != chr(27):
+      if getch("Press enter AFTER BLACK TAG to get the basket...") != chr(27):
 	      s5p2()
       if getch("Press enter to bring PR2 to play the basket game...") != chr(27):
 	      s5p3()     

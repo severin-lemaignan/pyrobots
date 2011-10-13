@@ -93,7 +93,7 @@
 	},
 	"LOOK_FEET":{
 		"_comment":"A position, relative to base link, for the robot to look at its feets",
-		"x": 0.5, 
+		"x": 0.7, 
 		"y": 0.0,
 		"z": 0.4,
 		"qx": 0.0,
@@ -124,8 +124,8 @@
         },
 	"AUDIENCE":{
 		"_comment":"Used to look at the audience. Robot not expected to go there!",
-                "x": 5.0,
-                "y": -20,
+                "x": 10.0,
+                "y": -14,
                 "z": 0.8,
                 "qx": 0.0,
                 "qy": 0.0,
