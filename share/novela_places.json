@@ -2,35 +2,34 @@
 	"TABLE_CENTER":{
                 "_comment": "Center of Xavier desk",
                 "_TODO": "Use SPARK tags!",
-		"x": 4.78, 
-		"y": -3.31,
-		"z": 0.8,
+		"x": 4.8, 
+		"y": -3.8,
+		"z": 0.6,
 		"qx": 0.0,
 		"qy": 0.0,
-		"qz": 0.146, 
-		"qw": 0.989
+		"qz": 0.0, 
+		"qw": 0.0
 	},
 	"TABLE":{
                 "_comment": "Manipulation place, in front of Xavier desk",
                 "_TODO": "Use SPARK tags!",
-		"x": 4.08, 
-		"y": -3.21,
+		"x": 3.83, 
+		"y": -3.89,
 		"z": 0.8,
 		"qx": 0.0,
 		"qy": 0.0,
-		"qz": 0.146, 
-		"qw": 0.989
+		"qz": 0.32, 
+		"qw": 0.956
 	},
-	"TABLE_CORNER":{
-                "_comment": "Manipulation place, at one corner of Xavier desk, used for fan sequence",
-                "_TODO": "Use SPARK tags!",
-		"x": 3.85, 
-		"y": -2.6,
-		"z": 0.8,
-		"qx": 0.0,
-		"qy": 0.0,
-		"qz": -0.116, 
-		"qw": 0.993
+	"FLYING_PAPER":{
+                "_comment": "Place next to the table, for the ventilo manip",
+		"qw": 0.943,
+		"qy": 0.0, 
+		"qx": 0.0, 
+		"qz": -0.333, 
+		"y": -2.645, 
+		"x": 3.705, 
+		"z": 0.8
 	},
 	"HQ":{
 		"_comment":"Place next to engineers, backstage",
@@ -42,6 +41,15 @@
 		"qz": 0.992,
 		"qw": -0.126
 	},
+	"BACKSTAGE_JARDIN":{
+		"x": 0.12,
+		"y": -5.7,
+		"z": 0.0,
+		"qx": 0.0,
+		"qy": 0.0,
+		"qz": 0.85,
+		"qw": 0.51
+	},
         "HANGER":{
                 "_comment": "Jacket hanger, behind Xavier desk",
 		"x": 4.2,
@@ -52,21 +60,42 @@
 		"qz": 0.386,
 		"qw": 0.922
 	},
-        "HANGER_WATCHING":{
-                "_comment": "Place where the robot can correctly see the jacket hanger",
-		"x": 3.92,
-		"y": -2.43,
-		"z": 1.0,
+        "HANGER_LOW":{
+                "_comment": "Jacket hanger, behind Xavier desk",
+		"x": 4.2,
+		"y": -1.8,
+		"z": 0.5,
 		"qx": 0.0,
 		"qy": 0.0,
 		"qz": 0.386,
 		"qw": 0.922
+	},
+        "HANGER_WATCHING":{
+                "_comment": "Place where the robot can correctly see the jacket hanger",
+		"x": 3.59,
+		"y": -3.02,
+		"z": 1.0,
+		"qx": 0.0,
+		"qy": 0.0,
+		"qz": 0.536,
+		"qw": 0.844
 	},
 	"LOOK_NOWHERE":{
 		"_comment":"A position, relative to base link, used to simply look straight",
 		"x": 1.0, 
 		"y": 0.0,
 		"z": 1.0,
+		"qx": 0.0,
+		"qy": 0.0,
+		"qz": 0.0,
+		"qw": 1.0,
+		"frame": "base_link"
+	},
+	"LOOK_FEET":{
+		"_comment":"A position, relative to base link, for the robot to look at its feets",
+		"x": 0.5, 
+		"y": 0.0,
+		"z": 0.4,
 		"qx": 0.0,
 		"qy": 0.0,
 		"qz": 0.0,
@@ -85,19 +114,19 @@
 		},
 	"NICHE_WATCHING":{
                 "_comment": "Place where the robot can correctly see its shelter",
-                "x": 2.83,
-                "y": -4.0,
+                "x": 2.13,
+                "y": -3.79,
                 "z": 0.6,
                 "qx": 0.0,
                 "qy": 0.0,
-                "qz": 0.93,
-                "qw": 0.366
+                "qz": 0.89,
+                "qw": 0.446
         },
 	"AUDIENCE":{
 		"_comment":"Used to look at the audience. Robot not expected to go there!",
                 "x": 5.0,
-                "y": -6,
-                "z": 0.1,
+                "y": -20,
+                "z": 0.8,
                 "qx": 0.0,
                 "qy": 0.0,
                 "qz": 0.0,
@@ -105,13 +134,13 @@
         },
 	"AUDIENCE_WATCHING":{
 		"_comment":"Place, near the proscenium, where to look at the audience from.",
-                "x": 2.701,
-                "y": -4.569,
-                "z": 0.6,
+                "x": 3.09,
+                "y": -4.84,
+                "z": 0.7,
                 "qx": 0.0,
                 "qy": 0.0,
-                "qz": -0.513,
-                "qw": 0.858
+                "qz": -0.496,
+                "qw": 0.868
         },
 	"AUDIENCE_WATCHING_JARDIN":{
 		"_comment":"Place, near the proscenium, where to look at the audience from.",
@@ -125,19 +154,19 @@
         },
 	"MONSTER_POSE":{
 		"_comment":"Place where the robot stands when he scaries Xavier",
-                "x": 4.47,
-                "y": -3.65,
-                "z": 0.0,
+                "x": 2.83,
+                "y": -4.36,
+                "z": 0.8,
                 "qx": 0.0,
                 "qy": 0.0,
-                "qz": 0.087,
-                "qw": 0.996
+                "qz": 0.219,
+                "qw": 0.977
         },
 	"CENTER_FACE":{
 		"_comment":"Place in the center of the stage, face to the audience",
                 "x": 3.25,
                 "y": -3.81,
-                "z": 0.4,
+                "z": 0.8,
                 "qx": 0.0,
                 "qy": 0.0,
                 "qz": -0.5,
@@ -147,7 +176,7 @@
 		"_comment":"Place in the center of the stage, face to the table",
                 "x": 2.244,
                 "y": -3.934,
-                "z": 0.4,
+                "z": 0.8,
                 "qx": 0.0,
                 "qy": 0.0,
                 "qz": 0.110,
@@ -229,14 +258,14 @@
                 "qz": 0.923,
                 "qw": -0.385
         },
-        "JARDIN_EXIT_IN":{
-                "x": 1.504,
-                "y": -3.889,
+        "JARDIN_ENTER_IN":{
+                "x": 1.52,
+                "y": -4.05,
                 "z": 0.0,
                 "qx": 0.0,
                 "qy": 0.0,
-                "qz": 0.978,
-                "qw": -0.209
+                "qz": 0.204,
+                "qw": 0.979
         },
        "JARDIN_EXIT_OUT":{
                 "x": 0.5,
@@ -248,21 +277,21 @@
                 "qw": -0.18
         },
        "JARDIN_ENTER_OUT":{
-                "x": -0.033,
-                "y": -4.676,
+                "x": 0.709,
+                "y": -3.891,
                 "z": 0.0,
                 "qx": 0.0,
                 "qy": 0.0,
-                "qz": 0.182,
-                "qw": 0.983
+                "qz": -0.071,
+                "qw": 0.997
         },
-       "JARDIN_ENTER_IN":{
-                "x": 1.344,
-                "y": -4.233,
+       "JARDIN_EXIT_IN":{
+                "x": 1.245,
+                "y": -3.973,
                 "z": 0.0,
                 "qx": 0.0,
                 "qy": 0.0,
-                "qz": 0.07,
-                "qw": 0.998
+                "qz": 0.997,
+                "qw": 0.0786
         }
 }
