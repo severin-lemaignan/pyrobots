@@ -3,6 +3,16 @@ from exception import RobotError
 from action import action, genom_request
 from helpers import trajectory, postures
 
+import os
+
+@action
+def enabledevileye():
+    os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 3")
+
+@action
+def disabledevileye():
+    os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 1")
+ 
 @action
 def setpose(posture, callback = None, part = None, collision_avoidance = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
