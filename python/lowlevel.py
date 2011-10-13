@@ -108,9 +108,11 @@ class ActionPerformer:
     def _execute_python(self, action):
         
         if action["abort"]:
-            self._pending_python_requests[action["class"]].stop()
-            logger.warning("Aborted Python background task " + action["class"].__name__)
-
+            try:
+                self._pending_python_requests[action["class"]].stop()
+                logger.warning("Aborted Python background task " + action["class"].__name__)
+            except KeyError:
+                pass #Likely a task already aborted
             return
 
         logger.info("Starting Python background task " + action["class"].__name__ + " with params " + str(action["args"]))
