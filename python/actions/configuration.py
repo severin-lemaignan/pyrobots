@@ -205,3 +205,123 @@ def tuckedpose(callback = None, nohead = True):
     posture = pose['TUCKED']
 
     return setpose(posture, callback, part)
+
+@action
+def idle(choice = None,callback = None):
+    """ action to do when nothing to do.
+
+       :param choice: default to -1, this param make it possible to choose
+       the action to do. if choice>10 or choice<0 the action to do is randomly
+       choosed.
+       :param callback: (optional) If given, the action is non-blocking, and the callback is
+    invoked at the activity completion.
+    """
+    
+    c = -1
+    if not choice or (choice > 10 or choice < 0):
+        c = random.randint(0,9);
+    else:
+       c = choice
+
+    part = 'PR2'
+    pose = postures.read()
+ 
+    actions = []
+    if (c == 0):
+        posture1 = pose['TUCKED']
+        posture2 = pose['WATCH_LOOKING']
+        actions = setpose(posture1,callback,part) + setpose(posture2,callback,part) + setpose(posture1,callback,part) 
+    elif(c == 1):
+        short1 = trajectory.Trajectory('short1')
+        actions = [
+                genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + short1.initcoords() ),
+                genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ short1.abspath(),"PR2SM_TRACK_FILE", "PR2"])
+               ]
+    elif(c == 2):
+        scratch = trajectory.Trajectory('scratch')
+        actions = [
+                genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + scratch.initcoords() ),
+                genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ scratch.abspath(),"PR2SM_TRACK_FILE", "PR2"])
+               ]
+    elif(c == 3):
+        changeCrossing = trajectory.Trajectory('changeCrossing')
+        actions = [
+                genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + changeCrossing.initcoords() ),
+                genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ changeCrossing.abspath(),"PR2SM_TRACK_FILE", "PR2"])
+               ]
+
+    elif(c == 4):
+        etirement = trajectory.Trajectory('etirement')
+        actions = [
+                genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + etirement.initcoords() ),
+                genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ etirement.abspath(),"PR2SM_TRACK_FILE", "PR2"])
+               ]
+
+    elif(c == 5):
+        lookHuman = trajectory.Trajectory('lookHuman')
+        actions = [
+                genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + lookHuman.initcoords() ),
+                genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ lookHuman.abspath(),"PR2SM_TRACK_FILE", "PR2"])
+               ]
+
+    elif(c == 6):
+        lookUp = trajectory.Trajectory('lookUp')
+        actions = [
+                genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + lookUp.initcoords() ),
+                genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ lookUp.abspath(),"PR2SM_TRACK_FILE", "PR2"])
+               ]
+
+    elif(c == 7):
+        scratch = trajectory.Trajectory('scratch')
+        actions = [
+                genom_request( 'pr2SoftMotion', 'GotoQ',
+                        ['PR2', 0] + scratch.initcoords() ),
+                genom_request( 'pr2SoftMotion', 'TrackQ',
+                       [ scratch.abspath(),"PR2SM_TRACK_FILE", "PR2"])
+               ]
+
+    elif(c == 8):
+        posture1 = pose['TUCKED']
+        posture2 = pose['WATCH_LOOKING']
+        actions = setpose(posture1,callback,part) + setpose(posture2,callback,part) + setpose(posture1,callback,part)
+    elif(c == 9):
+        posture1 = pose['TUCKED']
+        posture2 = pose['WATCH_LOOKING']
+        actions = setpose(posture1,callback,part) + setpose(posture2,callback,part) + setpose(posture1,callback,part)
+
+    return actions 
+     
+
+
+
+"""
+@action
+def idle():
+    :param dfsdfsd: 
+
+    import look_at
+    return look_at.sweep_look(..., nop) + [
+         genom_request(
+                    "pr2SoftMotion", 
+                    "GotoQ",
+                ["ARMS",
+                0,
+                torso, pan, tilt, 0.0,
+                    rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
+                lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
+                wait_for_completion = False if callback else True,
+                callback = callback)
+         ]
+""" 
