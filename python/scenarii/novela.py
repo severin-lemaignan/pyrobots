@@ -36,7 +36,7 @@ def printer(e):
 
 # If true, will do all the trackings. Else, avoid the trackings that
 # take place during other actions
-fulltrack = True
+fulltrack = False
 
 def gotoniche():
     if fulltrack:
@@ -90,8 +90,8 @@ def s2p22():
     else:
         robot.execute(look_at, p["LOOK_NOWHERE"])
     robot.execute(goto, p["HANGER_WATCHING"])
-    robot.execute(wait, 2)
-    robot.execute(sweep_look, 10, 0.1)
+    #robot.execute(wait, 2)
+    #robot.execute(sweep_look, 10, 0.1)
 
 def s2p23():
     robot.execute(lock_object, "HANGER")
@@ -102,8 +102,8 @@ def s2p23():
     robot.execute(goto, p["NICHE_WATCHING"])
     robot.execute(cancel_track)
     robot.execute(look_at, p["NICHE"])
-    robot.execute(wait, 2)
-    robot.execute(sweep_look, 10, 0.1)
+    #robot.execute(wait, 2)
+    #robot.execute(sweep_look, 10, 0.1)
 
 def s2p24():
     robot.execute(lock_object, "SHELTER")
@@ -191,7 +191,7 @@ def s4p22():
     """Retour niche
     """
     robot.execute(setpose, poses["TRANSITION"])
-    robot.execute(tuckedpose, nop)
+    robot.execute(tuckedpose)
     gotoniche()
 
 def s4p3():
@@ -218,7 +218,8 @@ def s4p4():
     robot.execute(goto, p["CENTER_TABLE"])
     robot.execute(cancel_track)
     robot.execute(look_at, p["TABLE_CENTER"])
-    robot.execute(sweep_look, 50)
+    robot.execute(wait, 2)
+    robot.execute(sweep_look, 50, speed = 0.4)
 
     if fulltrack:
         robot.execute(track, p["HANGER_LOW"])
@@ -227,7 +228,7 @@ def s4p4():
     robot.execute(goto, p["TABLE"])
     robot.execute(cancel_track)
     robot.execute(look_at, p["HANGER_LOW"])
-    robot.execute(sweep_look)
+    robot.execute(sweep_look, 50, speed = 0.4)
 
     robot.execute(look_at, p["LOOK_FEET"])
     robot.execute(goto, p["NICHE"])
@@ -283,6 +284,7 @@ def s5p4():
     robot.execute(release_gripper)
     robot.execute(wait, 2)
     robot.execute(close_gripper)
+    robot.execute(tuckedpose)
 
 def s6p1():
     robot.execute(goto, p["AUDIENCE_WATCHING"])
@@ -321,17 +323,18 @@ if __name__=="__main__":
       #robot.execute(track_human)
       #raw_input("Press enter to end track human")
       #robot.execute(cancel_track)
-      if getch("Press enter to init the robot") != chr(27):
+      if getch("Press enter to init the robot software") != chr(27):
            robot.execute(setup_scenario, [SCE_PATH + "clean.sce"]) #TODO: broken!!
-           robot.execute(tuckedpose)
-           robot.execute(goto, p["AUDIENCE_WATCHING"])
-           robot.execute(look_at, p["LOOK_NOWHERE"])
            robot.execute(unlock_object, "BLUE_BOTTLE")
            robot.execute(unlock_object, "PHONE_RED")
            robot.execute(unlock_object, "LAMP")
            robot.execute(unlock_object, "SHELTER")
            robot.execute(unlock_object, "HANGER")
            robot.execute(unlock_object, "SOFA")
+      if getch("Press enter to init the robot") != chr(27):
+           robot.execute(tuckedpose)
+           robot.execute(goto, p["AUDIENCE_WATCHING"])
+           robot.execute(look_at, p["LOOK_NOWHERE"])
       print("[[[[[[[[[[[[[ END OF INIT ]]]]]]]]]]]]]")
 
       if getch("Press enter when robot in ready to open curtain...") != chr(27):

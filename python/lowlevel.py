@@ -24,7 +24,8 @@ class ActionPerformer:
 
     def close(self):
         logger.info('Closing the lowlevel!')
-        pypoco.close()
+        for s in self.servers:
+		self.servers[s].close()
 
     def _ack(self, evt):
         """ NOP function that serves as fallback callback
