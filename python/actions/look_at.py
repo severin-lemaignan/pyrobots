@@ -6,8 +6,9 @@ from helpers.jointstate import getjoint
 from helpers import position
 from helpers.cb import nop
 
-
+import roslib; roslib.load_manifest('novela_actionlib')
 import rospy
+
 import numpy
 import math
 from geometry_msgs.msg import PointStamped
