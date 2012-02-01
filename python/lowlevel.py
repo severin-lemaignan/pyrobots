@@ -5,14 +5,20 @@ from pypoco import PocoRemoteError
 import logging; logger = logging.getLogger("novela." + __name__)
 logger.setLevel(logging.DEBUG)
 
+from exception import RobotError
+
 class ActionPerformer:
 
-    def __init__(self, host, port, use_ros = True):
+    def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True):
 
-        self.servers, self.poco_modules = pypoco.discover(host, port)
+	self.use_pocolibs = use_pocolibs
+	self.use_ros = use_ros
 
-        self._pending_pocolibs_requests = {}
-        self._pending_python_requests = {}
+	if use_pocolibs:
+	        self.servers, self.poco_modules = pypoco.discover(host, port)
+
+	        self._pending_pocolibs_requests = {}
+        	self._pending_python_requests = {}
 
         if use_ros:
             import roslib; roslib.load_manifest('novela_actionlib')
@@ -44,6 +50,11 @@ class ActionPerformer:
         - an optional flag to decide if the request must be blocking or not.
         """
         
+	if not self.use_pocolibs:
+		raise RobotError("This action '" + action["request"] + "' "
+				 "requires Pocolibs, but this ActionPerformer "
+				 "has been started without it.")
+
         if action["abort"]:
             # We want to abort a previous request.
             self._pending_pocolibs_requests[action["module"] + "." + action["request"]].abort()
@@ -54,7 +65,7 @@ class ActionPerformer:
         module = self.poco_modules[action["module"]]
         method = getattr(module, action["request"])
 
-        args = action["args"]
+        args = action["args"] if action["args"] else []
         if not action['wait_for_completion']:
             # asynchronous mode! 
             if action["callback"]:
@@ -67,7 +78,8 @@ class ActionPerformer:
             rqst = method(*args)
         except PocoRemoteError:
             print(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
-            print(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<", action["request"], str(action["args"]))
+            print(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" 
+		  % (action["request"], str(action["args"])))
             return None
         if not action["wait_for_completion"]:
             # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
@@ -84,6 +96,11 @@ class ActionPerformer:
         - an action name
 
         """
+
+	if not self.use_ros:
+		raise RobotError("This action '" + action["request"] + "' "
+				 "requires ROS, but this ActionPerformer "
+				 "has been started without it.")
 
         client = action['client']
         goal = action['goal']
