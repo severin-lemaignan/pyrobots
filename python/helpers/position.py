@@ -4,7 +4,7 @@ logger.setLevel(logging.DEBUG)
 from action import genom_request
 from helpers import places
 
-HUMAN = "XAVIER_HUMAN"
+POS_EPSILON = 0.5 # Min distance in meters from origin to be considered as 'in game'
 
 class ROSPositionKeeper:
     def __init__(self):
@@ -66,27 +66,18 @@ def mypose():
         _rosposition = ROSPositionKeeper()
     return _rosposition.getabspos("/base_link")
 
-def gethumanpose(robot, human = HUMAN, part = 'Pelvis'):
+def gethumanpose(action_performer, human, part = 'Pelvis'):
     """
     Head -> part="HeadX"
     """
     
-    epsilon = 0.5 # Min distance in meters from origin to be considered as 'in game'
+   
     # Where is the human?
+    return poseof(action_performer, human, part)
     
-    raw = robot.execute(getabspose, [human, part])
-    ok, res = raw
-    if not ok:
-        # Object probably do not exist
-        return None
-    yaw, pitch, roll, x, y, z = [float(x) for x in res]
     
-    if abs(x) < epsilon and abs(y) < epsilon:
-        # Still at origin
-        return None
-    return {"x":x, "y":y, "z":z, "qx":0.0, "qy":0.0, "qz":0.0, "qw":0.0}
 
-def poseof(object):
+def poseof(action_performer, object, part = None):
     
     p = places.read()
 
@@ -95,6 +86,36 @@ def poseof(object):
         return p[object]
     
     # Is it a SPARK object?
+    raw = action_performer.execute(getabspose, [human, part if part else "default"])
+    ok, res = raw
+    if not ok:
+        # Object probably do not exist
+        return None
+    yaw, pitch, roll, x, y, z = [float(x) for x in res]
+    
+    if abs(x) < POS_EPSILON and abs(y) < POS_EPSILON:
+        # Still at origin
+        return None
+        
+    return spark2ros([x, y, z, roll, pitch, yaw])
+
+def ros2spark(pose):
+    """ Converts a 'ROS' pose {x,y,z,qx,qy,qz,qw} to a 'SPARK' one:
+    [x,y,z,rx,ry,rz].
+    """
+    from tf import transformations
+    rx,ry,rz = transformations.euler_from_quaternion([pose['qx'], pose['qy'], pose['qz'], pose['qw'], 'sxyz')
+    return [pose["x"], pose["y"], pose["z"], rx, ry, rz]
+
+def spark2ros(pose):    
+    """ Converts a 'SPARK' pose [x,y,z,rx,ry,rz] to a 'ROS' one
+    {x,y,z,qx,qy,qz,qw}
+    """
+    from tf import transformations
+    if len(pose) != 6:
+        raise RobotError("SPARK pose should have 6 terms")
+    qx,qy,qz, qw = transformations.quaternion_from_euler([pose[3], pose[4], pose[5], 'sxyz')
+    return {"x":pose[0], "y":pose[1], "z":pose[2], "qx":qx, "qy":qy, "qz":qz, "qw":qw}
     
 def isin(point,polygon):
     """
