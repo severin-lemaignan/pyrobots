@@ -26,8 +26,8 @@ from action import action, ros_request
 def goto(target, callback = None):
     """ Moves the robot base to a given target, using ROS 2D navigation stack.
 
-        Only (x,y,theta) are considered for the target. All other values are
-        ignored.
+        Only (x,y,theta), ie (x, y, qw, qz), are considered for the target. 
+	All other values are ignored.
     
         :param target: the destination, as a dictionary {x,y,z,qx,qy,qz,qw}.
         :param callback: (optional) a callback to be called when the destination

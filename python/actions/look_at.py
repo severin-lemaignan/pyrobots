@@ -29,7 +29,7 @@ def xyz_to_panTilt(frame, x, y, z):
     :param y: the y coordinate
     :param z: the z coordinate
     :param frame: the frame in which coordinates are interpreted
-
+    :returns: (pan, tilt) in radians
     """
 
     goal = PointStamped()
