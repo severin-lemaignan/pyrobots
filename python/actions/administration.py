@@ -39,3 +39,9 @@ def wait(seconds):
 	"""
 	return [basewait(seconds)]
 
+@action
+def init():
+    """ Initialize modules in correct order.
+    """
+    return [genom_request("pr2SoftMotion", "Init")]
+
