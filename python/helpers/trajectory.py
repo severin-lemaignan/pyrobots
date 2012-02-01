@@ -2,9 +2,6 @@ import os
 import glob
 PREFIX = '../share/novela_trajlib/Seg_file/'
 SUFFIX = '_Seg.traj'
-listing = os.listdir(PREFIX)
-
-
 
 class Trajectory:
 
