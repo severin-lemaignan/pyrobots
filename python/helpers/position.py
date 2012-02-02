@@ -1,11 +1,186 @@
-import logging; logger = logging.getLogger("novela." + __name__)
+import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
-from action import genom_request
-from helpers import places
+from exception import RobotError
+import places
 
-POS_EPSILON = 0.5 # Min distance in meters from origin to be considered as 'in game'
+POS_EPSILON = 0.1 # Min distance in meters from origin to be considered as 'in game'
 
+class PoseManager:
+    """ A pose is for us a dict {'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame':frame},
+    ie a (x, y, z) cartesian pose in meter interpreted in a specific reference 
+    frame, and a quaternion describing the orientation of the object in radians.
+    
+    This class helps with:
+     * retrieving pose using ROS TF, SPARK or a static library of positions,
+     * converting from other convention to our convention,
+     * converting back to other conventions.
+     
+     """
+    
+    def __init__(self, robot):
+        
+        if robot.hasROS():
+            from tf import transformations
+            self.ros = ROSPositionKeeper()
+        else:
+            logger.warning("Initializing the PoseManager without ROS support." +\
+                           "TF transformations and conversions between" +\
+                           " quaternions and euler angles won't be available.")
+            self.ros = None
+            
+        if robot.hasPocolibs() and robots.hasmodule('spark'):
+            from action import genom_request
+            self.spark = SPARKPositionKeeper(robot)
+        else:
+            logger.warning("Initializing the PoseManager without SPARK support." +\
+                           "Positions of SPARK objects won't be available.")
+            self.spark = None
+        
+    def quaternion_from_euler(self, rx, ry, rz):
+        if not self.ros:
+            raise RobotError("ROS support required for conversions between quaternions" +\
+            " and euler angles.")
+        return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
+    
+    def euler_from_quaternion(self, rx, ry, rz):
+        if not self.ros:
+            raise RobotError("ROS support required for conversions between quaternions" +\
+            " and euler angles.")
+        return transformations.euler_from_quaternion(pose['qx'], pose['qy'], pose['qz'], pose['qw'], 'sxyz')
+        
+    def normalizedict(self, pose):
+        if not 'x' in pose:
+            pose['x'] = None
+        else:
+            pose['x'] = float(pose['x'])
+            
+        if not 'y' in pose:
+            pose['y'] = None
+        else:
+            pose['y'] = float(pose['y'])
+            
+        if not 'z' in pose:
+            pose['z'] = None
+        else:
+            pose['z'] = float(pose['z'])
+            
+        if not 'qx' in pose:
+            pose['qx'] = None
+        else:
+            pose['qx'] = float(pose['qx'])
+        
+        if not 'qy' in pose:
+            pose['qy'] = None
+        else:
+            pose['qy'] = float(pose['qy'])
+        
+        if not 'qz' in pose:
+            pose['qz'] = None
+        else:
+            pose['qz'] = float(pose['qz'])
+            
+        if not 'qw' in pose:
+            pose['qw'] = None
+        else:
+            pose['qw'] = float(pose['qw'])
+            
+        if not 'frame' in pose:
+            pose['frame'] = 'map'
+        return pose
+        
+    def normalizelist(self, pose):
+        if len(pose) == 3:
+            x,y,z = pose
+            return self.normalizedict({'x':x, 'y':y, 'z':z})
+            
+        if len(pose) == 6:
+            x,y,z, rx, ry, rz = pose
+            qx,qy,qz,qw = self.quaternion_from_euler(rx, ry, rz)
+            return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw})
+            
+        if len(pose) == 7:
+            x,y,z, qx, qy, qz, qw = pose
+            return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw})
+        
+        raise RobotError("Don't know what to do with pose as array %s" % pose)
+    
+    def normalize(self, pose):
+        if isinstance(pose, list) or isinstance(pose, tuple):
+            return self.normalizelist(pose)
+        if isinstance(pose, dict):
+            return self.normalizedict(pose)
+        
+        raise RobotError("normalize() takes either lists or dict as input.")
+    
+    def get(self, raw):
+        """ takes a loosly define 'pose' as input and returns a properly formatted
+        and normalized pose.
+        
+        Input may be:
+         * a SPARK entity (either an object name of a pair (object name, part name))
+         * a ROS TF frame
+         * an incomplete pose dictionary
+         * a list or tuple (x,y,z), or (z,y,z,rx,ry,rz) or (x,y,z,qx,qy,qz,qw)
+        """
+        
+        pose = None
+        
+        if isinstance(raw, basestring):
+            
+            p = places.read()
+            # Is it a known symbolic place?
+            if raw in p.keys():
+                return p[raw]
+            
+            #Either a SPARK object name or a ROS TF frame
+            if self.ros:
+                pose = self.ros.getabspose(raw)
+            
+            if not pose:
+                #Trying with SPARK
+                if self.spark:
+                    pose = self.spark.getabspose(raw)
+                if not pose:
+                    raise RobotError("Unknown object or frame %s" % raw)
+                else:
+                    return self.normalize(pose)
+            else:
+                return self.normalize(pose)
+            
+        else:
+            try:
+                # SPARK tuple (object name, part)?
+                obj, part = raw
+                if isinstance(obj, basestring) and isinstance(part, basestring):
+                    if self.spark:
+                        pose = self.spark.getabspose(raw)
+                    if not pose:
+                        raise RobotError("Unknown object or part %s" % raw)
+                    else:
+                        return self.normalizelist(pose)
+                else:
+                    raise RobotError("Unable to recognize the pose %s" % raw)
+            except ValueError:
+                # List or dict (x,y,z,...)?
+                try:
+                    return self.normalize(raw)
+                except RobotError as re:
+                    raise RobotError("Unable to process the pose %s (original error was:%s)" % (raw, str(re)))
+
+    def myself():
+        """
+        Returns the current PR2 base pose.
+        """
+        return self.get("base_link")
+
+    def gethumanpose(action_performer, human, part = 'Pelvis'):
+        """
+        Head -> part="HeadX"
+        """
+        # Where is the human?
+        return poseof(action_performer, human, part)
+    
 class ROSPositionKeeper:
     def __init__(self):
         self.isrosconfigured = True
@@ -29,94 +204,41 @@ class ROSPositionKeeper:
         if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
             t = self.tf.getLatestCommonTime("/map", frame)
             position, quaternion = self.tf.lookupTransform("/map", frame, t)
-            return dict(zip(["x","y","z","qx","qy","qz","qw"], position + quaternion))
+            return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ["map"]))
         
         logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
         return None
 
-_rosposition = None
-
-def getrelativepose(robot_name1, robot_name2):
-
-    actions = [ genom_request("spark", "GetRobotPoseRelativeToAnotherRobot", [robot_name1, robot_name2]) ]
-
-    return actions
-
-def getabspose(object_name):
-
-    actions = [ genom_request("spark", "GetJointAbsPose", object_name) ]
-
-    return actions
-
-def setabspose(object_name):
-
-    res = getabspose(object_name)
-    ans = res[1]
-    x_goal, y_goal, z_goal = float(ans[3]), float(ans[4]), float(ans[5])
-
-    return [x_goal, y_goal, z_goal]
-
-def mypose():
-    """
-    Returns the current robot base pose in the map frame as a dictionary with
-    [x,y,z,qx,qy,qz,qw].
-    """
-    global _rosposition
-    if not _rosposition:
-        _rosposition = ROSPositionKeeper()
-    return _rosposition.getabspos("/base_link")
-
-def gethumanpose(action_performer, human, part = 'Pelvis'):
-    """
-    Head -> part="HeadX"
-    """
-    
-   
-    # Where is the human?
-    return poseof(action_performer, human, part)
-    
-    
-
-def poseof(action_performer, object, part = None):
-    
-    p = places.read()
-
-    # Is it a known symbolic place?
-    if object in p.keys():
-        return p[object]
-    
-    # Is it a SPARK object?
-    raw = action_performer.execute(getabspose, [human, part if part else "default"])
-    ok, res = raw
-    if not ok:
-        # Object probably do not exist
-        return None
-    yaw, pitch, roll, x, y, z = [float(x) for x in res]
-    
-    if abs(x) < POS_EPSILON and abs(y) < POS_EPSILON:
-        # Still at origin
-        return None
+class SPARKPositionKeeper:
+    def __init__(self, robot):
+        self.robot = robot
         
-    return spark2ros([x, y, z, roll, pitch, yaw])
+    def getrelativepose(self, robot1, robot2):
 
-def ros2spark(pose):
-    """ Converts a 'ROS' pose {x,y,z,qx,qy,qz,qw} to a 'SPARK' one:
-    [x,y,z,rx,ry,rz].
-    """
-    from tf import transformations
-    rx,ry,rz = transformations.euler_from_quaternion([pose['qx'], pose['qy'], pose['qz'], pose['qw'], 'sxyz')
-    return [pose["x"], pose["y"], pose["z"], rx, ry, rz]
+        raw = robot.execute([genom_request("spark", "GetRobotPoseRelativeToAnotherRobot", [robot1, robot2])])
+        return _process_result(raw)
 
-def spark2ros(pose):    
-    """ Converts a 'SPARK' pose [x,y,z,rx,ry,rz] to a 'ROS' one
-    {x,y,z,qx,qy,qz,qw}
-    """
-    from tf import transformations
-    if len(pose) != 6:
-        raise RobotError("SPARK pose should have 6 terms")
-    qx,qy,qz, qw = transformations.quaternion_from_euler([pose[3], pose[4], pose[5], 'sxyz')
-    return {"x":pose[0], "y":pose[1], "z":pose[2], "qx":qx, "qy":qy, "qz":qz, "qw":qw}
-    
+    def getabspose(self, obj, part = "default"):
+
+        raw = robot.execute([genom_request("spark", "GetJointAbsPose", [obj, part])])
+        return _process_result(raw)
+        
+    def _process_result(self, raw):
+        
+        ok, res = raw
+        if not ok:
+            # Object probably do not exist
+            return None
+        yaw, pitch, roll, x, y, z = [float(x) for x in res]
+        
+        if abs(x) < POS_EPSILON and abs(y) < POS_EPSILON:
+            # Still at origin
+            logger.info("Object still at origin. Considered as 'not in game'")
+            return None
+            
+        return (x, y, z, roll, pitch, yaw)
+        
+
 def isin(point,polygon):
     """
     Determines if a 2D point is inside a given 2D polygon or not.
@@ -170,3 +292,4 @@ def isonstage(target):
     point = (target["x"], target["y"])
 
     return isin(point, poly)
+

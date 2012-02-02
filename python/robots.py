@@ -32,11 +32,14 @@ class Robot(object):
             self.add_action(action)
         
         self.dummy = dummy        
-        if dummy:
-            return
-        
         self.use_pocolibs = use_pocolibs
         self.use_ros = use_ros
+        
+        if dummy:
+            self.use_pocolibs = False
+            self.use_ros = False
+            return
+        
 
         if use_pocolibs:
                 self.servers, self.poco_modules = pypoco.discover(host, port)
@@ -52,7 +55,15 @@ class Robot(object):
             from actionlib_msgs.msg import GoalStatus
             self.GoalStatus = GoalStatus
 
-
+    def hasROS(self):
+        return self.use_ros
+        
+    def hasPocolibs(self):
+        return self.use_pocolibs
+    
+    def hasmodule(self, module):
+        return True if module in self.poco_modules else False
+        
     def close(self):
         logger.info('Closing the lowlevel!')
         for s in self.servers:
