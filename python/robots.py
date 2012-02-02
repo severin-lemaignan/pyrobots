@@ -1,3 +1,5 @@
+import sys
+import pkgutil
 import time
 import pypoco
 from pypoco import PocoRemoteError
@@ -7,15 +9,32 @@ logger.setLevel(logging.DEBUG)
 
 from exception import RobotError
 
-class Robot:
+class Robot(object):
     """ This 'low-level' class implements all what is required to actually execute
     actions on the robot.
     
-    It supports execution of ROS actions, Genom requests, Python code and some
+    It supports execution of ROS actions, Pocolibs (genom) requests, Python code and some
     special actions like 'wait'.
+    
+    :param dummy: (default: False) If true, no actual middleware is used. All
+    actions exectued are simply reported to the logger.
     """
-    def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True):
+    def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True, dummy = False):
 
+        # Import all modules under actions/
+        import actions
+        for loader, module_name, is_pkg in  pkgutil.walk_packages(['actions']):
+            __import__('actions.' + module_name)
+            
+        # Dynamically add available actions (ie, actions defined with @action in
+        # actions/* submodules.
+        for action in self.available_actions():
+            self.add_action(action)
+        
+        self.dummy = dummy        
+        if dummy:
+            return
+        
         self.use_pocolibs = use_pocolibs
         self.use_ros = use_ros
 
@@ -33,10 +52,38 @@ class Robot:
             from actionlib_msgs.msg import GoalStatus
             self.GoalStatus = GoalStatus
 
+
     def close(self):
         logger.info('Closing the lowlevel!')
         for s in self.servers:
             self.servers[s].close()
+
+    def available_actions(self):
+        """ Iterate over all loaded modules, and retrieve actions (ie functions
+        with the @action decorator).
+        """
+        actions = []
+        for loader, module_name, is_pkg in  pkgutil.walk_packages(['actions']):
+            m = sys.modules["actions." + module_name]
+            print("actions." + module_name)
+            for member in [getattr(m, fn) for fn in dir(m)]:
+                if hasattr(member, "_action"):
+                    logger.info("Added " + m.__name__ + "." + member.__name__ + \
+                                " as available action.")
+                    actions.append(member)
+        return actions
+    
+    def add_action(self, fn):
+        def innermethod(*args, **kwargs):
+            action = "%s" % fn.__name__
+            logger.debug("Calling action " + action)
+            actions = fn(*args, **kwargs)
+            return self.execute(actions)
+                
+        innermethod.__doc__ = fn.__doc__ if fn.__doc__ else fn.__name__ + \
+            "\nThis method has been dynamically added to your robot."
+        innermethod.__name__ = fn.__name__
+        setattr(self,innermethod.__name__,innermethod)
 
     def _ack(self, evt):
         """ NOP function that serves as fallback callback
@@ -147,13 +194,15 @@ class Robot:
             logger.info("Waiting for " + str(action["args"]))
             time.sleep(action["args"])
     
-    def execute(self, fn, *args, **kwargs):
+    def execute(self, actions):
     
-        logger.debug(str(fn))	
-        actions = fn(*args, **kwargs)
+        if self.dummy:
+            logger.info("#Dummy mode# Executing actions " + str(actions))
+            return None
+            
         result = None
         if actions:
-            logger.debug(str(actions))
+            logger.debug("Executing actions " + str(actions))
             for action in actions:
                 logger.info("Executing " + str(action))
                 if action["middleware"] == "pocolibs":
