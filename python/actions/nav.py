@@ -1,4 +1,4 @@
-import logging; logger = logging.getLogger("novela." + __name__)
+import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 isrosconfigured = False

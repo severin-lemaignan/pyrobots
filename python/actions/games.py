@@ -1,4 +1,4 @@
-import logging; logger = logging.getLogger("novela." + __name__)
+import logging; logger = logging.getLogger("robot." + __name__)
 from helpers import trajectory, position, cb, postures
 from action import action, genom_request
 
