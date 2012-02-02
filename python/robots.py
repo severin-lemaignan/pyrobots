@@ -9,6 +9,8 @@ logger.setLevel(logging.DEBUG)
 
 from exception import RobotError
 
+from helpers.position import PoseManager
+
 class Robot(object):
     """ This 'low-level' class implements all what is required to actually execute
     actions on the robot.
@@ -32,12 +34,12 @@ class Robot(object):
             self.add_action(action)
         
         self.dummy = dummy        
-        self.use_pocolibs = use_pocolibs
-        self.use_ros = use_ros
+        self.use_pocolibs = use_pocolibs if not dummy else False
+        self.use_ros = use_ros if not dummy else False
+
+        self.poses = PoseManager(self)
         
         if dummy:
-            self.use_pocolibs = False
-            self.use_ros = False
             return
         
 
@@ -54,6 +56,7 @@ class Robot(object):
             import actionlib
             from actionlib_msgs.msg import GoalStatus
             self.GoalStatus = GoalStatus
+
 
     def hasROS(self):
         return self.use_ros
