@@ -2,23 +2,28 @@ import time
 import pypoco
 from pypoco import PocoRemoteError
 
-import logging; logger = logging.getLogger("novela." + __name__)
+import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 from exception import RobotError
 
-class ActionPerformer:
-
+class Robot:
+    """ This 'low-level' class implements all what is required to actually execute
+    actions on the robot.
+    
+    It supports execution of ROS actions, Genom requests, Python code and some
+    special actions like 'wait'.
+    """
     def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True):
 
-	self.use_pocolibs = use_pocolibs
-	self.use_ros = use_ros
+        self.use_pocolibs = use_pocolibs
+        self.use_ros = use_ros
 
-	if use_pocolibs:
-	        self.servers, self.poco_modules = pypoco.discover(host, port)
+        if use_pocolibs:
+                self.servers, self.poco_modules = pypoco.discover(host, port)
 
-	        self._pending_pocolibs_requests = {}
-        	self._pending_python_requests = {}
+                self._pending_pocolibs_requests = {}
+                self._pending_python_requests = {}
 
         if use_ros:
             import roslib; roslib.load_manifest('novela_actionlib')
@@ -31,7 +36,7 @@ class ActionPerformer:
     def close(self):
         logger.info('Closing the lowlevel!')
         for s in self.servers:
-		self.servers[s].close()
+            self.servers[s].close()
 
     def _ack(self, evt):
         """ NOP function that serves as fallback callback
@@ -50,10 +55,10 @@ class ActionPerformer:
         - an optional flag to decide if the request must be blocking or not.
         """
         
-	if not self.use_pocolibs:
-		raise RobotError("This action '" + action["request"] + "' "
-				 "requires Pocolibs, but this ActionPerformer "
-				 "has been started without it.")
+        if not self.use_pocolibs:
+            raise RobotError("This action '" + action["request"] + "' "
+                     "requires Pocolibs, but this ActionPerformer "
+                     "has been started without it.")
 
         if action["abort"]:
             # We want to abort a previous request.
@@ -78,8 +83,7 @@ class ActionPerformer:
             rqst = method(*args)
         except PocoRemoteError:
             print(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
-            print(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" 
-		  % (action["request"], str(action["args"])))
+            print(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" % (action["request"], str(action["args"])))
             return None
         if not action["wait_for_completion"]:
             # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
@@ -87,7 +91,7 @@ class ActionPerformer:
 
         logger.info("Execution done.")
         logger.debug(str(rqst))
-	return rqst
+        return rqst
 
     def _execute_ros(self, action):
         """ Execute a ros action.
@@ -97,10 +101,10 @@ class ActionPerformer:
 
         """
 
-	if not self.use_ros:
-		raise RobotError("This action '" + action["request"] + "' "
-				 "requires ROS, but this ActionPerformer "
-				 "has been started without it.")
+        if not self.use_ros:
+            raise RobotError("This action '" + action["request"] + "' "
+                     "requires ROS, but this ActionPerformer "
+                     "has been started without it.")
 
         client = action['client']
         goal = action['goal']
@@ -136,18 +140,13 @@ class ActionPerformer:
         logger.info("Starting Python background task " + action["class"].__name__ + " with params " + str(action["args"]))
         instance = action["class"](self, *action["args"])
         self._pending_python_requests[action["class"]] = instance
-	instance.start()
+        instance.start()
         
     def _execute_special(self, action):
         if action["action"] == "wait":
             logger.info("Waiting for " + str(action["args"]))
             time.sleep(action["args"])
-        
-    def test(self):
-        print("Test")
-        logger.info("Test INFO")
-        logger.debug("Test DEBUG")
-
+    
     def execute(self, fn, *args, **kwargs):
     
         logger.debug(str(fn))	
@@ -176,3 +175,7 @@ class ActionPerformer:
                 else:
                     logger.warning("Unsupported middleware. Skipping the action.")
         return result
+        
+class Pr2(Robot):
+    def __init__(self):
+        super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_genom = True)
