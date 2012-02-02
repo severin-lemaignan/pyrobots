@@ -25,7 +25,7 @@ for act_m in [getattr(m, fn) for fn in dir(m)]:
             actions.setdefault(act_m.__name__, []).append((fn.__name__, fn.__doc__))
             anchors[fn.__name__] = act_m.__name__ + "." + fn.__name__
 
-print("= Documentation of Novela actions =")
+print("= Documentation of pyRobots actions =")
 print("\n<<TableOfContents(3)>>\n")
 
 for m in actions.keys():
@@ -44,14 +44,13 @@ for m in actions.keys():
                 print(" * '''" + p + "''': " + d)
         print("\n")
         print("Example:\n{{{#!highlight python")
-        print("from novela import *")
-        print("from " + m + " import *\n")
-        print("pr2 = getpr2()\n")
+        print("import robots")
+        print("pr2 = robots.PR2() # Pass 'dummy=True' to test without the real robot\n")
         if params:
             for p,d in params:
                 print(p + " = " + p.upper() + " # define here a " + p )
-            print("pr2.execute(" + name + ", " + ", ".join([p for p,d in params]) + ")")
+            print("pr2." + name + "(" + ", ".join([p for p,d in params]) + ")")
         else:
-            print("pr2.execute(" + name + ")")
+            print("pr2." + name + "()")
         print("}}}")
         print("\n")
