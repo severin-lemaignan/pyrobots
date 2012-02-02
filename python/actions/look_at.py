@@ -1,22 +1,15 @@
-import logging; logger = logging.getLogger("novela." + __name__)
+import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
+
+from exception import RobotError
 
 from action import action, genom_request, ros_request, background_task, wait
 from helpers.jointstate import getjoint
 from helpers import position
 from helpers.cb import nop
 
-import roslib; roslib.load_manifest('novela_actionlib')
-import rospy
+from actions.configuration import setpose
 
-import numpy
-import math
-from geometry_msgs.msg import PointStamped
-from tf import TransformerROS
-from tf import TransformListener
-from tf import transformations
-
-listener = TransformListener()
 
 #TODO HACK: I create here a new action performer for background "tracking"
 # actions to avoid pypoco multithreading issues
@@ -32,6 +25,18 @@ def xyz_to_panTilt(frame, x, y, z):
     :param frame: the frame in which coordinates are interpreted
     :returns: (pan, tilt) in radians
     """
+
+    import roslib; roslib.load_manifest('novela_actionlib')
+    import rospy
+
+    import numpy
+    import math
+    from geometry_msgs.msg import PointStamped
+    from tf import TransformerROS
+    from tf import TransformListener
+    from tf import transformations
+
+    listener = TransformListener()
 
     goal = PointStamped()
     goal.header.frame_id =frame
@@ -74,7 +79,7 @@ def xyz_to_panTilt(frame, x, y, z):
 ###############################################################################
 
 @action
-def look_at(place, callback = None):
+def look_at(robot, place, callback = None):
     """ A simple 'look at' method that uses pr2SoftMotion.
 
     Uses look_at_xyz underneath.
@@ -83,12 +88,10 @@ def look_at(place, callback = None):
               If a 'frame' key is found, use it as reference frame. Else
               the world frame '/map' is assumed.
     """
-    try:
-        frame = place['frame']
-    except KeyError:
-        frame = "map"
+    
+    place = robot.poses.get(place)
 
-    return look_at_xyz(place['x'], place['y'], place['z'], frame, callback)
+    return look_at_xyz(place['x'], place['y'], place['z'], place['frame'], callback)
     #return look_at_xyz_with_moveHead(place['x'], place['y'], place['z'], frame, callback)
 
 ###############################################################################
@@ -103,21 +106,9 @@ def look_at_xyz(x,y,z, frame = "map", callback = None):
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
     print("Looking at " + str([x,y,z]) + " in " + frame)
-    (pan,tilt) = xyz_to_panTilt(frame,x,y,z)
-    actions = [
-        genom_request(  "pr2SoftMotion",
-            "GotoQ",
-            ["HEAD",
-            0,
-            0.0, pan, tilt, 0.0,
-            0, 0, 0, 0, 0, 0, 0, 0.0, 0.0, 
-            0, 0, 0, 0, 0, 0, 0, 0.0, 0.0],
-        wait_for_completion = False if callback else True,
-        callback = callback
-        )
-    ]
+    pantilt = xyz_to_panTilt(frame,x,y,z)
 
-    return actions
+    return setpose({'HEAD':pantilt}, callback)
 
 ###############################################################################
 
