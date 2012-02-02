@@ -91,7 +91,7 @@ class Robot(object):
         def innermethod(*args, **kwargs):
             action = "%s" % fn.__name__
             logger.debug("Calling action " + action)
-            actions = fn(*args, **kwargs)
+            actions = fn(self, *args, **kwargs)
             return self.execute(actions)
                 
         innermethod.__doc__ = fn.__doc__ if fn.__doc__ else fn.__name__ + \
