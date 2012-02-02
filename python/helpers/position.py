@@ -142,7 +142,7 @@ class PoseManager:
                 if self.spark:
                     pose = self.spark.getabspose(raw)
                 if not pose:
-                    raise RobotError("Unknown object or frame %s" % raw)
+                    raise RobotError("Unknown object or frame '%s'" % raw)
                 else:
                     return self.normalize(pose)
             else:
@@ -156,17 +156,19 @@ class PoseManager:
                     if self.spark:
                         pose = self.spark.getabspose(raw)
                     if not pose:
-                        raise RobotError("Unknown object or part %s" % raw)
+                        raise RobotError("Unknown object or part '%s'" % raw)
                     else:
                         return self.normalizelist(pose)
                 else:
                     raise RobotError("Unable to recognize the pose %s" % raw)
+            except TypeError:
+                raise RobotError("Unable to process the pose '%s'" % raw)
             except ValueError:
                 # List or dict (x,y,z,...)?
                 try:
                     return self.normalize(raw)
                 except RobotError as re:
-                    raise RobotError("Unable to process the pose %s (original error was:%s)" % (raw, str(re)))
+                    raise RobotError("Unable to process the pose '%s' (original error was:%s)" % (raw, str(re)))
 
     def myself():
         """

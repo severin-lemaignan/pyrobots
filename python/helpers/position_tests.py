@@ -12,6 +12,7 @@ import unittest
 import position
 
 import robots
+from exception import RobotError
 
 class TestPositions(unittest.TestCase):
 
@@ -26,12 +27,24 @@ class TestPositions(unittest.TestCase):
         ref1 = {'x':0.0, 'y':0.0, 'z':0.0, 'qx':None, 'qy':None, 'qz':None, 'qw':None, 'frame':'map'}
         ref2 = {'x':None, 'y':None, 'z':None, 'qx':0.0, 'qy':0.0, 'qz':0.0, 'qw':0.0, 'frame':'map'}
         
+        with self.assertRaises(RobotError):    
+            self.poses.get('a')
+        with self.assertRaises(RobotError):
+            self.poses.get(None)
+        with self.assertRaises(RobotError):
+            self.poses.get(12)
+        
         self.assertEqual(ref0, self.poses.get(ref0))
         self.assertEqual(ref, self.poses.get(ref))
         
         self.assertEqual(ref1, self.poses.get([0,0,0]))
         self.assertEqual(ref0, self.poses.get([0,0,0,0,0,0]))
         self.assertEqual(ref0, self.poses.get([0,0,0,0,0,0,0]))
+        
+        with self.assertRaises(RobotError):
+            self.poses.get([0,0,0,0,0])
+        with self.assertRaises(RobotError):
+            self.poses.get([0,0,0,0,0,0,0,0])
         
         self.assertEqual(ref, self.poses.get([1.2,2.1,1.8,0.1,0.0,0.5,1.0]))
         
