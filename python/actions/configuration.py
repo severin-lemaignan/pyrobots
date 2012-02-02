@@ -1,3 +1,6 @@
+import logging; logger = logging.getLogger("robot." + __name__)
+logger.setLevel(logging.DEBUG)
+
 import random
 from exception import RobotError
 from action import action, genom_request
@@ -16,26 +19,36 @@ def disabledevileye():
 @action
 def setpose(posture, callback = None, part = None, collision_avoidance = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
-    Set the PR2 joints in a given configuration.
-
-    Set a posture taking or not (depend on collision_avoidance state) into account collisions.
+    Set the PR2 base and internal joints in a given configuration.
+    
+    Beware: if collision_avoidance is not set to True, not collision detection is done.
+    This can result in a dangerous robot behaviour. Note also that collision avoidance
+    is available for the right arm only.
+    
+    While you can set the global position of the PR2 robot with this action, please
+    use goto in the 'nav' category for obstacle aware navigation.
    
     If posture = {} and part = 'PR2', all parameters take 0 for value
  
     :param posture: a posture, ie, a dictionary built as follow:
     
+      * Key '''BASE''': array of 6 floats [x,y,z,rx,ry,rz], in meters and in radians. The position is given in the world frame.
       * Key '''RARM''': array of 7 joint angles for the right arm, in radians,
       * Key '''LARM''': array of 7 joint angles for the left arm, in radians,
       * Key '''TORSO''': the height of the torso ([0-30]), in centimeters,
       * Key '''HEAD''': array of pan and tilt values, in radians,
+    
+    Note that none of the items of the dictionary are mandatory. If no robot part is 
+    selected (see the 'part' parameter below), the smallest set of part is selected
+    that allow execution of the pose.
 
     :param part: (optional) force only a certain part of the PR2 to execute to posture.
-    Allowed values: 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD'
+    Allowed values: 'BASE', 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD'
     :param collision_avoidance: (optional), If true, the robot will be consider obstacles 
     in its environment. If true, you have to precise part = 'RARM'.
-    :param obj: (optional) precise which objet the robot has to avoid during the movement. 
+    :param obj: (optional) set which objet the robot has to avoid during the movement. 
     You can give only one object.
-    :param support: (optional precise which support the robot has to avoid during the movement.
+    :param support: (optional) set which support the robot has to avoid during the movement.
     You can give only one support.
     :param callback: (optional) If given, the action is non-blocking, and the callback is
     invoked at the activity completion.
@@ -44,13 +57,20 @@ def setpose(posture, callback = None, part = None, collision_avoidance = False, 
     if collision_avoidance and not part == 'RARM':
         raise RobotError("Can't use collision avoidance with other part than RARM")
 
-    if part and part not in ['RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
+    if part and part not in ['BASE', 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
         print("'Go to posture raw' for part " + part + " is not implemented.")
 
-    print (posture)
+    logger.debug("Setting pose " + str(posture))
 
     forced_part = part
 
+    try:
+        x, y, z, rx, ry ,rz = posture['BASE']
+        if not forced_part:
+            part = 'BASE'
+    except KeyError:
+        x, y, z, rx, ry ,rz = [0.0] * 6
+    
     try:
         rq1, rq2, rq3, rq4, rq5, rq6, rq7 = posture['RARM']
         if not forced_part:
@@ -99,9 +119,13 @@ def setpose(posture, callback = None, part = None, collision_avoidance = False, 
                     "pr2SoftMotion", 
                     "GotoQ",
                 [forced_part if forced_part else part,
-                0,
-                torso, pan, tilt, 0.0,
-                    rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
+                0, # Relative to current pos? 0: none, else yes
+                x,y,z,
+                rx,ry,rz,
+                torso, 
+                pan, tilt, # head
+                0.0, # laser tilt
+                rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
                 lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
                 wait_for_completion = False if callback else True,
                 callback = callback)
