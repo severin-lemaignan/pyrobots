@@ -236,6 +236,6 @@ class Robot(object):
                     logger.warning("Unsupported middleware. Skipping the action.")
         return result
         
-class Pr2(Robot):
-    def __init__(self):
-        super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_genom = True)
+class PR2(Robot):
+    def __init__(self, dummy = False):
+        super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_pocolibs = True, dummy = dummy)
