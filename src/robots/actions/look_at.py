@@ -1,14 +1,14 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
-from exception import RobotError
+from robots.exception import RobotError
 
-from action import action, genom_request, ros_request, background_task, wait
-from helpers.jointstate import getjoint
-from helpers import position
-from helpers.cb import nop
+from robots.action import action, genom_request, ros_request, background_task, wait
+from robots.helpers.jointstate import getjoint
+from robots.helpers import position
+from robots.helpers.cb import nop
 
-from actions.configuration import setpose
+from robots.actions.configuration import setpose
 
 
 #TODO HACK: I create here a new action performer for background "tracking"
@@ -26,7 +26,7 @@ def xyz_to_panTilt(frame, x, y, z):
     :returns: (pan, tilt) in radians
     """
 
-    import roslib; roslib.load_manifest('novela_actionlib')
+    import roslib; roslib.load_manifest('pyrobots_actionlib')
     import rospy
 
     import numpy

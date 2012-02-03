@@ -1,3 +1,4 @@
+from robots.action import action
 from configuration import setpose
 
 @action

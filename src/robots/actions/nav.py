@@ -1,29 +1,16 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
-isrosconfigured = False
-try:
-    import roslib; roslib.load_manifest('novela_actionlib')
-    import rospy
-    import actionlib
-    import move_base_msgs.msg
-    isrosconfigured = True
-    
-except ImportError: # Incorrect ROS setup!
-    logger.warning("ROS is not configured!! Running in dummy mode")
-    pass
+from robots.helpers.cb import *
 
-
-from helpers.cb import *
-
-from action import action, ros_request
+from robots.action import action, ros_request
 
 
 ###############################################################################
 ###############################################################################
 
 @action
-def goto(target, callback = None):
+def goto(robot, target, callback = None):
     """ Moves the robot base to a given target, using ROS 2D navigation stack.
 
         Only (x,y,theta), ie (x, y, qw, qz), are considered for the target. 
@@ -87,7 +74,7 @@ def goto(target, callback = None):
 ###############################################################################
 
 @action
-def cancel():
+def cancel(robot):
     """ Interrupt a navigation task.
     """
     
@@ -116,7 +103,7 @@ def cancel():
 ###############################################################################
 
 @action
-def carry(target, callback = None):
+def carry(robot, target, callback = None):
     """ Moves to a place, taking into account door crossing.
 
     If the robot needs to cross a door, it will stop in front of the door,

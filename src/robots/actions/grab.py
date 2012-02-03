@@ -1,20 +1,7 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
-
-isrosconfigured = False
-try:
-    import roslib; roslib.load_manifest('novela_actionlib')
-    import rospy
-
-    import actionlib
-    import pr2_gripper_sensor_msgs.msg
-    isrosconfigured = True
     
-except ImportError: # Incorrect ROS setup!
-    logger.warning("ROS is not configured!! Running in dummy mode")
-    pass
-    
-from action import action, ros_request
+from robots.action import action, ros_request
 
 ###############################################################################
 @action

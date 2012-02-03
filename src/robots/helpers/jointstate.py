@@ -1,6 +1,6 @@
 def getjoint(name):
     
-    import roslib; roslib.load_manifest('novela_actionlib')
+    import roslib; roslib.load_manifest('pyrobots_actionlib')
     import rospy
     from sensor_msgs.msg import JointState
     

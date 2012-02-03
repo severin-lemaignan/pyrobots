@@ -1,13 +1,13 @@
 <package>
-  <description brief="novela_actionlib">
+  <description brief="pyrobots_actionlib">
 
-     novela_actionlib
+     pyrobots_actionlib
 
   </description>
-  <author>Nicolas CourbetInconnuInconnu</author>
-  <license>BSD</license>
+  <author>Séverin Lemaignan et al.</author>
+  <license>ISC</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/novela_actionlib</url>
+  <url>http://ros.org/wiki/pyrobots_actionlib</url>
   <depend package="move_base_msgs"/>
   <depend package="actionlib"/>
   <depend package="rospy"/>

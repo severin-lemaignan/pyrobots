@@ -1,11 +1,11 @@
 import random
 
-from action import action, genom_request, wait
+from robots.action import action, genom_request, wait
 
-from helpers import postures
-from helpers.cb import *
+from robots.helpers import postures
+from robots.helpers.cb import *
 
-from actions import configuration
+from robots.actions import configuration
 
 used_plan_id = []
 

@@ -2,9 +2,9 @@ import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 import random
-from exception import RobotError
-from action import action, genom_request
-from helpers import trajectory, postures
+from robots.exception import RobotError
+from robots.action import action, genom_request
+from robots.helpers import trajectory, postures
 
 import os
 

@@ -1,8 +1,8 @@
 import logging; logger = logging.getLogger("robot." + __name__)
-from helpers import trajectory, position, cb, postures
-from action import action, genom_request
+from robots.helpers import trajectory, position, cb, postures
+from robots.action import action, genom_request
 
-from actions.administration import wait
+from robots.actions.administration import wait
 
 @action
 def basket(robot, duration = 4):

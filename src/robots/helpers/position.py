@@ -1,7 +1,7 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
-from exception import RobotError
+from robots.exception import RobotError
 import places
 
 POS_EPSILON = 0.1 # Min distance in meters from origin to be considered as 'in game'
@@ -29,8 +29,8 @@ class PoseManager:
                            " quaternions and euler angles won't be available.")
             self.ros = None
             
-        if robot.hasPocolibs() and robots.hasmodule('spark'):
-            from action import genom_request
+        if robot.hasPocolibs() and robot.hasmodule('spark'):
+            from robots.action import genom_request
             self.spark = SPARKPositionKeeper(robot)
         else:
             logger.warning("Initializing the PoseManager without SPARK support." +\
@@ -193,7 +193,6 @@ class ROSPositionKeeper:
         self.isrosconfigured = True
         
         try:
-            import roslib; roslib.load_manifest('novela_actionlib')
             import rospy
             from tf import TransformListener
         except ImportError: # Incorrect ROS setup!

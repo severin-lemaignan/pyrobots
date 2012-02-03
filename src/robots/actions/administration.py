@@ -1,8 +1,8 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
-from action import action, genom_request
-from action import wait as basewait
+from robots.action import action, genom_request
+from robots.action import wait as basewait
 
 @action
 def setup_scenario(scenario):
