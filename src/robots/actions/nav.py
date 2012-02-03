@@ -21,18 +21,16 @@ def goto(robot, target, callback = None):
         is reached. If nothing is provided, the action blocks until the 
         destination is reached.
     """
-    x = target['x']
-    y = target['y']
-    z = 0.0
-    qx = 0.0
-    qy = 0.0
-    qz = target['qz']
-    qw = target['qw']
+
+    pose = robot.poses[target]
     
     client = None
     goal = None
     
-    if isrosconfigured:
+    if robot.hasROS():
+	import rospy
+	import actionlib
+        import move_base_msgs.msg
         # Creates the SimpleActionClient, passing the type of the action
         # (Navigationction) to the constructor.
         client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
@@ -47,22 +45,22 @@ def goto(robot, target, callback = None):
         goal = move_base_msgs.msg.MoveBaseGoal()
 
         # Definition of the goal
-        goal.target_pose.header.frame_id = 'map'
+        goal.target_pose.header.frame_id = pose['frame']
         goal.target_pose.header.stamp = rospy.Time.now();
 
-        goal.target_pose.pose.position.x = x
-        goal.target_pose.pose.position.y = y
-        goal.target_pose.pose.position.z = z
+        goal.target_pose.pose.position.x = pose['x']
+        goal.target_pose.pose.position.y = pose['y']
+        goal.target_pose.pose.position.z = pose['z']
 
-        goal.target_pose.pose.orientation.x = qx
-        goal.target_pose.pose.orientation.y = qy
-        goal.target_pose.pose.orientation.z = qz
-        goal.target_pose.pose.orientation.w = qw
+        goal.target_pose.pose.orientation.x = pose['qx']
+        goal.target_pose.pose.orientation.y = pose['qy']
+        goal.target_pose.pose.orientation.z = pose['qz']
+        goal.target_pose.pose.orientation.w = pose['qw']
         
     else:
         # Useful for debugging purpose, without the actual robot
         client = "ROS move_base"
-        goal = [x, y, z, qx, qy, qz, qw]
+        goal = pose
     
 
     return [ros_request(client, 

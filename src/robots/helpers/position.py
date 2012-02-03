@@ -51,37 +51,37 @@ class PoseManager:
         
     def normalizedict(self, pose):
         if not 'x' in pose:
-            pose['x'] = None
+            pose['x'] = 0.0
         else:
             pose['x'] = float(pose['x'])
             
         if not 'y' in pose:
-            pose['y'] = None
+            pose['y'] = 0.0
         else:
             pose['y'] = float(pose['y'])
             
         if not 'z' in pose:
-            pose['z'] = None
+            pose['z'] = 0.0
         else:
             pose['z'] = float(pose['z'])
             
         if not 'qx' in pose:
-            pose['qx'] = None
+            pose['qx'] = 0.0
         else:
             pose['qx'] = float(pose['qx'])
         
         if not 'qy' in pose:
-            pose['qy'] = None
+            pose['qy'] = 0.0
         else:
             pose['qy'] = float(pose['qy'])
         
         if not 'qz' in pose:
-            pose['qz'] = None
+            pose['qz'] = 0.0
         else:
             pose['qz'] = float(pose['qz'])
             
         if not 'qw' in pose:
-            pose['qw'] = None
+            pose['qw'] = 0.0
         else:
             pose['qw'] = float(pose['qw'])
             
