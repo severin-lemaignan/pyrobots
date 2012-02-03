@@ -1,0 +1,4 @@
+pyRobots is a collection of Python scripts to easily interface with the robot
+ROS or GenoM functional modules.
+
+It currently only support the PR2 robot.
