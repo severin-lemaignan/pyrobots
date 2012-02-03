@@ -24,20 +24,22 @@ def lock_object(object):
 
 @action
 def unlock_object(object):
-    """ Unlock to position of an object in SPARK. It won't be updated
-    anymore.
+    """ Unlock to position of an object in SPARK. It will be updated
+    when seen.
     
-    :param object: The ID of the object to lock.
+    :param object: The ID of the object to unlock.
     """
     return [genom_request("spark", "SetObjectFixed", [object, "GEN_FALSE"])]
 
 
 @action
 def wait(seconds):
-	""" This special action simply waits for a given amount of second before 
-	sending the next action.
-	"""
-	return [basewait(seconds)]
+    """ This special action simply waits for a given amount of second before 
+    sending the next action.
+    
+    :param seconds: the time to wait, in seconds
+    """
+    return [basewait(seconds)]
 
 @action
 def init():

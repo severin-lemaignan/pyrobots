@@ -18,7 +18,7 @@ from action import action, ros_request
 
 ###############################################################################
 @action
-def grab(callback = None):
+def grab(robot, callback = None):
     
     client = None
     goal = None
@@ -51,8 +51,8 @@ def grab(callback = None):
             )]
             
 ###############################################################################
-@action			
-def release(callback = None):
+@action
+def release(robot, callback = None):
     
     #definition of the release client
     client = actionlib.SimpleActionClient('r_gripper_sensor_controller/release', pr2_gripper_sensor_msgs.msg.PR2GripperReleaseAction)
@@ -79,8 +79,8 @@ def release(callback = None):
         )]
             
 ###############################################################################	
-@action 			
-def detect(callback = None):
+@action
+def detect(robot, callback = None):
     
     #definition of the detect client
     client = actionlib.SimpleActionClient('r_gripper_sensor_controller/event_detector', pr2_gripper_sensor_msgs.msg.PR2GripperEventDetectorAction)
@@ -110,7 +110,7 @@ def detect(callback = None):
 
 ###############################################################################	
 @action
-def detect_and_grab(callback = None):
+def detect_and_grab(robot, callback = None):
 
     actions = detect()
 
