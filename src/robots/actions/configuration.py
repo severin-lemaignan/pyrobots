@@ -17,7 +17,7 @@ def disabledevileye():
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 1")
  
 @action
-def setpose(posture, callback = None, part = None, collision_avoidance = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
+def setpose(posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
     Set the PR2 base and internal joints in a given configuration.
     
@@ -46,6 +46,8 @@ def setpose(posture, callback = None, part = None, collision_avoidance = False, 
     Allowed values: 'BASE', 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD'
     :param collision_avoidance: (optional), If true, the robot will be consider obstacles 
     in its environment. If true, you have to precise part = 'RARM'.
+    :param relative: (default: False) if set to true, the posture is considered as
+    being relative to the current configuration.
     :param obj: (optional) set which objet the robot has to avoid during the movement. 
     You can give only one object.
     :param support: (optional) set which support the robot has to avoid during the movement.
@@ -119,7 +121,7 @@ def setpose(posture, callback = None, part = None, collision_avoidance = False, 
                     "pr2SoftMotion", 
                     "GotoQ",
                 [forced_part if forced_part else part,
-                0, # Relative to current pos? 0: none, else yes
+                1 if relative else 0,
                 x,y,z,
                 rx,ry,rz,
                 torso, 
