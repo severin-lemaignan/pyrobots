@@ -1,34 +1,27 @@
-import os
-import math
-def nav_line(x, y = 0, speed = 0.1):
-	"""A primitive method to move the base straight.
+from configuration import setpose
 
-	:param x: Define how many meter you want to move the base in front of or behind
-	:param y: Define how many meter you want to move the base on the right or on the left
-	:param speed: Define the speed will move the base
-	"""
+@action
+def translation(robot, x, y = 0):
+    """Move the robot base in XY, relatively to its current position.
+    
+    Be careful: this low-level action does NO obstacle avoidance.
 
-        goal = os.popen("/u/ncourbet/openrobots/src/ros-nodes/navGoto/bin/navLine " + str(x) + " " +  str(y) + " 0  base_link " + str(speed))
-
-        print goal
-
-        for line in goal.readlines():
-                print (line)
+    :param x: X (forward/backward) displacement, in meter
+    :param y: (default: 0) Y (left/right) displacement, in meter
+    """
+    
+    return setpose({'BASE':[x,y,0,0,0,0]}, relative = True)
 
 
-def rotation(theta):
-	"""A primitive method to go round in circles
+@action
+def rotation(robot, theta):
+    """Get the robot to turn on itself of the given angle
+    (relatively to its current heading).
+    
+    Be careful: this low-level action does NO obstacle avoidance.
+    
+    :param theta: an angle in radian
+    """
 
-	:param theta: The number of degree you want to turn the robot
-
-	"""
-
-	theta_rd = math.radians(float(theta))
-
-        goal = os.popen("/u/ncourbet/openrobots/src/ros-nodes/navGoto/bin/simpleGoal 0  0 " + str(theta_rd) +  " base_link")
-
-        print goal
-
-        for line in goal.readlines():
-                print (line)
+    return setpose({'BASE':[0,0,0,0,0,theta]}, relative = True)
 
