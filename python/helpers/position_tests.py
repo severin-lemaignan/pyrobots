@@ -37,22 +37,30 @@ class TestPositions(unittest.TestCase):
         self.assertEqual(ref0, self.poses.get(ref0))
         self.assertEqual(ref, self.poses.get(ref))
         
+        self.assertEqual(ref0, self.poses[ref0])
+        self.assertEqual(ref, self.poses[ref])
+        
         self.assertEqual(ref1, self.poses.get([0,0,0]))
-        self.assertEqual(ref0, self.poses.get([0,0,0,0,0,0]))
+        self.assertEqual(ref1, self.poses[[0,0,0]])
+        
         self.assertEqual(ref0, self.poses.get([0,0,0,0,0,0,0]))
         
         with self.assertRaises(RobotError):
             self.poses.get([0,0,0,0,0])
         with self.assertRaises(RobotError):
             self.poses.get([0,0,0,0,0,0,0,0])
-        
-        self.assertEqual(ref, self.poses.get([1.2,2.1,1.8,0.1,0.0,0.5,1.0]))
-        
+
         
         self.assertEqual(ref1, 
                          self.poses.get({'x':0.0, 'y':0.0, 'z':0.0}))
         self.assertEqual(ref2, 
                          self.poses.get({'qx':0.0, 'qy':0.0, 'qz':0.0, 'qw':0}))
+                         
+        # Requires ROS support
+        self.assertEqual(ref0, self.poses.get([0,0,0,0,0,0]))        
+        self.assertEqual(ref, self.poses.get([1.2,2.1,1.8,0.1,0.0,0.5,1.0]))
+        
+
         
         
         

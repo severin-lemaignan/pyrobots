@@ -113,6 +113,11 @@ class PoseManager:
         
         raise RobotError("normalize() takes either lists or dict as input.")
     
+    def __getitem__(self, raw):
+        """ Implements the PoseManager[] operator as an alias for PoseManager.get()
+        """
+        return self.get(raw)
+        
     def get(self, raw):
         """ takes a loosly define 'pose' as input and returns a properly formatted
         and normalized pose.
