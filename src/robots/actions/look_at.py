@@ -105,7 +105,7 @@ def look_at_xyz(x,y,z, frame = "map", callback = None):
     :param z: the z coordinate
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
-    print("Looking at " + str([x,y,z]) + " in " + frame)
+    logger.info("Looking at " + str([x,y,z]) + " in " + frame)
     pantilt = xyz_to_panTilt(frame,x,y,z)
 
     return setpose({'HEAD':pantilt}, callback)
@@ -123,7 +123,7 @@ def look_at_xyz_with_moveHead(x,y,z, frame = "map", callback = None):
     :param z: the z coordinate
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
-    print("Looking at " + str([x,y,z]) + " in " + frame)
+    logger.info("Looking at " + str([x,y,z]) + " in " + frame)
     actions = [
         genom_request(	"pr2SoftMotion",
             "MoveHead",
@@ -257,7 +257,7 @@ def look_at_ros(place):
     client.wait_for_server()
     ok = client.wait_for_server()
     if not ok:
-            print("Could not connect to the ROS client! Aborting action")
+            logger.error("Could not connect to the ROS client! Aborting action")
             return
 
     # Creates a goal to send to the action server.  

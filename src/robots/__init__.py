@@ -2,8 +2,18 @@ import sys
 import pkgutil
 import time
 
-import logging; logger = logging.getLogger("robot." + __name__)
-logger.setLevel(logging.DEBUG)
+import logging; robotlog = logging.getLogger("robot." + __name__)
+robotlog.setLevel(logging.DEBUG)
+
+class NullHandler(logging.Handler):
+    """Defines a NullHandler for logging, in case pyrobots is used in an 
+    application that doesn't use logging.
+    """
+    def emit(self, record):
+        pass
+
+h = NullHandler()
+robotlog.addHandler(h)
 
 from exception import RobotError
 
@@ -66,7 +76,7 @@ class Robot(object):
         return True if module in self.poco_modules else False
         
     def close(self):
-        logger.info('Closing the lowlevel!')
+        robotlog.info('Closing the lowlevel!')
         for s in self.servers:
             self.servers[s].close()
 
@@ -80,7 +90,7 @@ class Robot(object):
             m = sys.modules["robots.actions." + module_name]
             for member in [getattr(m, fn) for fn in dir(m)]:
                 if hasattr(member, "_action"):
-                    logger.info("Added " + m.__name__ + "." + member.__name__ + \
+                    robotlog.info("Added " + m.__name__ + "." + member.__name__ + \
                                 " as available action.")
                     actions.append(member)
         return actions
@@ -88,7 +98,7 @@ class Robot(object):
     def add_action(self, fn):
         def innermethod(*args, **kwargs):
             action = "%s" % fn.__name__
-            logger.debug("Calling action " + action)
+            robotlog.debug("Calling action " + action)
             actions = fn(self, *args, **kwargs)
             return self.execute(actions)
                 
@@ -122,10 +132,10 @@ class Robot(object):
         if action["abort"]:
             # We want to abort a previous request.
             self._pending_pocolibs_requests[action["module"] + "." + action["request"]].abort()
-            logger.warning("Aborted " + action["module"] + "." + action["request"])
+            robotlog.warning("Aborted " + action["module"] + "." + action["request"])
             return
 
-        logger.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(action["args"]))
+        robotlog.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(action["args"]))
         module = self.poco_modules[action["module"]]
         method = getattr(module, action["request"])
 
@@ -141,15 +151,15 @@ class Robot(object):
         try:
             rqst = method(*args)
         except PocoRemoteError:
-            print(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
-            print(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" % (action["request"], str(action["args"])))
+            robotlog.error(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
+            robotlog.error(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" % (action["request"], str(action["args"])))
             return None
         if not action["wait_for_completion"]:
             # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
             self._pending_pocolibs_requests[action["module"] + "." + action["request"]] = rqst
 
-        logger.info("Execution done.")
-        logger.debug(str(rqst))
+        robotlog.info("Execution done.")
+        robotlog.debug(str(rqst))
         return rqst
 
     def _execute_ros(self, action):
@@ -172,7 +182,7 @@ class Robot(object):
         #result = client.get_result()
 
     
-        print("Sending goal " + str(action["goal"]) + " to " + str(client))
+        robotlog.debug("Sending goal " + str(action["goal"]) + " to " + str(client))
         # Sends the goal to the action server 
         client.send_goal(goal, done_cb = action["callback"])
            
@@ -182,41 +192,41 @@ class Robot(object):
 
             # Checks if the goal was achieved
             if client.get_state() == self.GoalStatus.SUCCEEDED:
-                print('Action succeeded')
+                robotlog.info('Action succeeded')
             else:
-                print("Action failed!")
+                robotlog.error("Action failed!")
 
     def _execute_python(self, action):
         
         if action["abort"]:
             try:
                 self._pending_python_requests[action["class"]].stop()
-                logger.warning("Aborted Python background task " + action["class"].__name__)
+                robotlog.warning("Aborted Python background task " + action["class"].__name__)
             except KeyError:
                 pass #Likely a task already aborted
             return
 
-        logger.info("Starting Python background task " + action["class"].__name__ + " with params " + str(action["args"]))
+        robotlog.info("Starting Python background task " + action["class"].__name__ + " with params " + str(action["args"]))
         instance = action["class"](self, *action["args"])
         self._pending_python_requests[action["class"]] = instance
         instance.start()
         
     def _execute_special(self, action):
         if action["action"] == "wait":
-            logger.info("Waiting for " + str(action["args"]))
+            robotlog.info("Waiting for " + str(action["args"]))
             time.sleep(action["args"])
     
     def execute(self, actions):
     
         if self.dummy:
-            logger.info("#Dummy mode# Executing actions " + str(actions))
+            robotlog.info("#Dummy mode# Executing actions " + str(actions))
             return None
             
         result = None
         if actions:
-            logger.debug("Executing actions " + str(actions))
+            robotlog.debug("Executing actions " + str(actions))
             for action in actions:
-                logger.info("Executing " + str(action))
+                robotlog.info("Executing " + str(action))
                 if action["middleware"] == "pocolibs":
                     res = self._execute_pocolibs(action)
                     if res:
@@ -234,9 +244,19 @@ class Robot(object):
                     if res:
                         result = res
                 else:
-                    logger.warning("Unsupported middleware. Skipping the action.")
+                    robotlog.warning("Unsupported middleware. Skipping the action.")
         return result
         
 class PR2(Robot):
     def __init__(self, dummy = False):
         super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_pocolibs = True, dummy = dummy)
+
+import __main__ as main
+if not hasattr(main, '__file__'):
+    # Running in interactive mode:
+    # Add a console logger
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('[%(levelname)s] %(name)s -> %(message)s')
+    handler.setFormatter(formatter)
+    robotlog.addHandler(handler)
