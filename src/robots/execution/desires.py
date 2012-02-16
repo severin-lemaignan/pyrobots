@@ -35,14 +35,19 @@ class Desire(object):
             self._oro.add(["myself currentlyPerforms " + self._sit], "EPISODIC")
 
 class Move(Desire):
-    def __init__(self, situation, oro, actionQueue):
-        super(Move, self).__init__(situation, oro, actionQueue)
+    def __init__(self, situation, oro, robot):
+        super(Move, self).__init__(situation, oro, robot)
         
         self.to = oro[self._sit + " hasGoal *"]
 
+    def perform(self):
+        logger.info("Moving to: " + str(self.to))
+        self._robot.goto(self.to[0]))
+        super(Move, self).perform()
+
 class Get(Desire):
-    def __init__(self, situation, oro, actionQueue):
-        super(Get, self).__init__(situation, oro, actionQueue)
+    def __init__(self, situation, oro, robot):
+        super(Get, self).__init__(situation, oro, robot)
         
         self.objects = oro[self._sit + " actsOnObject *"]
     
@@ -51,8 +56,8 @@ class Get(Desire):
         super(Get, self).perform()
 
 class Show(Desire):
-    def __init__(self, situation, oro, actionQueue):
-        super(Show, self).__init__(situation, oro, actionQueue)
+    def __init__(self, situation, oro, robot):
+        super(Show, self).__init__(situation, oro, robot)
         
         self.objects = oro[self._sit + " actsOnObject *"]
         self.doer = oro[self._sit + " performedBy *"]
@@ -61,12 +66,12 @@ class Show(Desire):
     def perform(self):
         logger.info(str(self.doer) + " wants to show " + str(self.objects) + " to " + str(self.to))
         
-        self._action_queue.put(GenomAction.show(self.doer[0], self.objects[0], self.to[0]))
+        self._robot.show(self.doer[0], self.objects[0], self.to[0]))
         super(Show, self).perform()
     
 class Give(Desire):
-    def __init__(self, situation, oro, actionQueue):
-        super(Give, self).__init__(situation, oro, actionQueue)
+    def __init__(self, situation, oro, robot):
+        super(Give, self).__init__(situation, oro, robot)
         
         self.objects = oro[self._sit + " actsOnObject *"]
         self.doer = oro[self._sit + " performedBy *"]
@@ -75,7 +80,7 @@ class Give(Desire):
     def perform(self):
         logger.info(str(self.doer) + " wants to give " + str(self.objects) + " to " + str(self.to))
         
-        self._action_queue.put(GenomAction.give(self.doer[0], self.objects[0], self.to[0]))
+        self._robot.give(self.doer[0], self.objects[0], self.to[0]))
 
         super(Give, self).perform()
 
@@ -103,7 +108,7 @@ class Look(Desire):
     
     def perform(self):
         logger.info(str(self.doer) + " wants to look at " + str(self.objects))
-	logger.warning("Currently hard-coded to x,y,z")
+        logger.warning("Currently hard-coded to x,y,z")
         
         self._robot.look_at_xyz_with_moveHead(5.5, -5, 1, "map")
 
