@@ -1,7 +1,5 @@
 import logging
-logger = logging.getLogger("supervision")
-
-from genomactionlibrary import GenomAction
+logger = logging.getLogger("robots." + __name__)
 
 class Desire(object):
     """ This class encapsulates a desire (or goal) as formalized in the
@@ -9,10 +7,10 @@ class Desire(object):
     
     An instance of Desire is constructed by passing an existing desire ID.
     """
-    def __init__(self, situation, oro, actionQueue):
+    def __init__(self, situation, oro, robot):
         self._sit = situation
         self._oro = oro
-        self._action_queue = actionQueue
+        self._robot = robot
         
         self.owners = oro["* desires " + self._sit]
         if not self.owners:
@@ -82,8 +80,8 @@ class Give(Desire):
         super(Give, self).perform()
 
 class Hide(Desire):
-    def __init__(self, situation, oro, actionQueue):
-        super(Hide, self).__init__(situation, oro, actionQueue)
+    def __init__(self, situation, oro, robot):
+        super(Hide, self).__init__(situation, oro, robot)
         
         self.objects = oro[self._sit + " actsOnObject *"]
         self.doer = oro[self._sit + " performedBy *"]
@@ -92,9 +90,24 @@ class Hide(Desire):
     def perform(self):
         logger.info(str(self.doer) + " wants to hide " + str(self.objects) + " to " + str(self.to))
         
-        self._action_queue.put(GenomAction.hide(self.doer[0], self.objects[0], self.to[0]))
+        self._robot.hide(self.doer[0], self.objects[0], self.to[0])
 
-        super(Give, self).perform()
+        super(Hide, self).perform()
+
+class Look(Desire):
+    def __init__(self, situation, oro, robot):
+        super(Look, self).__init__(situation, oro, robot)
+        
+        self.objects = oro[self._sit + " actsOnObject *"]
+        self.doer = oro[self._sit + " performedBy *"]
+    
+    def perform(self):
+        logger.info(str(self.doer) + " wants to look at " + str(self.objects))
+	logger.warning("Currently hard-coded to x,y,z")
+        
+        self._robot.look_at_xyz_with_moveHead(5.5, -5, 1, "map")
+
+        super(Look, self).perform()
 
 class NotExistingDesireTypeError(Exception):
     def __init__(self, value):
@@ -114,7 +127,7 @@ class NoPerformerDesireError(Exception):
     def __str__(self):
         return repr(self.value)
 
-def desire_factory(sit, oro, actionQueue):
+def desire_factory(sit, oro, robot):
 
     act = oro.getDirectClassesOf(sit).keys()    
     try:
@@ -125,7 +138,7 @@ def desire_factory(sit, oro, actionQueue):
                 "are subclasses of PurposefulAction?")
     
     try:
-        goal = eval(action)(sit, oro, actionQueue)
+        goal = eval(action)(sit, oro, robot)
     except NameError:
         raise NotExistingDesireTypeError("I don't know the action \"" + action + "\"!")
     
