@@ -1,7 +1,7 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
-from robots.action import action, genom_request
+from robots.action import *
 from robots.action import wait as basewait
 
 @action
@@ -32,6 +32,7 @@ def unlock_object(robot, object):
     return [genom_request("spark", "SetObjectFixed", [object, "GEN_FALSE"])]
 
 
+@tested("22/02/2012")
 @action
 def wait(robot, seconds):
     """ This special action simply waits for a given amount of second before 
@@ -41,6 +42,8 @@ def wait(robot, seconds):
     """
     return [basewait(seconds)]
 
+
+@tested("22/02/2012")
 @action
 def init(robot):
     """ Initialize modules in correct order.

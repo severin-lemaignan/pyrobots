@@ -3,7 +3,7 @@ logger.setLevel(logging.DEBUG)
 
 from robots.exception import RobotError
 
-from robots.action import action, broken, genom_request, ros_request, background_task, wait
+from robots.action import *
 from robots.helpers.jointstate import getjoint
 from robots.helpers import position
 from robots.helpers.cb import nop
@@ -69,6 +69,7 @@ def xyz_to_panTilt(frame, x, y, z):
 ###############################################################################
 ###############################################################################
 
+@tested("22/02/2012")
 @action
 def look_at(robot, place, callback = None):
     """ A simple 'look at' method that uses pr2SoftMotion.
@@ -87,6 +88,7 @@ def look_at(robot, place, callback = None):
 
 ###############################################################################
 
+@tested("22/02/2012")
 @action
 def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
     """ Look at via pr2SoftMotion.
@@ -105,6 +107,7 @@ def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
 
 
 
+@tested("22/02/2012")
 @action
 def look_at_xyz_with_moveHead(robot, xyz, frame = "map", callback = None):
     """ Look at via pr2SoftMotion.
@@ -216,6 +219,7 @@ def cancel_track(robot):
 ###############################################################################
 
 @broken
+@tested("22/02/2012")
 @action
 def look_at_ros(robot, place):
     """ Create the client and the goal.
@@ -272,26 +276,24 @@ def look_at_ros(robot, place):
 
 ###############################################################################
 
+@tested("22/02/2012")
 @action
-def glance_to(robot, place, frame='/map'): 
+def glance_to(robot, place): 
     """ Glance to via pr2SoftMotion
     """
 
     head_tilt = getjoint('head_tilt_joint')
     head_pan = getjoint('head_pan_joint')
+    pose_head_base = {"HEAD": (head_pan,  head_tilt)}
 
-    actions = look_at_xyz(place['x'], place['y'], place['z'], frame)
-
-    actions += [
-                wait(2),
-                genom_request("pr2SoftMotion", "GotoQ", 
-                        ["HEAD", 0, 0.0, head_pan,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-                        )
-                ]
+    actions = look_at(robot, place)
+    actions += [wait(2)]
+    actions += setpose(robot, pose_head_base) 
     return actions
 
 ###############################################################################
 
+@tested("22/02/2012")
 @action
 def sweep_look(robot, amplitude = 90, speed = 0.2):
     """ Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
