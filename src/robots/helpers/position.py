@@ -1,6 +1,7 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
+from robots.action import *
 from robots.exception import RobotError
 import places
 
@@ -21,7 +22,6 @@ class PoseManager:
     def __init__(self, robot):
         
         if robot.hasROS():
-            from tf import transformations
             self.ros = ROSPositionKeeper()
         else:
             logger.warning("Initializing the PoseManager without ROS support." +\
@@ -41,12 +41,14 @@ class PoseManager:
         if not self.ros:
             raise RobotError("ROS support required for conversions between quaternions" +\
             " and euler angles.")
+        from tf import transformations
         return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
     
     def euler_from_quaternion(self, rx, ry, rz):
         if not self.ros:
             raise RobotError("ROS support required for conversions between quaternions" +\
             " and euler angles.")
+        from tf import transformations
         return transformations.euler_from_quaternion(pose['qx'], pose['qy'], pose['qz'], pose['qw'], 'sxyz')
         
     def normalizedict(self, pose):
@@ -203,7 +205,7 @@ class ROSPositionKeeper:
     
         self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
 
-    def getabspos(self, frame):
+    def getabspose(self, frame):
         if not self.isrosconfigured:
             return None
         
@@ -226,8 +228,8 @@ class SPARKPositionKeeper:
 
     def getabspose(self, obj, part = "default"):
 
-        raw = robot.execute([genom_request("spark", "GetJointAbsPose", [obj, part])])
-        return _process_result(raw)
+        raw = self.robot.execute([genom_request("spark", "GetJointAbsPose", [obj, part])])
+        return self._process_result(raw)
         
     def _process_result(self, raw):
         
