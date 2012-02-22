@@ -306,19 +306,20 @@ def sweep_look(robot, amplitude = 90, speed = 0.2):
     head_tilt = getjoint('head_tilt_joint')
     head_pan = getjoint('head_pan_joint')
 
+    pose_head_base = {"HEAD": (head_pan,  head_tilt)}
+    pose_head1 = {"HEAD": (head_pan + amplitude_rd/2,  head_tilt)}
+    pose_head2 = {"HEAD": (head_pan - amplitude_rd/2,  head_tilt)}
+
+    actions =[
+        genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, speed, 1.0, 1.0, 1.0])
+    ]
+
+    actions += setpose(pose_head1) 
+    actions += setpose(pose_head2) 
     actions +=[
-        genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, speed, 1.0, 1.0]),
-        genom_request("pr2SoftMotion", "GotoQ",
-            ["HEAD", 0, 0.0, head_pan + amplitude_rd/2,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            ),
-        genom_request("pr2SoftMotion", "GotoQ",
-            ["HEAD", 0, 0.0, head_pan - amplitude_rd/2,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            ),
-        genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, 1.0, 1.0, 1.0]),
-        genom_request("pr2SoftMotion", "GotoQ", 
-            ["HEAD", 0, 0.0, head_pan,  head_tilt, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            )
-        ]
+        genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+    ]
+    actions += setpose(pose_head_base) 
 
     return actions
 
