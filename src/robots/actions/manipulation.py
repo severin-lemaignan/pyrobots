@@ -1,6 +1,6 @@
 import random
 
-from robots.action import action, genom_request, wait, broken
+from robots.action import *
 
 from robots.helpers import postures
 from robots.helpers.cb import *
@@ -9,6 +9,7 @@ from robots.actions import configuration
 
 used_plan_id = []
 
+@tested("22/02/2012")
 @action
 def release_gripper(robot):
     """
@@ -20,6 +21,7 @@ def release_gripper(robot):
     """
     return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
 
+@tested("22/02/2012")
 @action
 def grab_gripper(robot):
     """
@@ -31,6 +33,7 @@ def grab_gripper(robot):
     """
     return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
 
+@tested("22/02/2012")
 @action
 def open_gripper(robot, callback = None):
     """
@@ -44,6 +47,7 @@ def open_gripper(robot, callback = None):
             wait_for_completion = False if callback else True,
             callback = callback)]
 
+@tested("22/02/2012")
 @action
 def close_gripper(robot, callback = None):
     """ Closes the right gripper.
@@ -99,6 +103,7 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
     actions += close_gripper(robot)
     return actions
 
+@tested("22/02/2012")
 @action
 def basicgive(robot):
     """ The ultra stupid basic GIVE: simply hand the object in front of the
@@ -117,6 +122,7 @@ def basicgive(robot):
         
     return actions
 
+@tested("22/02/2012")
 @action
 def basicgrab(robot):
     """ The ultra stupid basic GRAB: simply take the object in front of the

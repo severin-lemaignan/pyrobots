@@ -3,12 +3,13 @@ logger.setLevel(logging.DEBUG)
 
 from robots.helpers.cb import *
 
-from robots.action import action, ros_request
+from robots.action import *
 
 
 ###############################################################################
 ###############################################################################
 
+@tested("22/02/2012")
 @action
 def goto(robot, target, callback = None):
     """ Moves the robot base to a given target, using ROS 2D navigation stack.
