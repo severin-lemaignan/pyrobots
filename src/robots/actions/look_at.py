@@ -61,16 +61,7 @@ def xyz_to_panTilt(frame, x, y, z):
     (transTilt,rotTilt) = listener.lookupTransform('head_pan_link', frame, rospy.Time(0))
     matBaseTilt= numpy.dot(transformations.translation_matrix(transTilt), transformations.quaternion_matrix(rotTilt))
     xyzTilt = tuple(numpy.dot(matBaseTilt, numpy.array([x, y, z, 1.0])))[:3]
-    tilt= 5*numpy.arctan2(-xyzTilt[2], numpy.sqrt(math.pow(xyzTilt[0],2)+math.pow(xyzTilt[1],2)))
-    #TODO: le 5* dans le tilt correspond a un hack pourri : le tilt ne correspond pas exactement au Z le coeficient est la pour palier a cela.
-
-    #print numpy.sqrt(math.pow(xyzTilt[0],2)+math.pow(xyzTilt[1],2))
-    #print -xyzTilt[2]
-    #print "###################"
-    #print "pan and tilt"
-    #print pan
-    #print tilt
-
+    tilt= numpy.arctan2(-xyzTilt[2], numpy.sqrt(math.pow(xyzTilt[0],2)+math.pow(xyzTilt[1],2)))
 
     return (pan,tilt)
 
