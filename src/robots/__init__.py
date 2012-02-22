@@ -92,12 +92,19 @@ class Robot(object):
                 if hasattr(member, "_action"):
                     robotlog.info("Added " + m.__name__ + "." + member.__name__ + \
                                 " as available action.")
+                    if hasattr(member, "_broken"):
+                        robotlog.warning("This action is marked as broken!")
                     actions.append(member)
         return actions
     
     def add_action(self, fn):
         def innermethod(*args, **kwargs):
             action = "%s" % fn.__name__
+            if hasattr(action, "_broken"):
+                ok = raw_input("Attention! " + action + " is marked as broken."
+                               "Are you sure you want to proceed? (y/N)")
+                if ok != 'y':
+                    return
             robotlog.debug("Calling action " + action)
             actions = fn(self, *args, **kwargs)
             return self.execute(actions)
