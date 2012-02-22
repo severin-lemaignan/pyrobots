@@ -27,7 +27,7 @@ m = sys.modules[__name__]
 for act_m in [getattr(m, fn) for fn in dir(m)]:
     for fn in [getattr(act_m, fn) for fn in dir(act_m) if hasattr(getattr(act_m, fn), "_action")]:
         if act_m.__name__ != "__main__":
-            actions.setdefault(act_m.__name__, []).append((fn.__name__, fn.__doc__))
+            actions.setdefault(act_m.__name__, []).append((fn.__name__, fn.__doc__, fn._broken if hasattr(fn, "_broken") else False))
             anchors[fn.__name__] = act_m.__name__ + "." + fn.__name__
 
 print("= Documentation of pyRobots actions =")
@@ -36,10 +36,14 @@ print("\n<<TableOfContents(3)>>\n")
 for m in actions.keys():
     print("<<Anchor(" + m + ")>>") # anchor
     print("== Category " + m.split('.')[2] + " ==")
-    for name, doc in actions[m]:
+    for name, doc, broken in actions[m]:
         params = []
         print("<<Anchor(" + m + "." + name + ")>>") # anchor
         print("=== Action " + name + " ===")
+	if broken:
+		print("\n{{{#!wiki caution\n"
+		      "'''Action currently broken!'''\n"
+		      "}}}")
         if doc: 
             doc, params = parse_docstring(doc)
             print(doc)

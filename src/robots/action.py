@@ -4,6 +4,13 @@ def action(fn):
 	fn._action = True
 	return fn
 
+def broken(fn):
+	"""Marks an action as 'broken', to ease tracking
+	"""
+	fn._action = True
+	fn._broken = True
+	return fn
+
 def genom_request(module, request, args = None, wait_for_completion = True, abort = False, callback=None):
 	return {"middleware": "pocolibs",
             "module": module,
