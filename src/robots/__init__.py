@@ -135,6 +135,8 @@ class Robot(object):
         - an optional flag to decide if the request must be blocking or not.
         """
         
+        from pypoco import PocoRemoteError
+	
         if not self.use_pocolibs:
             raise RobotError("This action '" + action["request"] + "' "
                      "requires Pocolibs, but this ActionPerformer "
@@ -205,7 +207,7 @@ class Robot(object):
             if client.get_state() == self.GoalStatus.SUCCEEDED:
                 robotlog.info('Action succeeded')
             else:
-                robotlog.error("Action failed!")
+                robotlog.error("Action failed! " + client.get_goal_status_text())
 
     def _execute_python(self, action):
         
