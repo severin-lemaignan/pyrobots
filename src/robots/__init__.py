@@ -107,6 +107,17 @@ class Robot(object):
         innermethod.__name__ = fn.__name__
         setattr(self,innermethod.__name__,innermethod)
 
+        def get_actions_innermethod(*args, **kwargs):
+            action = "%s" % fn.__name__
+            robotlog.debug("Returning action for " + action)
+            actions = fn(self, *args, **kwargs)
+            return actions
+                
+        get_actions_innermethod.__doc__ = fn.__doc__ if fn.__doc__ else fn.__name__ + \
+            "\nThis method has been dynamically added to your robot."
+        get_actions_innermethod.__name__ = "getactions" + fn.__name__
+        setattr(self,get_actions_innermethod.__name__,get_actions_innermethod)
+
     def _ack(self, evt):
         """ NOP function that serves as fallback callback
         """
