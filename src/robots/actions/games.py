@@ -33,11 +33,11 @@ def basket(robot, duration = 4):
 
                 # Mirror moving of the robot
                 if y > 0.2 and state != "RIGHT":
-                   robot.execute(setpose, poses["TRASHGAME_RIGHT"])
+                   robot.execute(setpose, robot, poses["TRASHGAME_RIGHT"])
                    state = "RIGHT"
                    j += 1
                 elif y < -0.2 and state != "LEFT":
-                   robot.execute(setpose, poses["TRASHGAME_LEFT"])
+                   robot.execute(setpose, robot, poses["TRASHGAME_LEFT"])
                    state = "LEFT"
                    j += 1
 

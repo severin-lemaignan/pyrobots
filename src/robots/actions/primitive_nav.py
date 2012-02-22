@@ -14,7 +14,7 @@ def translation(robot, x, y = 0):
     :param y: (default: 0) Y (left/right) displacement, in meter
     """
     
-    return setpose({'BASE':[x,y,0,0,0,0]}, relative = True)
+    return setpose(robot, {'BASE':[x,y,0,0,0,0]}, relative = True)
 
 
 @broken
@@ -30,5 +30,5 @@ def rotation(robot, theta):
     :param theta: an angle in radian
     """
 
-    return setpose({'BASE':[0,0,0,0,0,theta]}, relative = True)
+    return setpose(robot, {'BASE':[0,0,0,0,0,theta]}, relative = True)
 

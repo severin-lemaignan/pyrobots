@@ -110,7 +110,7 @@ def basicgive(robot):
 
     posture = postures.read()
     
-    actions = configuration.setpose(posture["GIVE"])
+    actions = configuration.setpose(robot, posture["GIVE"])
     actions += release_gripper(robot)
     actions += [wait(2)]
     actions += close_gripper(nop)
@@ -129,7 +129,7 @@ def basicgrab(robot):
     posture = postures.read()
     
     actions = open_gripper(nop)
-    actions += configuration.setpose(posture["GIVE"])
+    actions += configuration.setpose(robot, posture["GIVE"])
     actions += grab_gripper(robot)
         
     return actions

@@ -99,7 +99,7 @@ def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
     logger.info("Looking at " + str([x,y,z]) + " in " + frame)
     pantilt = xyz_to_panTilt(frame,x,y,z)
 
-    return setpose({'HEAD':pantilt}, callback)
+    return setpose(robot, {'HEAD':pantilt}, callback)
 
 ###############################################################################
 
@@ -314,12 +314,12 @@ def sweep_look(robot, amplitude = 90, speed = 0.2):
         genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, speed, 1.0, 1.0, 1.0])
     ]
 
-    actions += setpose(pose_head1) 
-    actions += setpose(pose_head2) 
+    actions += setpose(robot, pose_head1) 
+    actions += setpose(robot, pose_head2) 
     actions +=[
         genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
     ]
-    actions += setpose(pose_head_base) 
+    actions += setpose(robot, pose_head_base) 
 
     return actions
 

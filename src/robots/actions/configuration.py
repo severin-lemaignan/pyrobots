@@ -8,16 +8,19 @@ from robots.helpers import trajectory, postures
 
 import os
 
+@tested("22/02/2012")
 @action
-def enabledevileye():
+def enabledevileye(robot):
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 3")
 
+@tested("22/02/2012")
 @action
-def disabledevileye():
+def disabledevileye(robot):
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 1")
  
+@tested("22/02/2012")
 @action
-def setpose(posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
+def setpose(robot, posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
     Set the PR2 base and internal joints in a given configuration.
     
@@ -162,8 +165,9 @@ def setpose(posture, callback = None, part = None, collision_avoidance = False, 
 
     return actions
 
+@tested("22/02/2012")
 @action
-def manipose(nohead = True, callback = None):
+def manipose(robot, nohead = True, callback = None):
     """
     Quick method to set the PR2 joints in manip configuration. 
     It's useful when the robot to handle objects in in free spaces.
@@ -182,10 +186,12 @@ def manipose(nohead = True, callback = None):
     pose = postures.read()
     posture = pose['MANIP']
     
-    return setpose(posture, callback, part)
+    return setpose(robot, posture, callback, part)
 
+@tested("22/02/2012")
+@broken
 @action
-def restpose(nohead = True, callback = None):
+def restpose(robot, nohead = True, callback = None):
     """
     Quick method to set the PR2 joints in rest configuration. 
     You have the choice with three rest configuration. This choice is random.
@@ -207,10 +213,11 @@ def restpose(nohead = True, callback = None):
     pose = postures.read()
     posture = pose['REST' + str(n)]
 
-    return setpose(posture, callback, part)
+    return setpose(robot, posture, callback, part)
 
+@tested("22/02/2012")
 @action
-def tuckedpose(callback = None, nohead = True):
+def tuckedpose(robot, callback = None, nohead = True):
     """
     Quick method to set the PR2 joints in rest configuration. 
     You have the choice with three rest configuration. This choice is random.
@@ -230,10 +237,10 @@ def tuckedpose(callback = None, nohead = True):
     pose = postures.read()
     posture = pose['TUCKED']
 
-    return setpose(posture, callback, part)
+    return setpose(robot, posture, callback, part)
 
 @action
-def idle(choice = None,callback = None):
+def idle(robot, choice = None,callback = None):
     """ action to do when nothing to do.
 
        :param choice: default to -1, this param make it possible to choose
@@ -256,7 +263,7 @@ def idle(choice = None,callback = None):
     if (c == 0):
         posture1 = pose['TUCKED']
         posture2 = pose['WATCH_LOOKING']
-        actions = setpose(posture1,callback,part) + setpose(posture2,callback,part) + setpose(posture1,callback,part) 
+        actions = setpose(robot, posture1,callback,part) + setpose(robot, posture2,callback,part) + setpose(robot, posture1,callback,part) 
     elif(c == 1):
         short1 = trajectory.Trajectory('short1')
         actions = [
@@ -321,33 +328,11 @@ def idle(choice = None,callback = None):
     elif(c == 8):
         posture1 = pose['TUCKED']
         posture2 = pose['WATCH_LOOKING']
-        actions = setpose(posture1,callback,part) + setpose(posture2,callback,part) + setpose(posture1,callback,part)
+        actions = setpose(robot, posture1,callback,part) + setpose(robot, posture2,callback,part) + setpose(robot, posture1,callback,part)
     elif(c == 9):
         posture1 = pose['TUCKED']
         posture2 = pose['WATCH_LOOKING']
-        actions = setpose(posture1,callback,part) + setpose(posture2,callback,part) + setpose(posture1,callback,part)
+        actions = setpose(robot, posture1,callback,part) + setpose(robot, posture2,callback,part) + setpose(robot, posture1,callback,part)
 
     return actions 
      
-
-
-
-"""
-@action
-def idle():
-    :param dfsdfsd: 
-
-    import look_at
-    return look_at.sweep_look(..., nop) + [
-         genom_request(
-                    "pr2SoftMotion", 
-                    "GotoQ",
-                ["ARMS",
-                0,
-                torso, pan, tilt, 0.0,
-                    rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
-                lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
-                wait_for_completion = False if callback else True,
-                callback = callback)
-         ]
-""" 
