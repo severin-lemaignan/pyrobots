@@ -3,6 +3,11 @@
 import sys
 from robots.actions import nav, primitive_nav, look_at, manipulation, configuration, games, administration
 
+# documentation of special parameters
+special_doc = {"target": "a final position ([x,y,z], [x,y,z,qx,qy,qz,qw], a SPARK object or a ROS frame)",
+               "place": "a position ([x,y,z], [x,y,z,qx,qy,qz,qw], a SPARK object or a ROS frame)",
+               "callback": "a function (or functor) to call when the action is done"}
+
 def parse_docstring(doc):
     """ Parses the doc string, and return the doc without :param *:
     but with a list of params and their associated doc.
@@ -48,7 +53,10 @@ for m in actions.keys():
         print("pr2 = robots.PR2() # Pass 'dummy=True' to test without the real robot\n")
         if params:
             for p,d in params:
-                print(p + " = " + p.upper() + " # define here a " + p )
+                if p in special_doc:
+                    print(p + " = " + p.upper() + " # " + special_doc[p] )
+                else:
+                    print(p + " = " + p.upper() + " # define here a " + p )
             print("pr2." + name + "(" + ", ".join([p for p,d in params]) + ")")
         else:
             print("pr2." + name + "()")
