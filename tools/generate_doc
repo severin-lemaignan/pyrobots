@@ -11,8 +11,11 @@ special_doc = {"target": "a final position ([x,y,z], [x,y,z,qx,qy,qz,qw], a SPAR
 def parse_docstring(doc):
     """ Parses the doc string, and return the doc without :param *:
     but with a list of params and their associated doc.
+    
+    Also replace :see: by 'See also:'
     """
     doc = " ".join([(("[[#" + anchors[word] + "|" + word + "]]") if word in anchors else word) for word in doc.split(' ')])
+    doc.replace(':see:', "'''\nSee also:'''")
     r = doc.split(":param ")
     doc = r[0]
     params = [param.split(':',1) for param in r[1:]]
