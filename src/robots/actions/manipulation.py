@@ -1,6 +1,6 @@
 import random
 
-from robots.action import action, genom_request, wait
+from robots.action import action, genom_request, wait, broken
 
 from robots.helpers import postures
 from robots.helpers.cb import *
@@ -10,25 +10,34 @@ from robots.actions import configuration
 used_plan_id = []
 
 @action
-def release_gripper():
+def release_gripper(robot):
     """
     Opens the gripper to release something.
 
     Like gripper_open, except it waits until it senses some effort on the gripper force sensors.
+
+    :see: open_gripper
     """
     return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
 
 @action
-def grab_gripper():
+def grab_gripper(robot):
     """
     Closes the gripper to grab something.
 
     Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
+
+    :see: close_gripper
     """
     return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
 
 @action
-def open_gripper(callback = None):
+def open_gripper(robot, callback = None):
+    """
+    Opens the right gripper.
+
+    :see: release_gripper
+    """
     return [genom_request("pr2SoftMotion", 
             "GripperGrabRelease", 
             ["OPEN"],
@@ -36,7 +45,11 @@ def open_gripper(callback = None):
             callback = callback)]
 
 @action
-def close_gripper(callback = None):
+def close_gripper(robot, callback = None):
+    """ Closes the right gripper.
+    
+    :see: grab_gripper
+    """
     return [genom_request("pr2SoftMotion", 
             "GripperGrabRelease", 
             ["CLOSE"],
@@ -55,10 +68,14 @@ def getplanid():
     return plan_id
 
 @action
-def pick(obj, use_cartesian = "GEN_FALSE"):
+def pick(robot, obj, use_cartesian = "GEN_FALSE"):
+    """ Picks an object that is reachable by the robot.
+
+    :param object: the object to pick.
+    """
 
     # Open gripper
-    actions = configuration.open_gripper()
+    actions = open_gripper(robot)
 
     # Plan trajectory to object and execute it
     actions += [
@@ -79,39 +96,41 @@ def pick(obj, use_cartesian = "GEN_FALSE"):
     ]
 
     # Close gripper
-    actions += configuration.close_gripper()
+    actions += close_gripper(robot)
     return actions
 
 @action
-def basicgive():
-    """ The ultra stupid basic GIVE: simply hand the object in front of the robot.
+def basicgive(robot):
+    """ The ultra stupid basic GIVE: simply hand the object in front of the
+    robot.
     
-    After handing the object, the robot waits for someone to take it, and stay in
-    this posture.
+    After handing the object, the robot waits for someone to take it, and
+    stay in this posture. 
     """
 
     posture = postures.read()
     
     actions = configuration.setpose(posture["GIVE"])
-    actions += release_gripper()
+    actions += release_gripper(robot)
     actions += [wait(2)]
     actions += close_gripper(nop)
         
     return actions
 
 @action
-def basicgrab():
-    """ The ultra stupid basic GRAB: simply take the object in front of the robot.
-
-    After handing its gripper, the robot waits for someone to put an object in it, 
-    and stay in this posture.
+def basicgrab(robot):
+    """ The ultra stupid basic GRAB: simply take the object in front of the
+    robot.
+    
+    After handing its gripper, the robot waits for someone to put an object in
+    it, and stay in this posture.
     """
 
     posture = postures.read()
     
     actions = open_gripper(nop)
     actions += configuration.setpose(posture["GIVE"])
-    actions += grab_gripper()
+    actions += grab_gripper(robot)
         
     return actions
 
@@ -119,7 +138,7 @@ def basicgrab():
 
 
 @action
-def amit_give(performer, obj, receiver):
+def amit_give(robot, performer, obj, receiver):
     """ The 'Amit' GIVE.
     """
     plan_id = getplanid()

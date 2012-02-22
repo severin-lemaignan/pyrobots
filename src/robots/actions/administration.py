@@ -5,7 +5,7 @@ from robots.action import action, genom_request
 from robots.action import wait as basewait
 
 @action
-def setup_scenario(scenario):
+def setup_scenario(robot, scenario):
     """ Allows to load a custom scene configuration ('sce' files) in SPARK
     at runtime.
     
@@ -14,7 +14,7 @@ def setup_scenario(scenario):
     return [genom_request("spark", "LoadSce", scenario)]
 
 @action
-def lock_object(object):
+def lock_object(robot, object):
     """ Lock to position of an object in SPARK. It won't be updated
     anymore.
     
@@ -23,7 +23,7 @@ def lock_object(object):
     return [genom_request("spark", "SetObjectFixed", [object, "GEN_TRUE"])]
 
 @action
-def unlock_object(object):
+def unlock_object(robot, object):
     """ Unlock to position of an object in SPARK. It will be updated
     when seen.
     
@@ -33,7 +33,7 @@ def unlock_object(object):
 
 
 @action
-def wait(seconds):
+def wait(robot, seconds):
     """ This special action simply waits for a given amount of second before 
     sending the next action.
     
@@ -42,7 +42,7 @@ def wait(seconds):
     return [basewait(seconds)]
 
 @action
-def init():
+def init(robot):
     """ Initialize modules in correct order.
     """
     return [genom_request("pr2SoftMotion", "Init")]

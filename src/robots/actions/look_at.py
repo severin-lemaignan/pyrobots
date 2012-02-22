@@ -3,7 +3,7 @@ logger.setLevel(logging.DEBUG)
 
 from robots.exception import RobotError
 
-from robots.action import action, genom_request, ros_request, background_task, wait
+from robots.action import action, broken, genom_request, ros_request, background_task, wait
 from robots.helpers.jointstate import getjoint
 from robots.helpers import position
 from robots.helpers.cb import nop
@@ -82,13 +82,13 @@ def look_at(robot, place, callback = None):
     
     place = robot.poses.get(place)
 
-    return look_at_xyz(place['x'], place['y'], place['z'], place['frame'], callback)
+    return look_at_xyz(robot, place['x'], place['y'], place['z'], place['frame'], callback)
     #return look_at_xyz_with_moveHead(place['x'], place['y'], place['z'], frame, callback)
 
 ###############################################################################
 
 @action
-def look_at_xyz(x,y,z, frame = "map", callback = None):
+def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
     """ Look at via pr2SoftMotion.
     
     :param x: the x coordinate
@@ -106,7 +106,7 @@ def look_at_xyz(x,y,z, frame = "map", callback = None):
 
 
 @action
-def look_at_xyz_with_moveHead(x,y,z, frame = "map", callback = None):
+def look_at_xyz_with_moveHead(robot, xyz, frame = "map", callback = None):
     """ Look at via pr2SoftMotion.
     
     :param x: the x coordinate
@@ -114,7 +114,8 @@ def look_at_xyz_with_moveHead(x,y,z, frame = "map", callback = None):
     :param z: the z coordinate
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
-    logger.info("Looking at " + str([x,y,z]) + " in " + frame)
+    logger.info("Looking at " + str(xyz) + " in " + frame)
+    x,y,z = xyz
     actions = [
         genom_request(	"pr2SoftMotion",
             "MoveHead",
@@ -123,13 +124,12 @@ def look_at_xyz_with_moveHead(x,y,z, frame = "map", callback = None):
         callback = callback
         )
     ]
-    (pan,tilt) = xyz_to_panTilt(frame,x,y,z)
     return actions
 
 ###############################################################################
 
 @action
-def track(place):
+def track(robot, place):
     """ Tracks an object with the head.
 
     This uses pr2SoftMotion.
@@ -148,7 +148,7 @@ def track(place):
 ###############################################################################
 
 @action
-def track_human(part = "HeadX"):
+def track_human(robot, part = "HeadX"):
     """ Tracks the human head.
 
     This uses pr2SoftMotion.
@@ -208,22 +208,23 @@ class TrackAction(Thread):
 ###############################################################################
 
 @action
-def cancel_track():
+def cancel_track(robot):
     """ If running, interrupt a current track action.
     """
     return [background_task(TrackAction, abort=True)]
 
 ###############################################################################
 
+@broken
 @action
-def look_at_ros(place):
+def look_at_ros(robot, place):
     """ Create the client and the goal.
 
     :param place: a dictionary which contains object position parameters. 
     Cf look_at for details.
     """
 
-    import roslib; roslib.load_manifest('novela_actionlib')
+    #import roslib; roslib.load_manifest('p_actionlib')
     import rospy
 
     import actionlib
@@ -231,6 +232,7 @@ def look_at_ros(place):
     import geometry_msgs.msg
 
 
+    place = robot.poses[place]
     x = place['x']
     y = place['y']
     z = place['z']
@@ -271,7 +273,7 @@ def look_at_ros(place):
 ###############################################################################
 
 @action
-def glance_to(place, frame='/map'): 
+def glance_to(robot, place, frame='/map'): 
     """ Glance to via pr2SoftMotion
     """
 
@@ -291,7 +293,7 @@ def glance_to(place, frame='/map'):
 ###############################################################################
 
 @action
-def sweep_look(amplitude = 90, speed = 0.2):
+def sweep_look(robot, amplitude = 90, speed = 0.2):
     """ Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
     
     :param amplitude: Number of degrees of the sweeping head movement
