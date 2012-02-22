@@ -4,6 +4,14 @@ def action(fn):
 	fn._action = True
 	return fn
 
+def tested(date):
+	"""Marks the last time this method has been tested.
+        """
+	def decorator(fn):
+		fn._tested = date
+		return fn
+	return decorator
+
 def broken(fn):
 	"""Marks an action as 'broken', to ease tracking
 	"""

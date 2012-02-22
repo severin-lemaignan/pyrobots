@@ -3,7 +3,7 @@ logger.setLevel(logging.DEBUG)
 
 import random
 from robots.exception import RobotError
-from robots.action import action, genom_request
+from robots.action import *
 from robots.helpers import trajectory, postures
 
 import os
