@@ -42,7 +42,7 @@ class Move(Desire):
 
     def perform(self):
         logger.info("Moving to: " + str(self.to))
-        self._robot.goto(self.to[0]))
+        self._robot.goto(self.to[0])
         super(Move, self).perform()
 
 class Get(Desire):
@@ -66,7 +66,7 @@ class Show(Desire):
     def perform(self):
         logger.info(str(self.doer) + " wants to show " + str(self.objects) + " to " + str(self.to))
         
-        self._robot.show(self.doer[0], self.objects[0], self.to[0]))
+        self._robot.show(self.doer[0], self.objects[0], self.to[0])
         super(Show, self).perform()
     
 class Give(Desire):
@@ -80,7 +80,7 @@ class Give(Desire):
     def perform(self):
         logger.info(str(self.doer) + " wants to give " + str(self.objects) + " to " + str(self.to))
         
-        self._robot.give(self.doer[0], self.objects[0], self.to[0]))
+        self._robot.give(self.doer[0], self.objects[0], self.to[0])
 
         super(Give, self).perform()
 
