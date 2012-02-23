@@ -4,6 +4,8 @@ logger.setLevel(logging.DEBUG)
 from robots.action import *
 from robots.action import wait as basewait
 
+from robots.actions.manipulation import configure_grippers
+
 @action
 def setup_scenario(robot, scenario):
     """ Allows to load a custom scene configuration ('sce' files) in SPARK
@@ -48,5 +50,7 @@ def wait(robot, seconds):
 def init(robot):
     """ Initialize modules in correct order.
     """
-    return [genom_request("pr2SoftMotion", "Init")]
+    actions = configure_grippers(robot)
+    actions += [genom_request("pr2SoftMotion", "Init")]
+    return actions
 

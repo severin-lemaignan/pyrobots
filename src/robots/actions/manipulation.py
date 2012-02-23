@@ -60,6 +60,21 @@ def close_gripper(robot, callback = None):
             wait_for_completion = False if callback else True,
             callback = callback)]
 
+@tested("23/02/2012")
+@action
+def configure_grippers(robot, grab_acc = 8.0, grab_slip = 0.2, release_acc = 4.0, release_slip = 0.05, force = 25):
+    """ Sets the grippers thresholds.
+    
+    :param grab_acc: threshold for grab detection
+    :param grab_slip: threshold for grab detection
+    :param release_acc: threshold for release detection
+    :param release_slip: threshold for release detection
+    :param force: hold force
+    """
+    return [genom_request("pr2SoftMotion", 
+            "SetGripperTresholds", 
+            [grab_acc, grab_slip, release_acc, release_slip, force])]
+
 
 def getplanid():
     """ Returns a random plan id (for Amit planification routines) which is
