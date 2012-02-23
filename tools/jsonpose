@@ -1,0 +1,37 @@
+#! /usr/bin/env python
+
+import sys
+
+import roslib; roslib.load_manifest('pyrobots_actionlib')
+import rospy
+from sensor_msgs.msg import JointState
+import pprint
+
+rospy.init_node('pyrobots_actionlib')
+
+try:
+    msg = rospy.client.wait_for_message('/joint_states', JointState, timeout = 10)
+except rospy.exceptions.ROSException:
+    print("Could not read topic /joint_states. Right ROS_MASTER_URI? "
+          "PR2 started?")
+    sys.exit(-1)
+
+raw = msg.position
+
+pose = {}
+pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
+pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
+
+# Arm joints order:
+# shoulder_pan_joint
+# shoulder_lift_joint
+# upper_arm_roll_joint 
+# elbow_flex_joint
+# forearm_roll_joint
+# wrist_flex_joint
+# wrist_roll_joint
+
+pose["RARM"] = [round(raw[18], 3), round(raw[19], 3), round(raw[17], 3), round(raw[21], 3), round(raw[20], 3), round(raw[22], 3), round(raw[23], 3), ]
+pose["LARM"] = [round(raw[32], 3), round(raw[33], 3), round(raw[31], 3), round(raw[35], 3), round(raw[34], 3), round(raw[36], 3), round(raw[37], 3), ]
+
+pprint.pprint(pose)
