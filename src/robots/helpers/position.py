@@ -95,6 +95,11 @@ class PoseManager:
         if len(pose) == 3:
             x,y,z = pose
             return self.normalizedict({'x':x, 'y':y, 'z':z})
+
+        if len(pose) == 4 and isinstance(pose[3], basestring): 
+            # we assume the last arg is the frame
+            x,y,z, frame = pose
+            return self.normalizedict({'x':x, 'y':y, 'z':z, 'frame': frame})
             
         if len(pose) == 6:
             x,y,z, rx, ry, rz = pose
@@ -102,9 +107,20 @@ class PoseManager:
             return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw})
             
         if len(pose) == 7:
-            x,y,z, qx, qy, qz, qw = pose
-            return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw})
+            if isinstance(pose[6], basestring): 
+                # we assume the last arg is the frame
+                x,y,z, rx, ry, rz, frame = pose
+                qx,qy,qz,qw = self.quaternion_from_euler(rx, ry, rz)
+                return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame': frame})
+            else:
+                x,y,z, qx, qy, qz, qw = pose
+                return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw})
         
+        if len(pose) == 8 and isinstance(pose[7], basestring): 
+            # we assume the last arg is the frame
+            x,y,z, qx, qy, qz, qw, frame = pose
+            return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame': frame})
+       
         raise RobotError("Don't know what to do with pose as array %s" % pose)
     
     def normalize(self, pose):
