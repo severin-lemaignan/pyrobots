@@ -63,11 +63,14 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
         raise RobotError("Can't use collision avoidance with other part than RARM")
 
     if part and part not in ['BASE', 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
-        print("'Go to posture raw' for part " + part + " is not implemented.")
+        print("'setpose' for part " + part + " is not implemented.")
 
     logger.debug("Setting pose " + str(posture))
 
     forced_part = part
+
+    if not isinstance(posture, dict):
+	posture = postures.read()[posture]
 
     try:
         x, y, z, rx, ry ,rz = posture['BASE']
