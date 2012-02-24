@@ -78,7 +78,13 @@ class Robot(object):
     
     def hasmodule(self, module):
         return True if module in self.poco_modules else False
-        
+      
+    def __enter__(self):
+	return self
+
+    def __exit__(self, toto, tata, titi):
+        self.close()
+
     def close(self):
         if self.knowledge:
             robotlog.info('Closing the knowledge base')
