@@ -19,11 +19,7 @@ import pyoro
 import robots
 from robots import desires
 
-
 human = "HERAKLES_HUMAN1"
-
-pr2 = robots.PR2()
-oro = pyoro.Oro()
 
 incoming_desires = queue.Queue()
 
@@ -32,20 +28,20 @@ def ondesires(e):
 	for d in e:
 		incoming_desires.put(d)
 
+with robots.PR2(knowledge = pyoro.Oro()) as pr2:
 
-oro.subscribe([human + " desires ?d"], ondesires)
-
-try:
-	logger.info("Waiting for desires...")
-	while True:
-		sit = incoming_desires.get(False)
-		
-		if sit:
-			desire = desires.desire_factory(sit, oro, pr2)
-			desire.perform()
-		time.sleep(0.1)
-except KeyboardInterrupt:
-	pass
-
-oro.close()
-pr2.close()
+        
+    pr2.knowledge.subscribe([human + " desires ?d"], ondesires)
+    
+    try:
+    	logger.info("Waiting for desires...")
+    	while True:
+    		sit = incoming_desires.get()
+    		
+    		if sit:
+    			desire = desires.desire_factory(sit, pr2)
+    			desire.perform()
+    		time.sleep(0.1)
+    except KeyboardInterrupt:
+    	pass
+    
