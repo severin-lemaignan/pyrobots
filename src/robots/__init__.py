@@ -26,10 +26,12 @@ class Robot(object):
     It supports execution of ROS actions, Pocolibs (genom) requests, Python code and some
     special actions like 'wait'.
     
+    :param knowledge: (default: None) pass here an instance of a pyoro.Oro 
+    object to connect to a knowledge base.
     :param dummy: (default: False) If true, no actual middleware is used. All
     actions exectued are simply reported to the logger.
     """
-    def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True, dummy = False):
+    def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True, knowledge = None, dummy = False):
 
         # Import all modules under robots/actions/
         import actions
@@ -41,9 +43,11 @@ class Robot(object):
         # actions/* submodules.
         for action in self.available_actions():
             self.add_action(action)
-        
+       
+        self.knowledge = knowledge 
         self.dummy = dummy        
         self.use_pocolibs = use_pocolibs if not dummy else False
+        self.servers = {} # holds the list of tclserv servers when using pocolibs
         self.use_ros = use_ros if not dummy else False
 
         
@@ -76,6 +80,10 @@ class Robot(object):
         return True if module in self.poco_modules else False
         
     def close(self):
+        if self.knowledge:
+            robotlog.info('Closing the knowledge base')
+            self.knowledge.close()
+            self.knowledge = None
         robotlog.info('Closing the lowlevel!')
         for s in self.servers:
             self.servers[s].close()
@@ -230,7 +238,16 @@ class Robot(object):
         instance = action["class"](self, *action["args"])
         self._pending_python_requests[action["class"]] = instance
         instance.start()
-        
+
+    def _execute_knowledge(self, action):
+        if action["action"] == "add":
+            robotlog.debug("Adding facts to the knowledge base: " + str(action["args"]))
+            self.knowledge += action["args"]
+
+        if action["action"] == "retract":
+            robotlog.debug("Removing facts to the knowledge base: " + str(action["args"]))
+            self.knowledge -= action["args"]
+       
     def _execute_special(self, action):
         if action["action"] == "wait":
             robotlog.info("Waiting for " + str(action["args"]))
@@ -259,6 +276,10 @@ class Robot(object):
                     res = self._execute_python(action)
                     if res:
                         result = res
+                elif action["middleware"] == "knowledge":
+                    res = self._execute_knowledge(action)
+                    if res:
+                        result = res
                 elif action["middleware"] == "special":
                     res = self._execute_special(action)
                     if res:
@@ -268,8 +289,8 @@ class Robot(object):
         return result
         
 class PR2(Robot):
-    def __init__(self, dummy = False):
-        super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_pocolibs = True, dummy = dummy)
+    def __init__(self, knowledge = None, dummy = False):
+        super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
 	robotlog.info("PR2 actions loaded. Initializing modules...")
 	self.init()
 	robotlog.info("Initialization ok.")

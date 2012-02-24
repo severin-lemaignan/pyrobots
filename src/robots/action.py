@@ -43,6 +43,16 @@ def ros_request(client, goal, wait_for_completion = True, callback = None):
 	    "wait_for_completion": wait_for_completion,
 	    "callback": callback}
 
+def add_knowledge(stmts):
+	return [{"middleware": "knowledge",
+            "action": "add",
+	    "args": stmts}]
+
+def retract_knowledge(stmts):
+	return [{"middleware": "knowledge",
+            "action": "retract",
+	    "args": stmts}]
+
 def wait(seconds):
 	""" This special action simply waits for a given amount of second before 
 	sending the next action.
