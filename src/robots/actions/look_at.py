@@ -15,57 +15,6 @@ from robots.actions.configuration import setpose
 # actions to avoid pypoco multithreading issues
 actionPerformerForTracking = None
 
-#############################################################################
-############################################################################
-def xyz_to_panTilt(frame, x, y, z):
-    """ Change moveHead parameters from xyz tp pan and tilt
-    :param x: the x coordinate
-    :param y: the y coordinate
-    :param z: the z coordinate
-    :param frame: the frame in which coordinates are interpreted
-    :returns: (pan, tilt) in radians
-    """
-
-    import roslib; roslib.load_manifest('pyrobots_actionlib')
-    import rospy
-
-    import numpy
-    import math
-    from geometry_msgs.msg import PointStamped
-    from tf import TransformerROS
-    from tf import TransformListener
-    from tf import transformations
-
-    listener = TransformListener()
-
-    goal = PointStamped()
-    goal.header.frame_id =frame
-    goal.header.stamp = rospy.Time(0);
-    goal.point.x = x
-    goal.point.y = y
-    goal.point.z = z
-    frame = 'map'
-
-    goalInFrame = PointStamped()
-    listener.waitForTransform(frame, 'base_footprint', rospy.Time(0), rospy.Duration(4.0))
-    goalInFrame = listener.transformPoint('base_footprint',goal)
-    
-    x = goalInFrame.point.x
-    y = goalInFrame.point.y
-    z = goalInFrame.point.z
-
-    #listener = TransformListener()
-    # +0.067 to take into account the translation between base_footprint and head_pan_link
-    pan= numpy.arctan2(y, x+0.067)
-    listener.waitForTransform(frame, 'head_pan_link', rospy.Time(0), rospy.Duration(4.0))
-    (transTilt,rotTilt) = listener.lookupTransform('head_pan_link', frame, rospy.Time(0))
-    matBaseTilt= numpy.dot(transformations.translation_matrix(transTilt), transformations.quaternion_matrix(rotTilt))
-    xyzTilt = tuple(numpy.dot(matBaseTilt, numpy.array([x, y, z, 1.0])))[:3]
-    tilt= numpy.arctan2(-xyzTilt[2], numpy.sqrt(math.pow(xyzTilt[0],2)+math.pow(xyzTilt[1],2)))
-
-    return (pan,tilt)
-
-
 ###############################################################################
 ###############################################################################
 
@@ -99,7 +48,7 @@ def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
     logger.info("Looking at " + str([x,y,z]) + " in " + frame)
-    pantilt = xyz_to_panTilt(frame,x,y,z)
+    pantilt = robot.poses.ros.xyz2pantilt(x,y,z, frame)
 
     return setpose(robot, {'HEAD':pantilt}, callback)
 
