@@ -4,7 +4,7 @@ import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 #hack that tries to find out the current prefix and then the data directory
-DATA_DIR = os.path.abspath(__file__).split('lib')[0] + '/share/pyrobots/'
+DATA_DIR = os.path.abspath(__file__).split('lib')[0] + 'share/pyrobots/'
 
 #TODO: make something more generic!!
 sources = [DATA_DIR + 'pr2_postures.json']
