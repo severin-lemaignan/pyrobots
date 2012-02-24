@@ -13,11 +13,12 @@ logger.addHandler(console)
 
 
 import time
-import pyoro
-import robots
 import Queue as queue
 
-import desires
+import pyoro
+import robots
+from robots import desires
+
 
 human = "HERAKLES_HUMAN1"
 
@@ -27,7 +28,7 @@ oro = pyoro.Oro()
 incoming_desires = queue.Queue()
 
 def ondesires(e):
-	print("Incomig desires:" + str(e))
+	logger.info("Incomig desires:" + str(e))
 	for d in e:
 		incoming_desires.put(d)
 
@@ -35,10 +36,16 @@ def ondesires(e):
 oro.subscribe([human + " desires ?d"], ondesires)
 
 try:
-	print("Waiting for desires...")
+	logger.info("Waiting for desires...")
 	while True:
-		desire = desires.desire_factory(incoming_desires.get(), oro, pr2)
-		desire.perform()
+		sit = incoming_desires.get(False)
+		
+		if sit:
+			desire = desires.desire_factory(sit, oro, pr2)
+			desire.perform()
+		time.sleep(0.1)
 except KeyboardInterrupt:
-	oro.close()
-	pr2.close()
+	pass
+
+oro.close()
+pr2.close()
