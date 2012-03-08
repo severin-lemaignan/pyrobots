@@ -1,6 +1,11 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
+import os
+
+from robots.exception import RobotError
+from robots.helpers.cb import nop
+
 from robots.action import *
 from robots.action import wait as basewait
 
@@ -47,10 +52,30 @@ def wait(robot, seconds):
 
 @tested("22/02/2012")
 @action
-def init(robot):
+def init(robot, \
+        pr2SoftMotion = True, \
+        spark = False,
+        p3d = ""):
     """ Initialize modules in correct order.
     """
-    actions = configure_grippers(robot)
-    actions += [genom_request("pr2SoftMotion", "Init")]
+
+    if pr2SoftMotion:
+        actions = configure_grippers(robot)
+        actions += [genom_request("pr2SoftMotion", "Init")]
+    if spark:
+        if not os.path.exists(p3d):
+            raise RobotError("P3D file not found!")
+        actions += [genom_request("spark", "LoadP3d", [p3d, 1, 0]),
+                    genom_request("spark", "UpdateInterface", callback = nop),
+                    genom_request("spark", "SetInterfaceParams", [1200, 900, 0, 1, 1, 0, 0, 0]), #Scale up the SPARK window·
+                    genom_request("spark", "SetInterfaceAgentParams", ["ACHILE_HUMAN1", 1, 1, 0]), # Display visibility and pointing cones.
+                    genom_request("spark", "ChangeCameraPos", [4, -4, 1, 5, -0.7, 0.7]), #Move the camera
+                    genom_request("spark", "ReadRobot", ["lwrCurrentPoseArmRight", "lwrSAHand" , "pomPos", "pomPlatineFramePos", "."], callback = nop), # LWR poster, sahand poster, POM poster, Platine poster, sparkyarp robot config
+                    genom_request("spark", "ReadHumans", ['USE_NIUT', 0 , 'niutHuman'], callback = nop),
+                    genom_request("spark", "ReadObjects", ['USE_VIMAN', 0 , 'vimanObjectPose'], callback = nop),
+                    genom_request("spark", "SetKBAddress", ["localhost", 6969]),
+                    genom_request("spark", "ComputeFacts", callback = nop)
+                    ]
+
     return actions
 
