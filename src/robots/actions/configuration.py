@@ -221,12 +221,33 @@ def restpose(robot, nohead = True, callback = None):
 
     return setpose(robot, posture, callback, part)
 
+@tested("08/03/2012")
+@action
+def settorso(robot, height = 15, callback = None):
+    """
+    Set the PR2 torso height.
+
+    :param height: The height of the torso, in centimeters. Defaults to 15
+    cm.
+
+    Height is clamped into [0, 30].
+
+    :param callback: (optional) If given, the action is non-blocking,
+    and the callback is invoked at the activity completion.
+
+    """
+    if height < 0:
+        height = 0
+    if height > 30:
+        height = 30
+    return setpose(robot, {'TORSO': [float(height) / 100]}, callback)
+
+
 @tested("22/02/2012")
 @action
 def tuckedpose(robot, callback = None, nohead = True):
     """
-    Quick method to set the PR2 joints in rest configuration. 
-    You have the choice with three rest configuration. This choice is random.
+    Tucks the robot arms.
 
     :param no_head: (optional) If true, only arms and torso will set a new configuration.
     Very useful if you track an object
@@ -245,6 +266,7 @@ def tuckedpose(robot, callback = None, nohead = True):
 
     return setpose(robot, posture, callback, part)
 
+@broken
 @action
 def idle(robot, choice = None,callback = None):
     """ action to do when nothing to do.
