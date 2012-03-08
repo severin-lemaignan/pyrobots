@@ -5,28 +5,31 @@ def action(fn):
 	return fn
 
 def tested(date):
-	"""Marks the last time this method has been tested.
+    """Marks the last time this method has been tested.
         """
-	def decorator(fn):
-		fn._tested = date
-		return fn
-	return decorator
+    def decorator(fn):
+        fn._tested = date
+        return fn
+    return decorator
 
 def broken(fn):
-	"""Marks an action as 'broken', to ease tracking
-	"""
-	fn._action = True
-	fn._broken = True
-	return fn
+    """Marks an action as 'broken', to ease tracking
+    """
+    fn._action = True
+    fn._broken = True
+    return fn
 
 def genom_request(module, request, args = None, wait_for_completion = True, abort = False, callback=None):
-	return {"middleware": "pocolibs",
+    if callback:
+        wait_for_completion = False
+
+    return {"middleware": "pocolibs",
             "module": module,
             "request": request,
             "args": args,
-	    "abort": abort,
-	    "wait_for_completion": wait_for_completion,
-	    "callback": callback}
+        "abort": abort,
+        "wait_for_completion": wait_for_completion,
+        "callback": callback}
 
 def background_task(taskclass, args = None, wait_for_completion = True, abort = False, callback=None):
 	return {"middleware": "python",
