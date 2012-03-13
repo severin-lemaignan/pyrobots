@@ -209,27 +209,33 @@ class PoseManager:
 class ROSPositionKeeper:
     def __init__(self):
         self.isrosconfigured = True
-        
+
         try:
             import rospy
-            from tf import TransformListener
+            import tf
         except ImportError: # Incorrect ROS setup!
             self.isrosconfigured = False
             return
-            
-        self.tf = TransformListener()
-    
-        self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
+
+        self.tf = tf.TransformListener()
+
+        try:
+            self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
+        except tf.Exception: # likely a timeout
+            logger.error("Timeout while waiting for TF transformations!"
+                         " Did you initialize the PR2?\n ROS positions won't be available.")
+            self.isrosconfigured = False
+            return
 
     def getabspose(self, frame):
         if not self.isrosconfigured:
             return None
-        
+
         if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
             t = self.tf.getLatestCommonTime("/map", frame)
             position, quaternion = self.tf.lookupTransform("/map", frame, t)
             return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ["map"]))
-        
+
         logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
         return None
 
