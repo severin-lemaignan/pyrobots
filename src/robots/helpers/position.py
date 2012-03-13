@@ -291,7 +291,7 @@ class SPARKPositionKeeper:
         raw = robot.execute([genom_request("spark", "GetRobotPoseRelativeToAnotherRobot", [robot1, robot2])])
         return _process_result(raw)
 
-    def getabspose(self, obj, part = "default"):
+    def getabspose(self, obj, part = "HeadX"): #HeadX is useful to find the human head. Ignored by SPARK for other objects.
 
         raw = self.robot.execute([genom_request("spark", "GetJointAbsPose", [obj, part])])
         return self._process_result(raw)

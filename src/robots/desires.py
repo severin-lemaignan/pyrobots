@@ -108,10 +108,8 @@ class Look(Desire):
     
     def perform(self):
         super(Look, self).perform()
-        logger.info(str(self.doer) + " wants to look at " + str(self.objects))
-        logger.warning("Currently hard-coded to x,y,z")
-        
-        self._robot.look_at([5.5, -5, 1, "map"])
+        logger.info(str(self.doer) + " wants to look at " + str(self.objects[0]))
+        self._robot.look_at(self.objects[0])
 
 class Display(Desire):
     def __init__(self, situation, robot):
