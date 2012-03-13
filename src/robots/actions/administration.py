@@ -51,8 +51,30 @@ def wait(robot, seconds):
     """
     return [basewait(seconds)]
 
+@tested("13/03/2012")
+@action
+def display(robot, window, host = "localhost"):
+    """ Allows to select which software window is displayed by the robot.
 
-@tested("22/02/2012")
+    Requires:
+     - laaswm as windows manager
+     - laaswm.py installed (available from laaswm-libs repository)
+
+    :param window: name (or part of the name) of the window to put
+    on front. Case insensitive.
+    :param host: the LAASWM host (default: localhost)
+    """
+    import laaswm
+    wm = laaswm.WM(host)
+
+    windows = wm.list()
+    for id, params in windows.items():
+        if window.lower() in params["name"].lower():
+            wm.fullscreen(id)
+            return
+
+
+@tested("13/03/2012")
 @action
 def init(robot, \
         viman = True, \

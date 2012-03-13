@@ -113,6 +113,18 @@ class Look(Desire):
         
         self._robot.look_at([5.5, -5, 1, "map"])
 
+class Display(Desire):
+    def __init__(self, situation, robot):
+        super(Display, self).__init__(situation, robot)
+
+        self.window = robot.knowledge[self._sit + " involves *"][0]
+
+    def perform(self):
+        super(Display, self).perform()
+
+        logger.info("Let's try to display " + str(self.window))
+
+        self._robot.display(self.window)
 
 class NotExistingDesireTypeError(Exception):
     def __init__(self, value):
