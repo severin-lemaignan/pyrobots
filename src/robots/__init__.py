@@ -38,19 +38,18 @@ class Robot(object):
 	path = sys.modules['robots.actions'].__path__
         for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
             __import__('robots.actions.' + module_name)
-            
+
         # Dynamically add available actions (ie, actions defined with @action in
         # actions/* submodules.
         for action in self.available_actions():
             self.add_action(action)
-       
+
         self.knowledge = knowledge 
-        self.dummy = dummy        
+        self.dummy = dummy
         self.use_pocolibs = use_pocolibs if not dummy else False
         self.servers = {} # holds the list of tclserv servers when using pocolibs
         self.use_ros = use_ros if not dummy else False
 
-        
         if not dummy:
 
             if use_pocolibs:
@@ -295,11 +294,13 @@ class Robot(object):
         return result
         
 class PR2(Robot):
-    def __init__(self, knowledge = None, dummy = False):
-        super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
-	robotlog.info("PR2 actions loaded. Initializing modules...")
-	self.init()
-	robotlog.info("Initialization ok.")
+    def __init__(self, knowledge = None, dummy = False, init = True):
+        super(self.__class__,self).__init__(['pr2c2', 'pr2c1', 'rangueil'], 9472, use_ros = True, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
+        robotlog.info("PR2 actions loaded.")
+        if init:
+            robotlog.info("Initializing modules...")
+            self.init()
+            robotlog.info("Initialization done.")
 
 import __main__ as main
 if not hasattr(main, '__file__'):

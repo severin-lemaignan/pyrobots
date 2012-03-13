@@ -28,9 +28,9 @@ def ondesires(e):
 	for d in e:
 		incoming_desires.put(d)
 
-with robots.PR2(knowledge = pyoro.Oro()) as pr2:
+with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
 
-        
+    pr2.init(p3d = "/u/slemaign/openrobots/share/move3d/assets/GS/gsPr2.p3d")
     pr2.knowledge.subscribe([human + " desires ?d"], ondesires)
     
     try:
