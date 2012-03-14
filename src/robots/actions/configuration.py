@@ -73,7 +73,10 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
     forced_part = part
 
     if not isinstance(posture, dict):
-	posture = postures.read()[posture]
+        try:
+            posture = postures.read()[posture]
+        except KeyError:
+            raise RobotError("Posture %s not found!" % posture)
 
     try:
         x, y, z, rx, ry ,rz = posture['BASE']
