@@ -18,26 +18,23 @@ actionPerformerForTracking = None
 ###############################################################################
 ###############################################################################
 
-@tested("22/02/2012")
+@tested("13/03/2012")
 @action
 def look_at(robot, place, callback = None):
-    """ A simple 'look at' method that uses pr2SoftMotion.
+    """ Orders the robot to look at a given place of object.
 
     Uses look_at_xyz underneath.
 
-    :param place: a dictionary with the x,y,z position of objects in space#.
-              If a 'frame' key is found, use it as reference frame. Else
-              the world frame '/map' is assumed.
+    :param place: any valid pyrobots place (spark id, ROS frame, [x,y,z],...)
     """
-    
+
     place = robot.poses.get(place)
 
-    return look_at_xyz(robot, place['x'], place['y'], place['z'], place['frame'], callback)
-    #return look_at_xyz_with_moveHead(place['x'], place['y'], place['z'], frame, callback)
+    return look_at_xyz_with_moveHead(robot, place['x'], place['y'], place['z'], place['frame'], callback)
 
 ###############################################################################
 
-@tested("22/02/2012")
+@tested("13/03/2012")
 @action
 def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
     """ Look at via pr2SoftMotion.
@@ -58,7 +55,7 @@ def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
 
 @tested("22/02/2012")
 @action
-def look_at_xyz_with_moveHead(robot, xyz, frame = "map", callback = None):
+def look_at_xyz_with_moveHead(robot, x,y,z, frame = "map", callback = None):
     """ Look at via pr2SoftMotion.
     
     :param x: the x coordinate
@@ -66,8 +63,7 @@ def look_at_xyz_with_moveHead(robot, xyz, frame = "map", callback = None):
     :param z: the z coordinate
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
-    logger.info("Looking at " + str(xyz) + " in " + frame)
-    x,y,z = xyz
+    logger.info("Looking at " + str([x,y,z]) + " in " + frame)
     actions = [
         genom_request(	"pr2SoftMotion",
             "MoveHead",
