@@ -126,17 +126,31 @@ def init(robot, \
                                                                   "GEN_FALSE", # Enable shadows
                                                                   "GEN_FALSE", # Enables tiles
                                                                   "GEN_FALSE"]), # Antialiasing
-                    genom_request("spark", "SetInterfaceAgentParams", ["HERAKLES_HUMAN1", 1, 1, 0]), # Display visibility and pointing cones.
+                    genom_request("spark", "SetInterfaceAgentParams", 
+                        ["HERAKLES_HUMAN1", 
+                        "GEN_TRUE", # Display fov/foa cones
+                        "GEN_TRUE", # Display pointing cones
+                        "GEN_FALSE"]), # Show visible objects.Not working?
                     genom_request("spark", "ChangeCameraPos", [6, -2, 1, 5, -1, 0.5]), #Move the camera
                     genom_request("spark", "SetKinectFixedFrame", ["GEN_TRUE", 3.0, 0.0, 2.51, 0, 0.45, -0.78]), #Place the fixed Kinect above Rachid's door
-                    genom_request("spark", "ReadRobot", ["ignored", "ignored" , "ignored", "ignored", "ignored", "pr2Pose", "pr2JointState", "pr2JointMap"], callback = nop), # LWR poster, sahand poster, POM poster, Platine poster, sparkyarp robot config
+                    genom_request("spark", "ReadRobot", 
+                        ["ignored", # LWR poster
+                         "ignored" , # sahand poster
+                         "ignored", # POM poster
+                         "ignored", # Platine poster
+                         "ignored", # sparkyarp robot config
+                         "pr2Pose", # PR2 position poster
+                         "pr2JointState", # PR2 jointstate
+                         "pr2JointMap"], # mapping between PR2 joints and Move3D convention
+                        callback = nop),
                     genom_request("spark", "ReadHumans", ['USE_NIUT', 0 , 'niutHuman'], callback = nop),
                     genom_request("spark", "ReadObjects", ['USE_VIMAN', 0 , 'vimanObjectPose'], callback = nop)]
 
         if robot.knowledge: # The robot has been created with an knowledge base, let's use it
             logger.info("I'm connected to a knowledge base. Let's start filling it from perception!")
             actions += [genom_request("spark", "SetKBAddress", [robot.knowledge.host, robot.knowledge.port]),
-                        genom_request("spark", "ComputeFacts", callback = nop)
+                        genom_request("spark", "ComputeFacts", callback = nop),
+                        genom_request("spark", "UpdateAllSituationAssessment", ["SPARK_FOREBID_DISAPPEAR", 7, 0.8]) # Required to have sees/pointsAt computation running.
                         ]
 
     return actions
