@@ -234,7 +234,7 @@ class ROSPositionKeeper:
         if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
             t = self.tf.getLatestCommonTime("/map", frame)
             position, quaternion = self.tf.lookupTransform("/map", frame, t)
-            return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ["map"]))
+            return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ("map",)))
 
         logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
         return None
