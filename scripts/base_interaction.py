@@ -11,7 +11,7 @@ console.setFormatter(formatter)
 
 logger.addHandler(console)
 
-
+import sys
 import time
 import Queue as queue
 
@@ -24,24 +24,26 @@ human = "HERAKLES_HUMAN1"
 incoming_desires = queue.Queue()
 
 def ondesires(e):
-	logger.info("Incomig desires:" + str(e))
-	for d in e:
-		incoming_desires.put(d)
+    logger.info("Incomig desires:" + str(e))
+    for d in e:
+        incoming_desires.put(d)
 
 with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
 
-    pr2.init(p3d = "/u/slemaign/openrobots/share/move3d/assets/GS/gsPr2.p3d")
+    if not "--noinit" in sys.argv:
+        pr2.init(p3d = "/u/slemaign/openrobots/share/move3d/assets/GS/gsPr2.p3d")
+        pr2.setenvironment()
     pr2.knowledge.subscribe([human + " desires ?d"], ondesires)
-    
+
     try:
-    	logger.info("Waiting for desires...")
-    	while True:
-    		sit = incoming_desires.get()
-    		
-    		if sit:
-    			desire = desires.desire_factory(sit, pr2)
-    			desire.perform()
-    		time.sleep(0.1)
+        logger.info("Waiting for desires...")
+        while True:
+            sit = incoming_desires.get()
+
+            if sit:
+                desire = desires.desire_factory(sit, pr2)
+                desire.perform()
+            time.sleep(0.1)
     except KeyboardInterrupt:
-    	pass
-    
+        pass
+
