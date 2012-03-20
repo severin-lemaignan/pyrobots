@@ -44,7 +44,7 @@ def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
     :param z: the z coordinate
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
-    logger.info("Looking at " + str([x,y,z]) + " in " + frame)
+    logger.debug("Looking at " + str([x,y,z]) + " in " + frame)
     pantilt = robot.poses.ros.xyz2pantilt(x,y,z, frame)
 
     return setpose(robot, {'HEAD':pantilt}, callback)
@@ -63,9 +63,9 @@ def look_at_xyz_with_moveHead(robot, x,y,z, frame = "map", callback = None):
     :param z: the z coordinate
     :param frame: the frame in which coordinates are interpreted. By default, '/map'
     """
-    logger.info("Looking at " + str([x,y,z]) + " in " + frame)
+    logger.debug("Looking at " + str([x,y,z]) + " in " + frame)
     actions = [
-        genom_request(	"pr2SoftMotion",
+        genom_request("pr2SoftMotion",
             "MoveHead",
             [x,y,z,frame],
         wait_for_completion = False if callback else True,

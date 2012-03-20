@@ -299,8 +299,8 @@ class SPARKPositionKeeper:
     def _process_result(self, raw):
         
         ok, res = raw
-        if not ok:
-            # Object probably do not exist
+        if ok != 'OK':
+            # Object probably does not exist
             return None
         yaw, pitch, roll, x, y, z = [float(x) for x in res]
         
