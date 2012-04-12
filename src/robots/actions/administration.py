@@ -81,7 +81,8 @@ def init(robot, \
         niut = True, \
         pr2SoftMotion = True, \
         spark = True,
-        p3d = ""):
+        p3d = "",
+        sce = ""):
     """ Initialize modules in correct order.
 
         Modules whose initialization is reentrant (ie, init code can be safely called
@@ -117,6 +118,12 @@ def init(robot, \
             logger.error("P3D file not found! Skipping the loading of the environment")
         else:
             actions += [genom_request("spark", "LoadP3d", [p3d, 1, 0])]
+
+        if not os.path.exists(sce):
+            logger.error("SCE file not found! Skipping the loading of the scenario")
+        else:
+            actions += [genom_request("spark", "LoadSce", [sce])]
+
 
         actions += [genom_request("spark", "UpdateInterface", callback = nop),
                     genom_request("spark", "SetInterfaceParams", [1200, 900, #Scale up the SPARK window·
