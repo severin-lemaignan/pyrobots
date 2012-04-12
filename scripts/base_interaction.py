@@ -31,7 +31,8 @@ def ondesires(e):
 with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
 
     if not "--noinit" in sys.argv:
-        pr2.init(p3d = "/u/slemaign/openrobots/share/move3d/assets/GS/gsPr2.p3d")
+        pr2.init(p3d = "/u/slemaign/openrobots/share/move3d/assets/ADREAM/ADREAM.p3d",
+                 sce = "/u/slemaign/openrobots/share/move3d/assets/ADREAM/SCENARIOS/ADREAM-salon-only.sce")
         pr2.setenvironment()
     pr2.knowledge.subscribe([human + " desires ?d"], ondesires)
 

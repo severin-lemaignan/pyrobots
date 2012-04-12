@@ -138,8 +138,8 @@ def init(robot, \
                         "GEN_TRUE", # Display fov/foa cones
                         "GEN_TRUE", # Display pointing cones
                         "GEN_FALSE"]), # Show visible objects.Not working?
-                    genom_request("spark", "ChangeCameraPos", [6, -2, 1, 5, -1, 0.5]), #Move the camera
-                    genom_request("spark", "SetKinectFixedFrame", ["GEN_TRUE", 3.0, 0.0, 2.51, 0, 0.45, -0.78]), #Place the fixed Kinect above Rachid's door
+                    genom_request("spark", "ChangeCameraPos", [4, 7, 0, 5, -1.1, 0.6]), #Move the camera
+                    genom_request("spark", "SetKinectFixedFrame", ["GEN_TRUE",6.1, 5.7, 2.65, 0.0, 0.65, 2.54]), #Place the fixed Kinect above Rachid's door
                     genom_request("spark", "ReadRobot", 
                         ["ignored", # LWR poster
                          "ignored" , # sahand poster
