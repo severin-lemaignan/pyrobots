@@ -12,12 +12,12 @@ import robots
 from robots.helpers import postures
 
 places = {}
-if len(sys.argv) == 2: # assume argument is posture file to loadi
+if len(sys.argv) == 2: # assume argument is posture file to load
     places = postures.load(sys.argv[1])
 else:
     places = postures.read()
 
-pr2 = robots.PR2()
+pr2 = robots.PR2(init = False)
 
 rospy.init_node('pyrobots_actionlib')
 
@@ -32,8 +32,8 @@ def getpose():
 	raw = msg.position
 
 	pose = {}
-	pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
-	pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
+	#pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
+	#pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
 
 	# Arm joints order:
 	# shoulder_pan_joint
@@ -51,7 +51,7 @@ def getpose():
 def getaction():
     action = raw_input("What do you want to do? v: view pose, g: go to pose, r:replace pose with current, s: save to file, q: quit\n")
     if action not in 'grsqv':
-	return getaction()
+        return getaction()
     else:
        return action
 
@@ -65,26 +65,31 @@ while True:
     name = raw_input("Enter the name of the pose to edit (enter to edit last pose):")
     if not name or name == "":
         name = prevname
-    if name in places:
-	print("Modifying existing pose " + name)
-        a = getaction()
-        if a == 'g':
-            pr2.setpose(places[name])
-        if a == 'r':
-           pose = getpose()
-           if rarm_only:
-               pose = {'RARM':pose['RARM']}
-           places[name] = pose
-        if a == 'v':
-           pprint.pprint(places[name])
-        if a == 'q':
-           pr2.close()
-           sys.exit()
-        if a == 's':
-           with open("tmp.json", 'w') as f:
-               json.dump(places, f)
-           print("Saved places as tmp.json")
+    if name not in places:
+        pose = getpose()
+        if rarm_only:
+            pose = {'RARM':pose['RARM']}
+        places[name] = pose
+
+        print("Creating a new pose " + name)
     else:
-	print("Adding current pose as new pose " + name)
-        places[name] = getpose()
+        print("Modifying existing pose " + name)
+    a = getaction()
+    if a == 'g':
+        pr2.setpose(places[name])
+    if a == 'r':
+        pose = getpose()
+        if rarm_only:
+            pose = {'RARM':pose['RARM']}
+        places[name] = pose
+    if a == 'v':
+        pprint.pprint(places[name])
+    if a == 'q':
+        pr2.close()
+        sys.exit()
+    if a == 's':
+        with open("tmp.json", 'w') as f:
+            json.dump(places, f)
+        print("Saved places as tmp.json")
+
     prevname = name
