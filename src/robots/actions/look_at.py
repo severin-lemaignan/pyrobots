@@ -243,7 +243,9 @@ def glance_to(robot, place):
 def sweep_look(robot, amplitude = 90, speed = 0.2):
     """ Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
     
-    :param amplitude: Number of degrees of the sweeping head movement
+    :param amplitude: Number of degrees of the sweeping head movement (default:
+    90 deg)
+    :param speed: Speed of the movement (default: 0.2)
     """
     import math
     actions =[]
