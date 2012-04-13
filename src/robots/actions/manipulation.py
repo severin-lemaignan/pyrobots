@@ -11,7 +11,7 @@ used_plan_id = []
 
 @tested("22/02/2012")
 @action
-def release_gripper(robot):
+def release_gripper(robot, gripper = "RIGHT"):
     """
     Opens the gripper to release something.
 
@@ -19,11 +19,14 @@ def release_gripper(robot):
 
     :see: open_gripper
     """
-    return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RELEASE"])]
+    if gripper == "RIGHT":
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
+    else:
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
 
 @tested("22/02/2012")
 @action
-def grab_gripper(robot):
+def grab_gripper(robot, gripper = "RIGHT"):
     """
     Closes the gripper to grab something.
 
@@ -31,34 +34,52 @@ def grab_gripper(robot):
 
     :see: close_gripper
     """
-    return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["GRAB"])]
+    if gripper == "RIGHT":
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RGRAB"])]
+    else:
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LGRAB"])]
 
 @tested("22/02/2012")
 @action
-def open_gripper(robot, callback = None):
+def open_gripper(robot, gripper = "RIGHT", callback = None):
     """
     Opens the right gripper.
 
     :see: release_gripper
     """
-    return [genom_request("pr2SoftMotion", 
-            "GripperGrabRelease", 
-            ["OPEN"],
-            wait_for_completion = False if callback else True,
-            callback = callback)]
+    if gripper == "RIGHT":
+        return [genom_request("pr2SoftMotion", 
+                "GripperGrabRelease", 
+                ["ROPEN"],
+                wait_for_completion = False if callback else True,
+                callback = callback)]
+
+    else:
+        return [genom_request("pr2SoftMotion", 
+                "GripperGrabRelease", 
+                ["LOPEN"],
+                wait_for_completion = False if callback else True,
+                callback = callback)]
 
 @tested("22/02/2012")
 @action
-def close_gripper(robot, callback = None):
+def close_gripper(robot, gripper = "RIGHT", callback = None):
     """ Closes the right gripper.
     
     :see: grab_gripper
     """
-    return [genom_request("pr2SoftMotion", 
-            "GripperGrabRelease", 
-            ["CLOSE"],
-            wait_for_completion = False if callback else True,
-            callback = callback)]
+    if gripper == "RIGHT":
+        return [genom_request("pr2SoftMotion", 
+                "GripperGrabRelease", 
+                ["RCLOSE"],
+                wait_for_completion = False if callback else True,
+                callback = callback)]
+    else:
+        return [genom_request("pr2SoftMotion", 
+                "GripperGrabRelease", 
+                ["LCLOSE"],
+                wait_for_completion = False if callback else True,
+                callback = callback)]
 
 @tested("23/02/2012")
 @action
