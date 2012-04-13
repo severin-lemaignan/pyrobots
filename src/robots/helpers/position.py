@@ -137,14 +137,14 @@ class PoseManager:
         return self.get(raw)
         
     def get(self, raw):
-        """ takes a loosly define 'pose' as input and returns a properly formatted
+        """ takes a loosly defined 'pose' as input and returns a properly formatted
         and normalized pose.
         
         Input may be:
          * a SPARK entity (either an object name of a pair (object name, part name))
          * a ROS TF frame
          * an incomplete pose dictionary
-         * a list or tuple (x,y,z), or (z,y,z,rx,ry,rz) or (x,y,z,qx,qy,qz,qw)
+         * a list or tuple (x,y,z), (x,y,z,frame) or (z,y,z,rx,ry,rz) or (x,y,z,qx,qy,qz,qw)
         """
         
         pose = None
