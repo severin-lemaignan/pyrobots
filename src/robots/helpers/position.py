@@ -227,6 +227,43 @@ class ROSPositionKeeper:
             self.isrosconfigured = False
             return
 
+    def inframe(self, pose, frame):
+        """ transform a given pose (assumed to be in the map frame) in
+        the given frame.
+        """
+        if not self.isrosconfigured:
+            return None
+
+        from geometry_msgs.msg import PoseStamped
+        import rospy
+
+        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
+            poseStamped = PoseStamped()
+
+            poseStamped.header.frame_id = pose["frame"]
+            poseStamped.header.stamp = self.tf.getLatestCommonTime("/map", frame)
+            poseStamped.pose.position.x = pose["x"]
+            poseStamped.pose.position.y = pose["y"]
+            poseStamped.pose.position.z = pose["z"]
+            poseStamped.pose.orientation.x = pose["qx"]
+            poseStamped.pose.orientation.y = pose["qy"]
+            poseStamped.pose.orientation.z = pose["qz"]
+            poseStamped.pose.orientation.w = pose["qw"]
+            newPoseStamped = self.tf.transformPose(frame, poseStamped)
+
+            return {"x":newPoseStamped.pose.position.x,
+                    "y":newPoseStamped.pose.position.y,
+                    "z":newPoseStamped.pose.position.z,
+                    "qx":newPoseStamped.pose.orientation.x,
+                    "qy":newPoseStamped.pose.orientation.y,
+                    "qz":newPoseStamped.pose.orientation.z,
+                    "qw":newPoseStamped.pose.orientation.w,
+                    "frame": frame}
+
+        logger.error("Could not transform the pose from /map to the frame " + frame) #TODO: For some reason, the logger do not work
+        return None
+
+
     def getabspose(self, frame):
         if not self.isrosconfigured:
             return None
