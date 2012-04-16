@@ -52,7 +52,7 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                 try:
                     desire = desires.desire_factory(sit, pr2)
                     desire.perform()
-                except NotExistingDesireTypeError as e:
+                except desires.NotExistingDesireTypeError as e:
                     logger.error(e)
                     logger.info("Skipping this desire.")
             time.sleep(0.1)
