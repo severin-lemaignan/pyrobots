@@ -124,6 +124,19 @@ class Display(Desire):
 
         self._robot.display(self.window)
 
+class Display(Desire):
+    def __init__(self, situation, robot):
+        super(Display, self).__init__(situation, robot)
+
+        self.window = robot.knowledge[self._sit + " involves *"][0]
+
+    def perform(self):
+        super(Display, self).perform()
+
+        logger.info("Let's try to display " + str(self.window))
+
+        self._robot.display(self.window)
+
 class NotExistingDesireTypeError(Exception):
     def __init__(self, value):
         self.value = value
