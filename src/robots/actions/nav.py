@@ -29,8 +29,8 @@ def goto(robot, target, callback = None):
     goal = None
     
     if robot.hasROS():
-	import rospy
-	import actionlib
+        import rospy
+        import actionlib
         import move_base_msgs.msg
         # Creates the SimpleActionClient, passing the type of the action
         # (Navigationction) to the constructor.
@@ -80,7 +80,10 @@ def cancel(robot):
     client = None
     goal = None
     
-    if isrosconfigured:
+    if robot.hasROS():
+        import rospy
+        import actionlib
+        import move_base_msgs.msg
         client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
         
         ok = client.wait_for_server()
