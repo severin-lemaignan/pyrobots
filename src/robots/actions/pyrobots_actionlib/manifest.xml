@@ -9,6 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/pyrobots_actionlib</url>
   <depend package="move_base_msgs"/>
+  <depend package="waypoints"/>
   <depend package="arm_navigation_msgs"/>
   <depend package="actionlib"/>
   <depend package="rospy"/>

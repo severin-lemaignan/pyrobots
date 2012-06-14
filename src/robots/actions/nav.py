@@ -160,8 +160,9 @@ def carry(robot, target, callback = None):
 
 ################################################################################
 
+@tested("14/06/2012")
 @action
-def waypoints(robot, waypoints, callback = None):
+def waypoints(robot, points, callback = None):
     """ Moves the robot base along a set of waypoints, using ROS 2D navigation 
     stack (and the LAAS 'waypoints' ROS node).
 
@@ -172,7 +173,7 @@ def waypoints(robot, waypoints, callback = None):
     """
 
     # Normalize the poses
-    wps = [robot.poses[pose] for pose in waypoints]
+    wps = [robot.poses[pose] for pose in points]
     
     client = None
     goal = None
@@ -180,10 +181,10 @@ def waypoints(robot, waypoints, callback = None):
     if robot.hasROS():
         import rospy
         import actionlib
-        import move_base_msgs.msg
+        import waypoints.msg
         # Creates the SimpleActionClient, passing the type of the action
         # (Navigationction) to the constructor.
-        client = actionlib.SimpleActionClient('waypoints', waypoints_msgs.msg.waypointsAction)
+        client = actionlib.SimpleActionClient('waypoints', waypoints.msg.waypointsAction)
 
         ok = client.wait_for_server()
         if not ok:
@@ -192,9 +193,9 @@ def waypoints(robot, waypoints, callback = None):
             return
 
         # Creates a goal to send to the action server.  
-        goal = _msgs.msg.waypointsGoal()
+        goal = waypoints.msg.waypointsGoal()
 
-        for pose in waypoints:
+        for pose in wps:
             goal.waypointTab.append(robot.poses.ros.asROSpose(pose))
 
     else:
