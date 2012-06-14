@@ -74,7 +74,7 @@ def goto(robot, target, callback = None):
 
 @action
 def cancel(robot):
-    """ Interrupt a navigation task.
+    """ Interrupt a 'goto' navigation task.
     """
     
     client = None
@@ -154,4 +154,58 @@ def carry(robot, target, callback = None):
             actions += goto(target, callback)
 
         return actions
+
+################################################################################
+
+@action
+def waypoints(robot, waypoints, callback = None):
+    """ Moves the robot base along a set of waypoints, using ROS 2D navigation 
+    stack (and the LAAS 'waypoints' ROS node).
+
+        :param waypoints: a set of locations (any valid pyRobot pose).
+        :param callback: (optional) a callback to be called when the final destination
+        is reached. If nothing is provided, the action blocks until the 
+        destination is reached.
+    """
+
+    # Normalize the poses
+    wps = [robot.poses[pose] for pose in waypoints]
+    
+    client = None
+    goal = None
+    
+    if robot.hasROS():
+        import rospy
+        import actionlib
+        import move_base_msgs.msg
+        # Creates the SimpleActionClient, passing the type of the action
+        # (Navigationction) to the constructor.
+        client = actionlib.SimpleActionClient('waypoints', waypoints_msgs.msg.waypointsAction)
+
+        ok = client.wait_for_server()
+        if not ok:
+            #logger.error("Could not connect to the ROS client! Aborting action")
+            print("Could not connect to the ROS client! Aborting action")
+            return
+
+        # Creates a goal to send to the action server.  
+        goal = _msgs.msg.waypointsGoal()
+
+        for pose in waypoints:
+            goal.waypointTab.append(robot.poses.ros.asROSpose(pose))
+
+    else:
+        # Useful for debugging purpose, without the actual robot
+        client = "ROS waypoints"
+        goal = wps
+    
+
+    return [ros_request(client, 
+            goal, 
+            wait_for_completion = False if callback else True,
+            callback = callback
+        )] # Return a non-blocking action. Useful to be able to cancel it later!
+
+###############################################################################
+
 
