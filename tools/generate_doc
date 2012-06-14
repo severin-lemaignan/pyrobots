@@ -4,6 +4,7 @@ import sys
 from robots.actions import nav, primitive_nav, look_at, manipulation, configuration, games, administration
 
 import robots.helpers.geometric_planning
+import robots.helpers.position
 
 # documentation of special parameters
 special_doc = {"target": "a final position ([x,y,z], [x,y,z,qx,qy,qz,qw], a SPARK object or a ROS frame)",
@@ -59,6 +60,7 @@ for helper_class in [getattr(robot_m, cls) for cls in dir(robot_m)]:
             helpers.setdefault(helper_class.__module__, []).append(
                 (fn.__name__, 
                 fn.__doc__, 
+                fn._helper_access if hasattr(fn, "_helper_access") else "",
                 fn._tested if hasattr(fn, "_tested") else None))
             anchors[fn.__name__] =  helper_class.__module__ + "." + helper_class.__name__ + "." + fn.__name__
 
@@ -119,7 +121,7 @@ print("\n\n== Helpers ==\n\n")
 for m in helpers.keys():
     print("<<Anchor(" + m + ")>>") # anchor
     print("=== Category " + m.split('.')[2]  + " ===")
-    for name, doc, tested in helpers[m]:
+    for name, doc, access, tested in helpers[m]:
         params = []
         print("<<Anchor(" + m + "." + name + ")>>") # anchor
         print("==== Helper " + name + " ====")
@@ -154,6 +156,6 @@ for m in helpers.keys():
                     print(p + " = " + p.upper() + " # define here a " + p )
             print("pr2." + name + "(" + ", ".join([p for p,d in params]) + ")")
         else:
-            print("pr2." + name + "()")
+            print("pr2." + access + "." + name + "()")
         print("}}}")
         print("\n")

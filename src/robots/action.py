@@ -4,11 +4,18 @@ def action(fn):
 	fn._action = True
 	return fn
 
-def helper(fn):
-	"""The @helper decorator.
-	"""
-	fn._helper = True
-	return fn
+def helper(access):
+    """The @helper decorator.
+
+    :param access: the name of the variable that gives access to
+    the helper. For instance, if access='planning' for the helper
+    'plan()', the helper can be invoked by: 'robot.planning.plan()'
+    """
+    def decorator(fn):
+        fn._helper = True
+        fn._helper_access = access
+        return fn
+    return decorator
 
 def tested(date):
     """Marks the last time this method has been tested.

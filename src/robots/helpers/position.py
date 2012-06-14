@@ -193,18 +193,20 @@ class PoseManager:
                 except RobotError as re:
                     raise RobotError("Unable to process the pose '%s' (original error was:%s)" % (raw, str(re)))
 
-    def myself():
+    @helper("poses")
+    def myself(self):
         """
         Returns the current PR2 base pose.
         """
         return self.get("base_link")
 
-    def gethumanpose(action_performer, human, part = 'Pelvis'):
+    @helper("poses")
+    def gethumanpose(self, human, part = 'Pelvis'):
         """
         Head -> part="HeadX"
         """
         # Where is the human?
-        return poseof(action_performer, human, part)
+        return self.get((human, part))
     
 class ROSPositionKeeper:
     def __init__(self):
@@ -227,8 +229,15 @@ class ROSPositionKeeper:
             self.isrosconfigured = False
             return
 
+    @tested("14/06/2012")
+    @helper("poses.ros")
     def asROSpose(self, pose):
         """ Returns a ROS PoseStamped from a pyRobots pose.
+
+        :param pose: a standard pyRobots pose (SPARK id, TF frame, [x,y,z],
+        [x,y,z,rx,ry,rz], [x,y,z,qx,qy,qw,qz], {'x':..., 'y':...,...})
+
+        :return: the corresponding ROS PoseStamped
         """
 
         from geometry_msgs.msg import PoseStamped

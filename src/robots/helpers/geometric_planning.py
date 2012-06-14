@@ -16,8 +16,8 @@ class PlanningManager:
         self.robot = robot
     
     @tested("14/06/2012")
-    @helper
-    def gethandoverwaypoints(self, human = "HERAKLES_HUMAN1", standing = True, mobility = 0.0):
+    @helper("planning")
+    def handover(self, human = "HERAKLES_HUMAN1", standing = True, mobility = 0.0):
         """ Computes a set of waypoints that allow the robot to reach a position 
         suitable to transfer an object to a human.
 
@@ -29,9 +29,9 @@ class PlanningManager:
         At 0.0, the human does not move. At 1.0, human and robot do approximately
         the same amount of displacement.
 
-        :return: a dictionary with two items:
-          * 'waypoints': the list of pyRobots poses (actually, a list of (x,y,theta)).
-          * 'pose': the body pose (right arm + torso) of the robot as a dictionary
+        :return: a list with two items:
+          * waypoints: the list of pyRobots poses (actually, a list of (x,y,theta)).
+          * pose: the body pose (right arm + torso) of the robot as a dictionary
           (cf setpose documentation).
         """
 
