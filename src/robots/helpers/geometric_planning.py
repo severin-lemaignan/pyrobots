@@ -40,17 +40,17 @@ class PlanningManager:
         ok, res = raw
         if ok != 'OK':
             return None
-        nbPoints = res[1]
-        points = res[2:-8]
-        right_hand_dofs = res[-8:]
+        nbPoints = int(res[0])
+        points = map(float, res[2:-8])
+        right_hand_dofs = map(float, res[-8:])
 
         def makeposedict(x,y,rz):
             return {'x':x, 'y':y, 'rz':rz}
 
         wps = map(makeposedict, points[::3], points[1::3], points[2::3])
         pose = {'RARM': right_hand_dofs[:7],
-                'TORSO': right_hand_dofs[8]}
+                'TORSO': right_hand_dofs[7]}
 
-        return {"waypoints":wps[:nbPoints], "pose":pose}
+        return (wps[:nbPoints], pose)
 
 
