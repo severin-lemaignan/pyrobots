@@ -227,28 +227,36 @@ class ROSPositionKeeper:
             self.isrosconfigured = False
             return
 
-    def inframe(self, pose, frame):
-        """ transform a given pose (assumed to be in the map frame) in
-        the given frame.
+    def asROSpose(self, pose):
+        """ Returns a ROS PoseStamped from a pyRobots pose.
         """
-        if not self.isrosconfigured:
-            return None
 
         from geometry_msgs.msg import PoseStamped
         import rospy
 
-        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
-            poseStamped = PoseStamped()
+        poseStamped = PoseStamped()
 
-            poseStamped.header.frame_id = pose["frame"]
-            poseStamped.header.stamp = self.tf.getLatestCommonTime("/map", frame)
-            poseStamped.pose.position.x = pose["x"]
-            poseStamped.pose.position.y = pose["y"]
-            poseStamped.pose.position.z = pose["z"]
-            poseStamped.pose.orientation.x = pose["qx"]
-            poseStamped.pose.orientation.y = pose["qy"]
-            poseStamped.pose.orientation.z = pose["qz"]
-            poseStamped.pose.orientation.w = pose["qw"]
+        poseStamped.header.frame_id = pose["frame"]
+        poseStamped.header.stamp = self.tf.getLatestCommonTime("/map", pose["frame"])
+        poseStamped.pose.position.x = pose["x"]
+        poseStamped.pose.position.y = pose["y"]
+        poseStamped.pose.position.z = pose["z"]
+        poseStamped.pose.orientation.x = pose["qx"]
+        poseStamped.pose.orientation.y = pose["qy"]
+        poseStamped.pose.orientation.z = pose["qz"]
+        poseStamped.pose.orientation.w = pose["qw"]
+
+        return poseStamped
+
+    def inframe(self, pose, frame):
+        """ Transforms a given pose in the given frame.
+        """
+        if not self.isrosconfigured:
+            return None
+
+        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
+
+            poseStamped = self.asROSpose(pose)
             newPoseStamped = self.tf.transformPose(frame, poseStamped)
 
             return {"x":newPoseStamped.pose.position.x,
