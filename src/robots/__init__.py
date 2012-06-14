@@ -18,6 +18,7 @@ robotlog.addHandler(h)
 from exception import RobotError
 
 from helpers.position import PoseManager
+from helpers.planning import PlanningManager
 
 class Robot(object):
     """ This 'low-level' class implements all what is required to actually execute
@@ -68,6 +69,7 @@ class Robot(object):
                 self.GoalStatus = GoalStatus
     
         self.poses = PoseManager(self)
+        self.planning = PlanningManager(self)
 
     def hasROS(self):
         return self.use_ros
