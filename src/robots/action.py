@@ -1,7 +1,13 @@
 def action(fn):
-	"""The @action decorator
+	"""The @action decorator.
 	"""
 	fn._action = True
+	return fn
+
+def helper(fn):
+	"""The @helper decorator.
+	"""
+	fn._helper = True
 	return fn
 
 def tested(date):

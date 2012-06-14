@@ -15,17 +15,42 @@ class PlanningManager:
     def __init__(self, robot):
         self.robot = robot
     
-    def gethandoverwaypoints(self, human = "HERAKLES_HUMAN1", standing = True, object_necessity = 0.0):
+    @tested("14/06/2012")
+    @helper
+    def gethandoverwaypoints(self, human = "HERAKLES_HUMAN1", standing = True, mobility = 0.0):
+        """ Computes a set of waypoints that allow the robot to reach a position 
+        suitable to transfer an object to a human.
 
-        raw = robot.execute([genom_request("mhp", "ComputeObjectTransferRos", [human, standing, object_necessity])])
-        return _process_result(raw)
+        :param human: the name of the human that must be reached, as
+        known by SPARK.
+        :param standing: if True, the human is considered as standing, if False
+        as sitting.
+        :param mobility: ratio of displacement between the human and the robot.
+        At 0.0, the human does not move. At 1.0, human and robot do approximately
+        the same amount of displacement.
 
-    def _process_result(self, raw):
-        
+        :return: a dictionary with two items:
+          * 'waypoints': the list of pyRobots poses (actually, a list of (x,y,theta)).
+          * 'pose': the body pose (right arm + torso) of the robot as a dictionary
+          (cf setpose documentation).
+        """
+
+        raw = self.robot.execute([genom_request("mhp", "ComputeObjectTransferRos", [human, standing, mobility])])
+
         ok, res = raw
         if ok != 'OK':
             return None
-        yaw, pitch, roll, x, y, z = [float(x) for x in res]
+        nbPoints = res[1]
+        points = res[2:-8]
+        right_hand_dofs = res[-8:]
 
-        return (x, y, z, roll, pitch, yaw)
+        def makeposedict(x,y,rz):
+            return {'x':x, 'y':y, 'rz':rz}
+
+        wps = map(makeposedict, points[::3], points[1::3], points[2::3])
+        pose = {'RARM': right_hand_dofs[:7],
+                'TORSO': right_hand_dofs[8]}
+
+        return {"waypoints":wps[:nbPoints], "pose":pose}
+
 
