@@ -170,11 +170,20 @@ class Robot(object):
             robotlog.warning("Aborted " + action["module"] + "." + action["request"])
             return
 
-        robotlog.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(action["args"]))
+        args = []
+        for arg in action["args"]:
+            if type(arg) == bool:
+                if arg:
+                    args.append("GEN_TRUE")
+                else:
+                    args.append("GEN_FALSE")
+            else:
+                args.append(arg)
+
+        robotlog.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(args))
         module = self.poco_modules[action["module"]]
         method = getattr(module, action["request"])
 
-        args = action["args"] if action["args"] else []
         if not action['wait_for_completion']:
             # asynchronous mode! 
             if action["callback"]:
