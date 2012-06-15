@@ -76,35 +76,19 @@ def look_at_xyz_with_moveHead(robot, x,y,z, frame = "map", callback = None):
 
 ###############################################################################
 
+@tested("15/06/2012")
 @action
-def track(robot, place):
+def track(robot, target):
     """ Tracks an object with the head.
 
     This uses pr2SoftMotion.
 
     This is a background action. Can be cancelled with cancel_track.
 
-    :param place: a dictionary with the x,y,z position of objects in space.
-              If a 'frame' key is found, use it as reference frame. Else
-              the world frame '/map' is assumed.
-    """
-    target = place
-    target.setdefault("frame", "/map")
+    :param target: a pyRobots pose to track. At each step, the pose is re-evaluated is needed (eg for a TF frame or a SPARK object)    """
 
     return [background_task(TrackAction, [target])]
 
-###############################################################################
-
-@action
-def track_human(robot, part = "HeadX"):
-    """ Tracks the human head.
-
-    This uses pr2SoftMotion.
-
-    This is a background action. Can be cancelled with cancel_track.
-
-    """
-    return [background_task(TrackAction, [part, True])] # Update = True
 
 ###############################################################################
 
@@ -113,7 +97,7 @@ import time
 
 # TODO: move head only if robot/target has moved
 class TrackAction(Thread):
-    def __init__(self, robot, target, needupdate = False):
+    def __init__(self, robot, target):
         global actionPerformerForTracking
 
         Thread.__init__(self)
@@ -124,37 +108,28 @@ class TrackAction(Thread):
         #    actionPerformerForTracking = ActionPerformer('pr2c2', 9472, use_ros = False)
 
         self.running = False
-
-        #TODO HACK: currently not used because of pypoco issues
         self.robot = robot
-        
-        self.targettoupdate = needupdate
-        self.robotpart = target
         self.target = target
 
-    def updatetarget(self):
-        self.target = position.gethumanpose(self.robot, part = self.robotpart)
-        #self.target = position.gethumanpose(actionPerformerForTracking, part = self.robotpart)
-
     def run(self):
-	logger.info("Starting task " + self.__class__.__name__)
+        logger.info("Starting task " + self.__class__.__name__)
         self.running = True
 
         while self.running:
-            if self.targettoupdate:
-                self.updatetarget()
+            self.target = self.robot.poses[self.target]
             if self.target:
-                self.robot.execute(look_at, self.target)
+                self.robot.look_at(self.target)
                 #actionPerformerForTracking.execute(look_at, self.target)
             time.sleep(0.5)
     
     def stop(self):
-	logger.info("Stopping task " + self.__class__.__name__)
+        logger.info("Stopping task " + self.__class__.__name__)
         self.running = False
 
 
 ###############################################################################
 
+@tested("15/06/2012")
 @action
 def cancel_track(robot):
     """ If running, interrupt a current track action.
