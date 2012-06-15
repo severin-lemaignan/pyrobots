@@ -231,7 +231,6 @@ def manipose(robot, nohead = True, callback = None):
     return setpose(robot, posture, callback, part)
 
 @tested("15/06/2012")
-@broken
 @action
 def restpose(robot, nohead = True, callback = None):
     """
