@@ -83,6 +83,19 @@ class Give(Desire):
         
         self._robot.give(self.objects[0], self.to[0])
 
+class Bring(Desire):
+    def __init__(self, situation, robot):
+        super(Bring, self).__init__(situation, robot)
+        
+        self.objects = robot.knowledge[self._sit + " actsOnObject *"]
+        self.doer = robot.knowledge[self._sit + " performedBy *"]
+        self.to = robot.knowledge[self._sit + " receivedBy *"]
+    
+    def perform(self):
+        super(Bring, self).perform()
+        logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
+        
+        self._robot.handover(self.to[0])
 
 class Hide(Desire):
     def __init__(self, situation, robot):
