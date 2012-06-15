@@ -45,11 +45,11 @@ class PlanningManager:
         right_hand_dofs = map(float, res[-8:])
 
         def makeposedict(x,y,rz):
-            return {'x':x, 'y':y, 'rz':rz}
+            return (x, y, 0, 0, 0, rz)
 
         wps = map(makeposedict, points[::3], points[1::3], points[2::3])
         pose = {'RARM': right_hand_dofs[:7],
-                'TORSO': right_hand_dofs[7]}
+                'TORSO': [right_hand_dofs[7]]}
 
         return (wps[:nbPoints], pose)
 
