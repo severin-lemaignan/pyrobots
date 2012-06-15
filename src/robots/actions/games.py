@@ -14,7 +14,7 @@ def basket(robot, duration = 4):
         # Where is the human?
 	human = None
 	while not human:
-	        human = position.gethumanpose(robot)      
+	        human = robot.poses.human()
 		if not human:
 			logger.warning("HUMAN not detected!!!")
 			raw_input("Press enter to retry")

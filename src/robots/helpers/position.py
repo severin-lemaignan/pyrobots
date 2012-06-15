@@ -201,7 +201,7 @@ class PoseManager:
         return self.get("base_link")
 
     @helper("poses")
-    def gethumanpose(self, human, part = 'Pelvis'):
+    def human(self, human, part = 'Pelvis'):
         """
         Head -> part="HeadX"
         """
