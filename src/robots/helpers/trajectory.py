@@ -16,7 +16,7 @@ class Trajectory:
 
     def __init__(self, traj):
         self.name = traj
-        self.path = os.path.abspath(os.path.join(PREFIX, self.name + SUFFIX))
+        self.path = os.path.abspath(os.path.join(DATA_DIR, self.name + SUFFIX))
         if not os.path.isfile(self.path):
             raise NameError("Trajectory " + traj + " do not exist")
 
