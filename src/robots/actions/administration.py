@@ -110,7 +110,7 @@ def init(robot, \
     if pr2SoftMotion:
         actions += configure_grippers(robot)
         actions += [genom_request("pr2SoftMotion", "Init")]
-        actions += settorso(robot, 10)
+        actions += settorso(robot, 0.10)
 
     # SPARK initialization
     if spark:

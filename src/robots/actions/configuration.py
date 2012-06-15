@@ -230,7 +230,7 @@ def manipose(robot, nohead = True, callback = None):
     
     return setpose(robot, posture, callback, part)
 
-@tested("22/02/2012")
+@tested("15/06/2012")
 @broken
 @action
 def restpose(robot, nohead = True, callback = None):
@@ -257,13 +257,13 @@ def restpose(robot, nohead = True, callback = None):
 
     return setpose(robot, posture, callback, part)
 
-@tested("08/03/2012")
+@tested("15/06/2012")
 @action
-def settorso(robot, height = 15, callback = None):
+def settorso(robot, height = 0.15, callback = None):
     """
     Set the PR2 torso height.
 
-    :param height: The height of the torso, in centimeters. Defaults to 15
+    :param height: The height of the torso, in meters. Defaults to 0.15
     cm.
 
     Height is clamped into [0, 30].
@@ -274,22 +274,21 @@ def settorso(robot, height = 15, callback = None):
     """
     if height < 0:
         height = 0
-    if height > 30:
-        height = 30
-    return setpose(robot, {'TORSO': [float(height) / 100]}, callback)
+    if height > 0.3:
+        height = 0.3
+    return setpose(robot, {'TORSO': [float(height)]}, callback)
 
 
-@tested("22/02/2012")
+@tested("15/06/2012")
 @action
 def tuckedpose(robot, callback = None, nohead = True):
     """
     Tucks the robot arms.
 
-    :param no_head: (optional) If true, only arms and torso will set a new configuration.
-    Very useful if you track an object
     :param callback: (optional) If given, the action is non-blocking, and the callback is
     invoked at the activity completion.
-
+    :param no_head: (optional) If true, only arms and torso will set a new configuration.
+    Very useful if you track an object
     """
 
     if nohead:
