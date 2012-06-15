@@ -1,3 +1,6 @@
+import logging; logger = logging.getLogger("robot." + __name__)
+logger.setLevel(logging.DEBUG)
+
 import random
 
 from robots.action import *
@@ -5,7 +8,7 @@ from robots.action import *
 from robots.helpers import postures
 from robots.helpers.cb import *
 
-from robots.actions import configuration
+from robots.actions import configuration, nav, look_at
 
 used_plan_id = []
 
@@ -18,6 +21,8 @@ def release_gripper(robot, gripper = "RIGHT"):
     Like gripper_open, except it waits until it senses some effort on the gripper force sensors.
 
     :see: open_gripper
+
+    :param gripper: "RIGHT" (default) or "LEFT"
     """
     if gripper == "RIGHT":
         return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
@@ -33,6 +38,7 @@ def grab_gripper(robot, gripper = "RIGHT"):
     Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
 
     :see: close_gripper
+    :param gripper: "RIGHT" (default) or "LEFT"
     """
     if gripper == "RIGHT":
         return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RGRAB"])]
@@ -46,6 +52,8 @@ def open_gripper(robot, gripper = "RIGHT", callback = None):
     Opens the right gripper.
 
     :see: release_gripper
+    :param gripper: "RIGHT" (default) or "LEFT"
+    :param callback: if set, the action is non-blocking and the callback is invoked upon completion
     """
     if gripper == "RIGHT":
         return [genom_request("pr2SoftMotion", 
@@ -67,6 +75,8 @@ def close_gripper(robot, gripper = "RIGHT", callback = None):
     """ Closes the right gripper.
     
     :see: grab_gripper
+    :param gripper: "RIGHT" (default) or "LEFT"
+    :param callback: if set, the action is non-blocking and the callback is invoked upon completion
     """
     if gripper == "RIGHT":
         return [genom_request("pr2SoftMotion", 
@@ -176,7 +186,41 @@ def basicgrab(robot):
         
     return actions
 
+@tested("15/06/2012")
+@action
+def handover(robot, human, mobility = 0.0):
+    actions = look_at.look_at(robot, human)
+    actions += configuration.tuckedpose(robot, nop)
+    actions += look_at.look_at(robot, [1,0,0.7,"base_link"])
+    res = robot.planning.handover(human, mobility = mobility)
 
+    if not res:
+        logger.warning("OTP planning failed. Retrying.")
+        robot.sorry()
+        res = robot.planning.handover(human, mobility=mobility)
+        if not res:
+            logger.error("OTP planning failed again. Giving up.")
+            return []
+
+    wps, pose = res
+    print(res)
+    actions += nav.waypoints(robot, wps)
+    actions += look_at.look_at(robot, human,nop)
+
+    # Collision avoidance
+    #pose_rarm = {'RARM':pose['RARM']}
+    #actions += configuration.settorso(pose['TORSO'][0], nop)
+    #actions += configuration.setpose(robot, pose_rarm, collision_avoidance = True, callback=nop)
+
+    # No collision avoidance
+    actions += configuration.setpose(robot, pose)
+
+    actions += release_gripper(robot)
+    actions += [wait(1)]
+    actions += close_gripper(robot, nop)
+    actions += configuration.tuckedpose(robot)
+
+    return actions
 
 
 @action
