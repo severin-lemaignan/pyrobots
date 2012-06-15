@@ -61,14 +61,12 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
     :param callback: (optional) If given, the action is non-blocking, and the callback is
     invoked at the activity completion.
     """
-
-    if collision_avoidance and not part == 'RARM':
-        raise RobotError("Can't use collision avoidance with other part than RARM")
-
     if part and part not in ['BASE', 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
         print("'setpose' for part " + part + " is not implemented.")
 
     logger.debug("Setting pose " + str(posture))
+
+    current_pose = getpose(robot)
 
     forced_part = part
 
@@ -90,7 +88,7 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
         if not forced_part:
             part = 'RARM'
     except KeyError:
-        rq1, rq2, rq3, rq4, rq5, rq6, rq7 = [0.0] * 7
+        rq1, rq2, rq3, rq4, rq5, rq6, rq7 = current_pose["RARM"]
 
     try:
         lq1, lq2, lq3, lq4, lq5, lq6, lq7 = posture['LARM']
@@ -100,19 +98,19 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
             else:
                 part = 'LARM'
     except KeyError:
-        lq1, lq2, lq3, lq4, lq5, lq6, lq7 = [0.0] * 7
+        lq1, lq2, lq3, lq4, lq5, lq6, lq7 = current_pose['LARM']
 
     try:
         [torso] = posture['TORSO']
         if not forced_part:
-            if part == 'ARMS':
+            if part in ['LARM', 'RARM', 'ARMS']:
                 part = 'PR2NOHEAD'
             elif not part:
                 part = 'TORSO'
             else:
                 raise RobotError("Can not move only one arm and the torso in one call. Please call gotopostureraw twice.")
     except KeyError:
-        torso = 0.0
+        [torso] = current_pose["TORSO"]
 
     try:
         pan, tilt = posture['HEAD']
@@ -124,7 +122,7 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
             else:
                 raise RobotError("Can not move only one arm or the torso and the head in one call. Please call gotopostureraw twice.")
     except KeyError:
-         pan, tilt= 0.0, 0.0
+         pan, tilt= current_pose["HEAD"]
 
 
     if not collision_avoidance:
@@ -146,6 +144,9 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
             ]
 
     else: #collision_avoidance == True
+        if not part == 'RARM':
+            raise RobotError("Can't use collision avoidance with other part than RARM")
+
         actions = [
         genom_request(
             "mhp",
@@ -173,6 +174,38 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
         ]
 
     return actions
+
+def getpose(robot):
+    """Returns to current whole-body pose of the PR2 robot.
+    """
+    try:
+        import rospy
+        from sensor_msgs.msg import JointState
+        logger.debug("Reading PR2 pose... (10 sec timeout)")
+        msg = rospy.client.wait_for_message('/joint_states', JointState, timeout = 10)
+    except rospy.exceptions.ROSException:
+        logger.error("Could not read topic /joint_states. Right ROS_MASTER_URI? "
+        "PR2 started?")
+        return None
+
+    raw = msg.position
+
+    pose = {}
+    pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
+    pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
+
+    # Arm joints order:
+    # shoulder_pan_joint
+    # shoulder_lift_joint
+    # upper_arm_roll_joint 
+    # elbow_flex_joint
+    # forearm_roll_joint
+    # wrist_flex_joint
+    # wrist_roll_joint
+
+    pose["RARM"] = [round(raw[18], 3), round(raw[19], 3), round(raw[17], 3), round(raw[21], 3), round(raw[20], 3), round(raw[22], 3), round(raw[23], 3), ]
+    pose["LARM"] = [round(raw[32], 3), round(raw[33], 3), round(raw[31], 3), round(raw[35], 3), round(raw[34], 3), round(raw[36], 3), round(raw[37], 3), ]
+    return pose
 
 @tested("15/06/2012")
 @action
