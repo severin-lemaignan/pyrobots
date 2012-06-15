@@ -18,7 +18,7 @@ def enabledevileye(robot):
 def disabledevileye(robot):
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 1")
  
-@tested("22/02/2012")
+@tested("15/06/2012")
 @action
 def setpose(robot, posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
@@ -174,7 +174,7 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
 
     return actions
 
-@tested("22/02/2012")
+@tested("15/06/2012")
 @action
 def manipose(robot, nohead = True, callback = None):
     """

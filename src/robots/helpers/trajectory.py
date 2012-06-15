@@ -1,7 +1,16 @@
 import os
 import glob
-PREFIX = '../share/novela_trajlib/Seg_file/'
+import os
+import json
+import logging; logger = logging.getLogger("robot." + __name__)
+logger.setLevel(logging.DEBUG)
+
+#hack that tries to find out the current prefix and then the data directory
+DATA_DIR = os.path.abspath(__file__).split('lib')[0] + 'share/trajectories/Seg_file/'
+
 SUFFIX = '_Seg.traj'
+
+
 
 class Trajectory:
 
@@ -9,10 +18,10 @@ class Trajectory:
         self.name = traj
         self.path = os.path.abspath(os.path.join(PREFIX, self.name + SUFFIX))
         if not os.path.isfile(self.path):
-            raise NameError("Trajectory " + traj + " do not exist")		
+            raise NameError("Trajectory " + traj + " do not exist")
 
     def abspath(self):
-        return self.path	
+        return self.path
 
     def initcoords(self):
 
@@ -26,7 +35,7 @@ class Trajectory:
     def list():
         # return a list of all available trajectories
         return []
-        
+
 if __name__ == "__main__" :
 
     traj = Trajectory("gym_3")
