@@ -9,15 +9,15 @@ from robots.action import *
 ###############################################################################
 ###############################################################################
 
-@tested("22/02/2012")
+@tested("22/06/2012")
 @action
-def goto(robot, target, callback = None):
+def goto(robot, target, callback = None, feedback = None):
     """ Moves the robot base to a given target, using ROS 2D navigation stack.
 
         Only (x,y,theta), ie (x, y, qw, qz), are considered for the target. 
 	All other values are ignored.
     
-        :param target: the destination, as a dictionary {x,y,z,qx,qy,qz,qw}.
+        :param target: the destination, as a valid pyRobots position.
         :param callback: (optional) a callback to be called when the destination
         is reached. If nothing is provided, the action blocks until the 
         destination is reached.
@@ -67,7 +67,8 @@ def goto(robot, target, callback = None):
     return [ros_request(client, 
             goal, 
             wait_for_completion = False if callback else True,
-            callback = callback
+            callback = callback,
+            feedback=feedback
         )] # Return a non-blocking action. Useful to be able to cancel it later!
 
 ###############################################################################
@@ -162,7 +163,7 @@ def carry(robot, target, callback = None):
 
 @tested("14/06/2012")
 @action
-def waypoints(robot, points, callback = None):
+def waypoints(robot, points, callback = None, feedback = None):
     """ Moves the robot base along a set of waypoints, using ROS 2D navigation 
     stack (and the LAAS 'waypoints' ROS node).
 
@@ -170,6 +171,7 @@ def waypoints(robot, points, callback = None):
         :param callback: (optional) a callback to be called when the final destination
         is reached. If nothing is provided, the action blocks until the 
         destination is reached.
+        :param feedback: (optional) a callback to be called each time the feedback topic of the waypoint is updated (ie, every few percent of trajectory accomplishment).
     """
 
     # Normalize the poses
@@ -207,7 +209,8 @@ def waypoints(robot, points, callback = None):
     return [ros_request(client, 
             goal, 
             wait_for_completion = False if callback else True,
-            callback = callback
+            callback = callback,
+            feedback = feedback
         )] # Return a non-blocking action. Useful to be able to cancel it later!
 
 ###############################################################################
