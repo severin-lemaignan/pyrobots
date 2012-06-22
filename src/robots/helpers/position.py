@@ -83,7 +83,7 @@ class PoseManager:
             pose['qz'] = float(pose['qz'])
             
         if not 'qw' in pose:
-            pose['qw'] = 0.0
+            pose['qw'] = 1.0
         else:
             pose['qw'] = float(pose['qw'])
             
