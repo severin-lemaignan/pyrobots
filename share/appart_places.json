@@ -1,0 +1,38 @@
+{
+	"CONTROL_DESK"
+                "_comment": "last desk of the control desks",
+		"x": 6.7, 
+		"y": 5.3,
+		"z": 0,
+		"rx": 0.0,
+		"ry": 0.0,
+		"rz": -1.57
+	},
+        "LOW_TABLE_LIVING"
+                "_comment": "The low table in the living room",
+                "x": 4.9,
+                "y": 6.9,
+                "z": 0,
+                "rx": 0.0,
+                "ry": 0.0,
+                "rz": -2.79
+        },
+        "RED_CHEST"
+                "_comment": "The chest in the bedroom",
+                "x": 5.3,
+                "y": 11.6,
+                "z": 0,
+                "rx": 0.0,
+                "ry": 0.0,
+                "rz": 0.0
+        },
+        "GREY_CONSOLE"
+                "_comment": "The console in the bedroom",
+                "x": 4.3,
+                "y": 12.3,
+                "z": 0,
+                "rx": 0.0,
+                "ry": 0.0,
+                "rz": 1.57
+        }
+}
