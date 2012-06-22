@@ -3,7 +3,7 @@ from configuration import setpose
 
 @broken
 @action
-def translation(robot, x, y = 0):
+def translate(robot, x, y = 0):
     """Move the robot base in XY, relatively to its current position.
     
     Be careful: this low-level action does NO obstacle avoidance.
@@ -19,7 +19,7 @@ def translation(robot, x, y = 0):
 
 @broken
 @action
-def rotation(robot, theta):
+def rotate(robot, theta):
     """Get the robot to turn on itself of the given angle
     (relatively to its current heading).
     
