@@ -228,9 +228,9 @@ class Robot(object):
     
         robotlog.debug("Sending goal " + str(action["goal"]) + " to " + str(client))
         # Sends the goal to the action server 
-        client.send_goal(goal, done_cb = action["callback"])
-           
-        if action['wait_for_completion']:	
+        client.send_goal(goal, done_cb = action["callback"], feedback_cb = action["feedback"])
+
+        if action['wait_for_completion']:
             # Waits for the server to finish performing the action
             client.wait_for_result()
 

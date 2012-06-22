@@ -52,12 +52,17 @@ def background_task(taskclass, args = None, wait_for_completion = True, abort = 
 	    "wait_for_completion": wait_for_completion,
 	    "callback": callback}
 
-def ros_request(client, goal, wait_for_completion = True, callback = None):
-	return {"middleware": "ros",
+def ros_request(client, goal, wait_for_completion = True, callback = None, feedback = None):
+    """
+    :param callback: an (optional) callback that is called when the action ic completed.
+    :param feedback: an (optional) callback that is called everytime the feedback topic is updated.
+    """
+    return {"middleware": "ros",
             "client": client,
             "goal": goal,
-	    "wait_for_completion": wait_for_completion,
-	    "callback": callback}
+            "wait_for_completion": wait_for_completion,
+            "callback": callback,
+            "feedback": feedback}
 
 def add_knowledge(stmts):
 	return [{"middleware": "knowledge",
