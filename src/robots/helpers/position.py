@@ -151,10 +151,10 @@ class PoseManager:
         
         if isinstance(raw, basestring):
             
-            p = places.read()
+            p = places.places()
             # Is it a known symbolic place?
             if raw in p.keys():
-                return p[raw]
+                return self.get(p[raw]) # normalize it
             
             #Either a SPARK object name or a ROS TF frame
             if self.ros:
