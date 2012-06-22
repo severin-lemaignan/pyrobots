@@ -90,12 +90,43 @@ class Bring(Desire):
         self.objects = robot.knowledge[self._sit + " actsOnObject *"]
         self.doer = robot.knowledge[self._sit + " performedBy *"]
         self.to = robot.knowledge[self._sit + " receivedBy *"]
+
+        self.in_safe_nav_pose = True
     
+    def navprogress(self, progress):
+        print(str(progress.percentage_covered) + "% of traj covered (" +  str(progress.distance_to_go) + "m to go).")
+        if progress.distance_covered > 0.5: # 50cm off the initial position
+            self._robot.manipose()
+            self.in_safe_nav_pose = True
+
     def perform(self):
         super(Bring, self).perform()
         logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
+        obj = objects[0]
+        if len(objects) > 1:
+            logger.info("Let take care of " + obj + " for now.")
         
-        self._robot.handover(self.to[0])
+        loc = self._robot.knowledge[obj + " isAt *"]
+        if not loc:
+            logger.warning("No place found for " + obj + "! I can not bring it")
+            return
+        logger.info(obj + " is on " + loc[0] + ". Let go there.")
+
+        #self._robot.goto(loc[0])
+        logger.info("Ok, destination reached. Let's try to see " + obj)
+        
+        #ok = findobject(obj, attempt = 3)
+        ok = True
+        if not ok:
+            logger.warning("I can not see the object " + obj + "! Giving up.")
+            return
+        logger.info("Ok, object found. Let's try to pick it.")
+        #self._robot.pick(obj)
+        self.in_safe_nav_pose = False
+
+        logger.info("And now, hand it over to " + self.to[0])
+
+        self._robot.handover(self.to[0], feedback = self.navprogress)
 
 class Hide(Desire):
     def __init__(self, situation, robot):
