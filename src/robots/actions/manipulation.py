@@ -193,11 +193,36 @@ def basicgrab(robot):
         
     return actions
 
+#def chained_handover_feedback_cb(previous_cb = None):
+#    def cb(progress):
+#        if progress >
+
+
 @tested("15/06/2012")
 @action
-def handover(robot, human, mobility = 0.0):
+def handover(robot, human, mobility = 0.0, feedback = None):
+    """ Computes and executes a move for a 'hand-over': given a
+    human, the robot finds a trajectory and a pose to go and hand
+    the object in its right hand to the human.
+
+    The efforts can be shared between the human and the robot with
+    the 'mobility' parameter.
+
+    Note that the object is assumed to be already in the hand.
+
+    :param human: the human (SPARK ID) to hand an object over.
+    :param mobility: the level of mobility of the human. 0.0 means
+    the human can not move (the robot does all the displacement),
+    1.0 means the robot and the human will each roughly move half 
+    the way.
+    :param feedback: (optional) a callback that is invoked as the
+    robot moves along. It provides the percentage of the trajectory
+    already covered, the distance to go and the distance already 
+    covered.
+    """
+
     actions = look_at.look_at(robot, human)
-    actions += configuration.tuckedpose(robot, nop)
+    actions += configuration.manipose(robot, nop)
     actions += look_at.look_at(robot, [1,0,0.7,"base_link"])
     res = robot.planning.handover(human, mobility = mobility)
 
@@ -211,7 +236,7 @@ def handover(robot, human, mobility = 0.0):
 
     wps, pose = res
     print(res)
-    actions += nav.waypoints(robot, wps)
+    actions += nav.waypoints(robot, wps, feedback = feedback)
     actions += look_at.look_at(robot, human,nop)
 
     # Collision avoidance
