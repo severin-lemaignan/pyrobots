@@ -145,8 +145,6 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
         genom_request("pr2SoftMotion", "TrackQ", ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM'])
     ]
 
-:spark::SetInferrenceForObject "LOTR_TAPE" 1 "JIDOKUKA_ROBOT" 0 SPARK_PRECISE_ROBOT_HAND 1.0 
-
     # Close gripper
     actions += close_gripper(robot)
 
