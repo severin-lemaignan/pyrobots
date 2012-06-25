@@ -18,7 +18,7 @@ robotlog.addHandler(h)
 from exception import RobotError
 
 from helpers.position import PoseManager
-from helpers.planning import PlanningManager
+from helpers.geometric_planning import PlanningManager
 
 class Robot(object):
     """ This 'low-level' class implements all what is required to actually execute
