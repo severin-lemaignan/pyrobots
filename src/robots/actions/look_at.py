@@ -4,7 +4,6 @@ logger.setLevel(logging.DEBUG)
 from robots.exception import RobotError
 
 from robots.action import *
-from robots.helpers.jointstate import getjoint
 from robots.helpers import position
 from robots.helpers.cb import nop
 
@@ -202,8 +201,8 @@ def glance_to(robot, place):
     """ Glance to via pr2SoftMotion
     """
 
-    head_tilt = getjoint('head_tilt_joint')
-    head_pan = getjoint('head_pan_joint')
+    head_tilt = robot.state.getjoint('head_tilt_joint')
+    head_pan = robot.state.getjoint('head_pan_joint')
     pose_head_base = {"HEAD": (head_pan,  head_tilt)}
 
     actions = look_at(robot, place)
@@ -227,8 +226,8 @@ def sweep_look(robot, amplitude = 90, speed = 0.2):
     
     amplitude_rd = math.radians(float(amplitude))
     
-    head_tilt = getjoint('head_tilt_joint')
-    head_pan = getjoint('head_pan_joint')
+    head_tilt = robot.state.getjoint('head_tilt_joint')
+    head_pan = robot.state.getjoint('head_pan_joint')
 
     pose_head_base = {"HEAD": (head_pan,  head_tilt)}
     pose_head1 = {"HEAD": (head_pan + amplitude_rd/2,  head_tilt)}
