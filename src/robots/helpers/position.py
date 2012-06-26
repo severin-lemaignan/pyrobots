@@ -207,6 +207,18 @@ class PoseManager:
         """
         # Where is the human?
         return self.get((human, part))
+
+    @helper("poses")
+    def distance(self, pose1, pose2):
+        """ Returns the euclidian distance between two pyRobots poses.
+        """
+        p1 = self.get(pose1)
+        p2 = self.get(pose2)
+
+        return math.sqrt(math.pow(p2["x"] - p1["x"], 2) + \
+                         math.pow(p2["y"] - p1["y"], 2) + \
+                         math.pow(p2["z"] - p1["z"], 2))
+
     
 class ROSPositionKeeper:
     def __init__(self):
