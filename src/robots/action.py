@@ -45,7 +45,7 @@ def genom_request(module, request, args = None, wait_for_completion = True, abor
         "callback": callback}
 
 def background_task(taskclass, args = None, wait_for_completion = True, abort = False, callback=None):
-	return {"middleware": "python",
+	return {"middleware": "background",
             "class": taskclass,
             "args": args,
 	    "abort": abort,
@@ -54,7 +54,7 @@ def background_task(taskclass, args = None, wait_for_completion = True, abort = 
 
 def ros_request(client, goal, wait_for_completion = True, callback = None, feedback = None):
     """
-    :param callback: an (optional) callback that is called when the action ic completed.
+    :param callback: an (optional) callback that is called when the action is completed.
     :param feedback: an (optional) callback that is called everytime the feedback topic is updated.
     """
     return {"middleware": "ros",
@@ -63,6 +63,16 @@ def ros_request(client, goal, wait_for_completion = True, callback = None, feedb
             "wait_for_completion": wait_for_completion,
             "callback": callback,
             "feedback": feedback}
+
+def python_request(functor, args, wait_for_completion = True, callback = None):
+    """
+    :param callback: an (optional) callback that is called when the action is completed.
+    """
+    return {"middleware": "python",
+            "functor": functor,
+            "args": args,
+            "wait_for_completion": wait_for_completion,
+            "callback": callback}
 
 def add_knowledge(stmts):
 	return [{"middleware": "knowledge",

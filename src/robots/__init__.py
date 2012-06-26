@@ -243,6 +243,11 @@ class Robot(object):
 
     def _execute_python(self, action):
         
+        robotlog.info("Starting Python task " + action["functor"].__name__ + " with params " + str(action["args"]))
+        return action["functor"](self, *action["args"])
+
+    def _execute_background(self, action):
+        
         if action["abort"]:
             try:
                 self._pending_python_requests[action["class"]].stop()
@@ -287,6 +292,10 @@ class Robot(object):
                         result = res
                 elif action["middleware"] == "ros":
                     res = self._execute_ros(action)
+                    if res:
+                        result = res
+                elif action["middleware"] == "background":
+                    res = self._execute_background(action)
                     if res:
                         result = res
                 elif action["middleware"] == "python":
