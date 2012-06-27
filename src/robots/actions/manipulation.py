@@ -14,7 +14,7 @@ used_plan_id = []
 
 @tested("22/02/2012")
 @action
-def release_gripper(robot, gripper = "RIGHT"):
+def release_gripper(robot, obj = "NONE", gripper = "RIGHT"):
     """
     Opens the gripper to release something.
 
@@ -23,11 +23,31 @@ def release_gripper(robot, gripper = "RIGHT"):
     :see: open_gripper
 
     :param gripper: "RIGHT" (default) or "LEFT"
+    :param obj: the object graped (if no object, NONE will make the gripper open anyway)
     """
+    
+    if obj != "NONE" :
+        actions =[
+        genom_request("spark","SetGraspedObject", [obj, 0, 0]),
+        genom_request("spark","SetInferrenceForObject", [obj, 0, robot.id, 0,
+            "SPARK_PRECISE_ROBOT_HAND", 1.0])
+        ]
+
     if gripper == "RIGHT":
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
+        actions = [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
     else:
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
+        actions = [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
+
+    if obj != "NONE" :
+        tmp = actions
+        actions =[
+        genom_request("spark","SetGraspedObject", [obj, 0, 0]),
+        genom_request("spark","SetInferrenceForObject", [obj, 0, robot.id, 0,
+            "SPARK_PRECISE_ROBOT_HAND", 1.0])
+        ]
+        actions += tmp
+
+    return actions
 
 @tested("22/02/2012")
 @action
