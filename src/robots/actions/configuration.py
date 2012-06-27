@@ -166,7 +166,7 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
                 0, # Rotation type
                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), # x y z rx ry rz
         
-        genom_request("mhp", "ArmSelectTraj", [0]),
+	    genom_request("mhp", "ArmSelectTraj", [0]),
             genom_request("pr2SoftMotion", 
             "TrackQ",['mhpArmTraj', 'PR2SM_TRACK_POSTER', part],
             wait_for_completion = False if callback else True,

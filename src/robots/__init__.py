@@ -306,8 +306,9 @@ class Robot(object):
         
 class PR2(Robot):
     def __init__(self, knowledge = None, dummy = False, init = True):
-        super(self.__class__,self).__init__(['pr2c2', 'pr2c1', 'rangueil'], 9472, use_ros = True, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
+        super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
         robotlog.info("PR2 actions loaded.")
+	self.id = "PR2_ROBOT"
         if init:
             robotlog.info("Initializing modules...")
             self.init()
