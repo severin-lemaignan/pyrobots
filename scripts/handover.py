@@ -22,6 +22,12 @@ from robots import desires
 human = "HERAKLES_HUMAN1"
 
 incoming_desires = queue.Queue()
+incoming_human_experiences = queue.Queue()
+
+def on_human_experience(e):
+    logger.info("Something happened to the human!! Details:" + str(e))
+    for d in e:
+        incoming_human_experiences.put(d)
 
 def ondesires(e):
     logger.info("Incomig desires:" + str(e))
@@ -33,26 +39,51 @@ def onemotion(e):
 
 with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
 
-    if not "--noinit" in sys.argv:
+    if "--init" in sys.argv:
+        logger.info("Initializing the robot...")
         pr2.init(p3d = "/u/magharbi/openrobots/share/move3d/assets/ADREAM/ADREAM-assets.p3d")
 
     # Subscribe to new human orders
     pr2.knowledge.subscribe([human + " desires ?d"], ondesires)
 
-    # Subscribe to changes of emotional state
+    # subscribe to changes of emotional state
     pr2.knowledge.subscribe(["myself experiences ?s"], onemotion)
-    try:
-        logger.info("Waiting for desires...")
-        while True:
-            sit = incoming_desires.get()
 
-            if sit:
-                try:
-                    desire = desires.desire_factory(sit, pr2)
-                    desire.perform()
-                except desires.NotExistingDesireTypeError as e:
-                    logger.error(e)
-                    logger.info("Skipping this desire.")
+    # subscribe to changes of emotional state
+    pr2.knowledge.subscribe([human + " experiences ?s"], on_human_experience)
+
+    try:
+        logger.info("Waiting for events...")
+        while True:
+            try:
+                human_evt = incoming_human_experiences.get(False)
+
+                if human_evt:
+                    evt_type = pr2.knowledge.getDirectClassesOf(human_evt).keys()[0]
+                    if evt_type == "Fall":
+                        logger.info("The human falled down! Carambar!")
+                        places = pr2.knowledge[human + " isAt *"]
+                        if not places:
+                            logger.error("I've no clue where the human is!")
+                        else:
+                            logger.info("I think the human is in " + str(places))
+                            logger.info("I go to " + places[0])
+                            pr2.goto(places[0])
+            except queue.Empty:
+                pass
+
+            try:
+                sit = incoming_desires.get(False)
+                if sit:
+                    try:
+                        desire = desires.desire_factory(sit, pr2)
+                        desire.perform()
+                    except desires.NotExistingDesireTypeError as e:
+                        logger.error(e)
+                        logger.info("Skipping this desire.")
+            except queue.Empty:
+                pass
+
             time.sleep(0.1)
     except KeyboardInterrupt:
         pass
