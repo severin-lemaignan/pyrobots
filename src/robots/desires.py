@@ -241,7 +241,8 @@ class NoPerformerDesireError(Exception):
 
 def desire_factory(sit, robot):
 
-    act = robot.knowledge.getDirectClassesOf(sit).keys()    
+    act = robot.knowledge.getDirectClassesOf(sit).keys()
+    act = [x for x in act if x not in ["ActiveConcept"]] # Filter out some internal classes
     try:
         [action] = act
     except ValueError:
@@ -250,6 +251,7 @@ def desire_factory(sit, robot):
                 "are subclasses of PurposefulAction?")
     
     try:
+        logger.info("Well well well! Someone wants a " + action + "!")
         goal = eval(action)(sit, robot)
     except NameError:
         raise NotExistingDesireTypeError("I don't know the action \"" + action + "\"!")

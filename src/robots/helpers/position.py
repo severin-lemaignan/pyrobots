@@ -1,6 +1,8 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
+import math
+
 from robots.action import *
 from robots.exception import RobotError
 import places
