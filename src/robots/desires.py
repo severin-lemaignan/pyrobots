@@ -1,5 +1,9 @@
+import time
 import logging
 logger = logging.getLogger("robots." + __name__)
+
+def nop(void, void2=None):
+    pass
 
 class Desire(object):
     """ This class encapsulates a desire (or goal) as formalized in the
@@ -93,6 +97,31 @@ class Bring(Desire):
 
         self.in_safe_nav_pose = True
     
+    def findobject(self, obj, max_attempts = 4):
+        """ Moves left and right the head to try to see an object.
+        Uses the knowledge base to check the object visibily.
+
+        :returns: True is the object is seen, False if it failed.
+        """
+
+        self._robot.look_at([1.0,0.0,0.5,"base_link"])
+
+        time.sleep(3)
+
+        attempts = 1
+        while not (["myself looksAt " + obj] in self._robot.knowledge) \
+              and attempts <= max_attempts:
+
+            # Looks once left, once right
+            self._robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
+            time.sleep(3)
+            attempts += 1
+
+        self._robot.look_at([1.0,0.0,1.0,"base_link"])
+        return (attempts <= max_attempts)
+
+
+
     def navprogress(self, progress):
         print(str(progress.percentage_covered) + "% of traj covered (" +  str(progress.distance_to_go) + "m to go).")
         if progress.distance_covered > 0.5: # 50cm off the initial position
@@ -101,9 +130,10 @@ class Bring(Desire):
 
     def perform(self):
         super(Bring, self).perform()
+        self._robot.manipose(nop)
         logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
-        obj = objects[0]
-        if len(objects) > 1:
+        obj = self.objects[0]
+        if len(self.objects) > 1:
             logger.info("Let take care of " + obj + " for now.")
         
         loc = self._robot.knowledge[obj + " isAt *"]
@@ -112,21 +142,31 @@ class Bring(Desire):
             return
         logger.info(obj + " is on " + loc[0] + ". Let go there.")
 
-        #self._robot.goto(loc[0])
+        self._robot.goto(loc[0])
+        self._robot.extractpose(nop)
+        if not self._robot.dock(): # docking fails if no obstacle is seen within 1m
+            self._robot.translate(0.3)
+
         logger.info("Ok, destination reached. Let's try to see " + obj)
         
-        #ok = findobject(obj, attempt = 3)
-        ok = True
+        ok = self.findobject(obj, max_attempts = 2)
+        
         if not ok:
             logger.warning("I can not see the object " + obj + "! Giving up.")
             return
         logger.info("Ok, object found. Let's try to pick it.")
-        #self._robot.pick(obj)
+        self._robot.pick(obj)
+        self._robot.extractpose()
+        self._robot.translate(-0.2) # undock
+        self._robot.manipose()
+
         self.in_safe_nav_pose = False
 
         logger.info("And now, hand it over to " + self.to[0])
 
         self._robot.handover(self.to[0], feedback = self.navprogress)
+        self._robot.manipose()
+        self._robot.goto("BASE")
 
 class Hide(Desire):
     def __init__(self, situation, robot):
