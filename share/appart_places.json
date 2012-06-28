@@ -2,7 +2,7 @@
         "CONTROL_DESK":{
                 "_comment": "last desk of the control desks",
                 "x": 6.59, 
-                "y": 5.54,
+                "y": 5.44,
                 "z": 0,
                 "qx": 0.0,
                 "qy": 0.0,
@@ -28,6 +28,26 @@
                 "qy": 0.0,
                 "qz": 0.0,
                 "qw": 1.0
+        },
+        "BASE":{
+                "_comment": "Next to the control desks",
+                "x": 7.66,
+                "y": 6.7,
+                "z": 0,
+                "qx": 0.0,
+                "qy": 0.0,
+                "qz": 1.0,
+                "qw": 0.0
+        },
+        "BED":{
+                "_comment": "Next to the bed",
+                "x": 5.7,
+                "y": 10.05,
+                "z": 0,
+                "qx": 0.0,
+                "qy": 0.0,
+                "qz": 0.893,
+                "qw": 0.45
         },
         "CONSOLE":{
                 "_comment": "The console in the bedroom",
