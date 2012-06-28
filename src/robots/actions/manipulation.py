@@ -170,6 +170,7 @@ def attachObject(robot, obj, attach):
         genom_request("spark","SetInferrenceForObject", [obj, i, robot.id, 0,
             "SPARK_PRECISE_ROBOT_HAND", 1.0])
     ]
+
     return actions
 
 
@@ -267,7 +268,6 @@ def handover(robot, human, mobility = 0.0, feedback = None):
     actions += release_gripper(robot)
     actions += [wait(1)]
     actions += close_gripper(robot, nop)
-    actions += configuration.tuckedpose(robot)
 
     return actions
 
