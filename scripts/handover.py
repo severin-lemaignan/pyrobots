@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import logging
-logger = logging.getLogger("robots")
+logger = logging.getLogger("robot")
 logger.setLevel(logging.DEBUG)
 
 console = logging.StreamHandler()
