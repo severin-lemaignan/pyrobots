@@ -37,7 +37,7 @@ class Robot(object):
 
         # Import all modules under robots/actions/
         import actions
-	path = sys.modules['robots.actions'].__path__
+        path = sys.modules['robots.actions'].__path__
         for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
             __import__('robots.actions.' + module_name)
 
@@ -315,7 +315,7 @@ class Robot(object):
         return result
         
 class PR2(Robot):
-    def __init__(self, knowledge = None, dummy = False, init = True):
+    def __init__(self, knowledge = None, dummy = False, init = False):
         super(self.__class__,self).__init__(['pr2c2', 'pr2c1'], 9472, use_ros = True, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
         robotlog.info("PR2 actions loaded.")
 
