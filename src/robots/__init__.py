@@ -264,7 +264,7 @@ class Robot(object):
     def _execute_knowledge(self, action):
         if action["action"] == "add":
             robotlog.debug("Adding facts to the knowledge base: " + str(action["args"]))
-            self.knowledge += action["args"]
+            self.knowledge.add(action["args"], action["memory_profile"])
 
         if action["action"] == "retract":
             robotlog.debug("Removing facts to the knowledge base: " + str(action["args"]))
