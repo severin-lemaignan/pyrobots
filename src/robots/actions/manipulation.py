@@ -14,7 +14,7 @@ used_plan_id = []
 
 @tested("22/02/2012")
 @action
-def release_gripper(robot, obj = "NONE", gripper = "RIGHT"):
+def release_gripper(robot, gripper = "RIGHT"):
     """
     Opens the gripper to release something.
 
@@ -23,31 +23,13 @@ def release_gripper(robot, obj = "NONE", gripper = "RIGHT"):
     :see: open_gripper
 
     :param gripper: "RIGHT" (default) or "LEFT"
-    :param obj: the object graped (if no object, NONE will make the gripper open anyway)
     """
     
-    if obj != "NONE" :
-        actions =[
-        genom_request("spark","SetGraspedObject", [obj, 0, 0]),
-        genom_request("spark","SetInferrenceForObject", [obj, 0, robot.id, 0,
-            "SPARK_PRECISE_ROBOT_HAND", 1.0])
-        ]
-
     if gripper == "RIGHT":
-        actions = [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
     else:
-        actions = [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
+        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
 
-    if obj != "NONE" :
-        tmp = actions
-        actions =[
-        genom_request("spark","SetGraspedObject", [obj, 0, 0]),
-        genom_request("spark","SetInferrenceForObject", [obj, 0, robot.id, 0,
-            "SPARK_PRECISE_ROBOT_HAND", 1.0])
-        ]
-        actions += tmp
-
-    return actions
 
 @tested("22/02/2012")
 @action
@@ -168,13 +150,28 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
     # Close gripper
     actions += close_gripper(robot)
 
-    # create link between the robot and the object
-    actions += [
-        genom_request("spark","SetGraspedObject", [obj, 1, 0]),
-        genom_request("spark","SetInferrenceForObject", [obj, 1, robot.id, 0, 
-            "SPARK_PRECISE_ROBOT_HAND", 1.0]) 
+    return actions
+
+
+@tested("")
+@action
+def attachObject(robot, obj, attach):
+    """ attach or detach the object to the robot hand
+    
+    This function should be called after a release or a grab
+    :param obj: the object to attach/dettach.
+    :param attach: true to attach an object
+    """
+    i = 0
+    if (attach) :
+      i = 1
+    actions = [
+        genom_request("spark","SetGraspedObject", [obj, i, 0]),
+        genom_request("spark","SetInferrenceForObject", [obj, i, robot.id, 0,
+            "SPARK_PRECISE_ROBOT_HAND", 1.0])
     ]
     return actions
+
 
 @tested("22/02/2012")
 @action
