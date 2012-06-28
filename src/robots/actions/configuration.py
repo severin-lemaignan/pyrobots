@@ -211,10 +211,11 @@ def getpose(robot):
 @action
 def manipose(robot, nohead = True, callback = None):
     """
-    Quick method to set the PR2 joints in manip configuration. 
-    It's useful when the robot to handle objects in in free spaces.
+    Quick method to set the PR2 joints in "manip" configuration.
+    This posture is designed for the robot to easily move around with
+    an object in its right hand.
 
-    :param no_head: (optional) If true, only arms and torso will set a new configuration.
+    :param no_head: (default: true) If true, only arms and torso will set a new configuration.
     Very useful if you track an object.
     :param callback: (optional) If given, the action is non-blocking, and the callback is
     invoked at the activity completion.
@@ -229,6 +230,22 @@ def manipose(robot, nohead = True, callback = None):
     posture = pose['MANIP']
     
     return setpose(robot, posture, callback, part)
+
+@action
+def extractpose(robot, callback = None):
+    """
+    Quick method to set the PR2 joints in "extraction" configuration.
+    In "extractaction" configuration, the robot's right hand is next to
+    the shoulder, far from the table.
+
+    Useful to prevent collisions when moving near to the tables.
+
+    :param callback: (optional) If given, the action is non-blocking, and the callback is
+    invoked at the activity completion.
+
+    """
+    
+    return setpose(robot, "EXTRACTION", callback)
 
 @tested("15/06/2012")
 @action
