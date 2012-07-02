@@ -42,10 +42,15 @@ class Move(Desire):
         super(Move, self).__init__(situation, robot)
         
         self.to = robot.knowledge[self._sit + " hasGoal *"]
+        if not self.to:
+            self.to = robot.knowledge[self._sit + " actsOnObject *"]
 
     def perform(self):
         super(Move, self).perform()
         logger.info("Moving to: " + str(self.to))
+        self._robot.extractpose(nop)
+        self._robot.look_at([1.0,0.0,0.9,"base_link"])
+        self._robot.manipose(nop)
         self._robot.goto(self.to[0])
 
 class Get(Desire):
@@ -84,6 +89,7 @@ class Give(Desire):
     def perform(self):
         super(Give, self).perform()
         logger.info(str(self.doer) + " wants to give " + str(self.objects) + " to " + str(self.to))
+        self._robot.say("Let's give " + self.objects[0] + " to " + self.to[0])
         
         self._robot.give(self.objects[0], self.to[0])
 
@@ -125,19 +131,25 @@ class Bring(Desire):
 
         self._robot.look_at([1.0,0.0,0.5,"base_link"])
 
-        time.sleep(4)
+        time.sleep(1)
 
         attempts = 1
-        while not (["myself looksAt " + obj] in self._robot.knowledge) \
+        #while not (["myself sees " + obj] in self._robot.knowledge) \
+        while not self.isseen(obj) \
               and attempts <= max_attempts:
 
             # Looks once left, once right
             self._robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
-            time.sleep(4)
+            time.sleep(1)
             attempts += 1
 
-        self._robot.look_at([1.0,0.0,1.0,"base_link"])
-        return (attempts <= max_attempts)
+
+        if (attempts <= max_attempts): #ok, found
+            self._robot.look_at(obj)
+            return True
+        else: # not found
+            self._robot.look_at([1.0,0.0,1.0,"base_link"])
+            return False
 
 
 
@@ -149,48 +161,58 @@ class Bring(Desire):
 
     def perform(self):
         super(Bring, self).perform()
-        self._robot.manipose(nop)
+
+        robot = self._robot
+
+        robot.manipose(nop)
         logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
         obj = self.objects[0]
         if len(self.objects) > 1:
             logger.info("Let take care of " + obj + " for now.")
-        
+
+
+        robot.say("Let's bring " + obj + " to " + self.to[0])
+
         loc = self._robot.knowledge[obj + " isAt *"]
         if not loc:
             logger.warning("No place found for " + obj + "! I can not bring it")
+            robot.say("Humm. I do not know where " + obj + " is...")
             return
-        logger.info(obj + " is on " + loc[0] + ". Let go there.")
+        robot.say(obj + " is on " + loc[0] + ". Let go there.")
 
-        self._robot.goto(loc[0])
-        self._robot.extractpose(nop)
-        if not self._robot.dock(): # docking fails if no obstacle is seen within 1m
-            self._robot.translate(0.3)
+        robot.goto(loc[0])
+        robot.extractpose(nop)
+        if not robot.dock(): # docking fails if no obstacle is seen within 1m
+            robot.translate(0.3)
 
-        logger.info("Ok, destination reached. Let's try to see " + obj)
+        robot.say("Ok. Now, where is my object?")
         
-        ok = self.findobject(obj, max_attempts = 2)
+        ok = self.findobject(obj, max_attempts = 3)
         
         if not ok:
             logger.warning("I can not see the object " + obj + "! Giving up.")
-            self._robot.translate(-0.2) # undock
-            self._robot.look_at([1.0,0.0,0.5,"base_link"])
-            self._robot.manipose()
+            robot.look_at("HERAKLES_HUMAN1")
+            robot.say("I can not find the object.")
+            robot.look_at([1.0,0.0,0.5,"base_link"])
+            robot.translate(-0.2) # undock
+            robot.manipose()
+            robot.look_at("HERAKLES_HUMAN1")
 
             return
 
-        logger.info("Ok, object found. Let's try to pick it.")
-        self._robot.pick(obj)
-        self._robot.extractpose()
-        self._robot.translate(-0.2) # undock
-        self._robot.manipose()
+        robot.say("Ok, I see the object. Let's try to pick it.")
+        robot.pick(obj)
+        robot.extractpose()
+        robot.translate(-0.2) # undock
+        robot.manipose()
 
         self.in_safe_nav_pose = False
 
-        logger.info("And now, hand it over to " + self.to[0])
+        robot.say("And now, hand it over to " + self.to[0])
 
-        self._robot.handover(self.to[0], feedback = self.navprogress)
-        self._robot.manipose()
-        self._robot.goto("BASE")
+        robot.handover(self.to[0], feedback = self.navprogress)
+        robot.manipose()
+        robot.goto("BASE")
 
 class Hide(Desire):
     def __init__(self, situation, robot):

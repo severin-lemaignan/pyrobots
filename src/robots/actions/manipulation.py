@@ -8,7 +8,7 @@ from robots.action import *
 from robots.helpers import postures
 from robots.helpers.cb import *
 
-from robots.actions import configuration, nav, look_at
+from robots.actions import configuration, nav, look_at, speech
 
 used_plan_id = []
 
@@ -265,6 +265,7 @@ def handover(robot, human, mobility = 0.0, feedback = None):
     # No collision avoidance
     actions += configuration.setpose(robot, pose)
 
+    actions += speech.say(robot, "Here your object")
     actions += release_gripper(robot)
     actions += [wait(1)]
     actions += close_gripper(robot, nop)
