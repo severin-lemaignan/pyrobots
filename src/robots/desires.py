@@ -106,7 +106,7 @@ class Bring(Desire):
 
         self._robot.look_at([1.0,0.0,0.5,"base_link"])
 
-        time.sleep(3)
+        time.sleep(4)
 
         attempts = 1
         while not (["myself looksAt " + obj] in self._robot.knowledge) \
@@ -114,7 +114,7 @@ class Bring(Desire):
 
             # Looks once left, once right
             self._robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
-            time.sleep(3)
+            time.sleep(4)
             attempts += 1
 
         self._robot.look_at([1.0,0.0,1.0,"base_link"])
@@ -153,7 +153,12 @@ class Bring(Desire):
         
         if not ok:
             logger.warning("I can not see the object " + obj + "! Giving up.")
+            self._robot.translate(-0.2) # undock
+            self._robot.look_at([1.0,0.0,0.5,"base_link"])
+            self._robot.manipose()
+
             return
+
         logger.info("Ok, object found. Let's try to pick it.")
         self._robot.pick(obj)
         self._robot.extractpose()
