@@ -97,6 +97,25 @@ class Bring(Desire):
 
         self.in_safe_nav_pose = True
     
+    def isseen(self, obj):
+        """ Hackish!!"""
+        spark = self._robot.poco_modules["spark"]
+        state = spark.poster("PositionsInfopositionsStatus")
+
+        lastseen = 0
+        for i in range(len(state)):
+            if state[i] == obj:
+                lastseen = int(state[i+5])
+
+        if lastseen == 0:
+            return False
+        else:
+            seenago = int(time.time()) - lastseen
+            logger.debug("Last seen " + str(seenago) + " sec ago")
+            if seenago < 2:
+                return True
+            return False
+
     def findobject(self, obj, max_attempts = 4):
         """ Moves left and right the head to try to see an object.
         Uses the knowledge base to check the object visibily.
