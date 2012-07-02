@@ -64,7 +64,7 @@ def ros_request(client, goal, wait_for_completion = True, callback = None, feedb
             "callback": callback,
             "feedback": feedback}
 
-def python_request(functor, args, wait_for_completion = True, callback = None):
+def python_request(functor, args = [], wait_for_completion = True, callback = None):
     """
     :param callback: an (optional) callback that is called when the action is completed.
     """
