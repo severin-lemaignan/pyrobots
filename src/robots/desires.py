@@ -2,6 +2,9 @@ import time
 import logging
 logger = logging.getLogger("robots." + __name__)
 
+#from robots.action import *
+#from robots.exception import *
+
 def nop(void, void2=None):
     pass
 
@@ -48,10 +51,17 @@ class Move(Desire):
     def perform(self):
         super(Move, self).perform()
         logger.info("Moving to: " + str(self.to))
+        
+        target = self._robot.poses[self.to[0]]
+        target["z"] = 0
+        target["qx"] = 0
+        target["qy"] = 0
         self._robot.extractpose(nop)
-        self._robot.look_at([1.0,0.0,0.9,"base_link"])
+        self._robot.track(self.to[0])
         self._robot.manipose(nop)
-        self._robot.goto(self.to[0])
+        self._robot.goto(target)
+
+        self._robot.cancel_track()
 
 class Get(Desire):
     def __init__(self, situation, robot):
@@ -91,7 +101,8 @@ class Give(Desire):
         logger.info(str(self.doer) + " wants to give " + str(self.objects) + " to " + str(self.to))
         self._robot.say("Let's give " + self.objects[0] + " to " + self.to[0])
         
-        self._robot.give(self.objects[0], self.to[0])
+        #self._robot.give(self.objects[0], self.to[0])
+        self._robot.basicgive()
 
 class Bring(Desire):
     def __init__(self, situation, robot):
@@ -108,10 +119,13 @@ class Bring(Desire):
         spark = self._robot.poco_modules["spark"]
         state = spark.poster("PositionsInfopositionsStatus")
 
-        lastseen = 0
+        lastseen = -1
         for i in range(len(state)):
             if state[i] == obj:
                 lastseen = int(state[i+5])
+
+        if lastseen == -1:
+            raise Exception("Object " + obj + " is not a special SPARK object (cf hri_knowledge.cpp:117. Argh!)")
 
         if lastseen == 0:
             return False
@@ -131,7 +145,7 @@ class Bring(Desire):
 
         self._robot.look_at([1.0,0.0,0.5,"base_link"])
 
-        time.sleep(1)
+        time.sleep(3)
 
         attempts = 1
         #while not (["myself sees " + obj] in self._robot.knowledge) \
@@ -139,6 +153,7 @@ class Bring(Desire):
               and attempts <= max_attempts:
 
             # Looks once left, once right
+            self._robot.look_at([1.0, 0.3 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
             self._robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
             time.sleep(1)
             attempts += 1
@@ -151,6 +166,17 @@ class Bring(Desire):
             self._robot.look_at([1.0,0.0,1.0,"base_link"])
             return False
 
+    def giveup(self):
+        robot = self._robot
+        robot.look_at([1.0,0.0,0.5,"base_link"])
+        robot.settorso(0.15, nop)
+
+        robot.translate(-0.2) # undock
+        robot.manipose()
+        try:
+            robot.look_at("HERAKLES_HUMAN1")
+        except Exception: # Human not here?
+            pass
 
 
     def navprogress(self, progress):
@@ -170,8 +196,7 @@ class Bring(Desire):
         if len(self.objects) > 1:
             logger.info("Let take care of " + obj + " for now.")
 
-
-        robot.say("Let's bring " + obj + " to " + self.to[0])
+        robot.say("Let's bring " + obj + " to you")
 
         loc = self._robot.knowledge[obj + " isAt *"]
         if not loc:
@@ -180,9 +205,28 @@ class Bring(Desire):
             return
         robot.say(obj + " is on " + loc[0] + ". Let go there.")
 
+        track_target = robot.poses[loc[0]]
+        track_target["z"] += 1.0
+        robot.track(track_target)
+
         robot.goto(loc[0])
+        robot.cancel_track()
+        self._robot.look_at([1.0,0.0,0.5,"base_link"])
+
+        #ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [loc[0]])])
+        ok, bb = robot.poco_modules["spark"].GetBBPoints(loc[0])
+
+        if ok=="OK":
+            support_height = float(bb[2])
+            logger.info("The object is placed on a support that is at " + str(support_height) + "m.")
+
+            if support_height > 0.9:
+                robot.settorso(0.3)
+
+
         robot.extractpose(nop)
-        if not robot.dock(): # docking fails if no obstacle is seen within 1m
+        hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
+        if not hasdocked:
             robot.translate(0.3)
 
         robot.say("Ok. Now, where is my object?")
@@ -191,24 +235,45 @@ class Bring(Desire):
         
         if not ok:
             logger.warning("I can not see the object " + obj + "! Giving up.")
-            robot.look_at("HERAKLES_HUMAN1")
-            robot.say("I can not find the object.")
-            robot.look_at([1.0,0.0,0.5,"base_link"])
-            robot.translate(-0.2) # undock
-            robot.manipose()
-            robot.look_at("HERAKLES_HUMAN1")
+            try:
+                robot.look_at("HERAKLES_HUMAN1")
+            except Exception: # Human not here?
+                pass
 
+            robot.say("I can not find the object.")
+            self.giveup()
             return
 
+        
         robot.say("Ok, I see the object. Let's try to pick it.")
-        robot.pick(obj)
+        ok, res = robot.pick(obj)
+
+        if not ok:
+            logger.warning("Pick failed! Msg:" + str(res) )
+            robot.say("I think I missed the object... Let's try one more time.")
+            ok, res = robot.pick(obj)
+            if not ok:
+                logger.warning("Second Pick also failed! Msg:" + str(res) )
+                try:
+                    robot.look_at("HERAKLES_HUMAN1")
+                except Exception: # Human not here?
+                    pass
+
+                robot.say("I give up!")
+                self.giveup()
+                return
+
+    
         robot.extractpose()
+
+        robot.settorso(0.15, nop)
+
         robot.translate(-0.2) # undock
         robot.manipose()
 
         self.in_safe_nav_pose = False
 
-        robot.say("And now, hand it over to " + self.to[0])
+        robot.say("And now, hand it over to you")
 
         robot.handover(self.to[0], feedback = self.navprogress)
         robot.manipose()
