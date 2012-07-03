@@ -126,6 +126,15 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
     :param object: the object to pick.
     """
 
+    def haspickedsmthg(robot):
+        gripper_joint = robot.state.getjoint('r_gripper_joint')
+
+        if gripper_joint < 0.01:
+            logger.warning("I think I've nothing in my right gripper...")
+            return (False, "gripper joint < 0.01")
+        else:
+            return (True, None)
+
     # Open gripper
     actions = open_gripper(robot)
 
@@ -149,6 +158,9 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
 
     # Close gripper
     actions += close_gripper(robot)
+
+    actions += [python_request(haspickedsmthg)]
+
 
     return actions
 
