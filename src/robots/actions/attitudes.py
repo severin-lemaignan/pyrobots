@@ -11,5 +11,5 @@ from robots.action import *
 
 @action
 def sorry(robot, speed = 0.5):
-    return sweep_look(45, speed)
+    return sweep_look(robot, 45, speed)
  
