@@ -201,7 +201,7 @@ def basicgive(robot):
     actions = configuration.setpose(robot, posture["GIVE"])
     actions += release_gripper(robot)
     actions += [wait(2)]
-    actions += close_gripper(nop)
+    actions += close_gripper(robot, callback = nop)
         
     return actions
 
@@ -280,7 +280,7 @@ def handover(robot, human, mobility = 0.0, feedback = None):
     actions += speech.say(robot, "Here your object")
     actions += release_gripper(robot)
     actions += [wait(1)]
-    actions += close_gripper(robot, nop)
+    actions += close_gripper(robot, callback=nop)
 
     return actions
 
