@@ -22,8 +22,10 @@ def say(robot, msg):
             from sound_play.libsoundplay import SoundClient
             soundhandle = SoundClient()
             soundhandle.say(msg)
+            return (True, None)
         else:
             logger.warning("No ROS, can not do speech synthesis.")
+            return (False, None)
 
     return [python_request(execute)]
 

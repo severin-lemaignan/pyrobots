@@ -198,14 +198,20 @@ class Robot(object):
         except PocoRemoteError:
             robotlog.error(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
             robotlog.error(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" % (action["request"], str(action["args"])))
-            return None
+            return (False, None)
         if not action["wait_for_completion"]:
             # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
             self._pending_pocolibs_requests[action["module"] + "." + action["request"]] = rqst
+            return (True, None)
 
         robotlog.info("Execution done.")
         robotlog.debug(str(rqst))
-        return rqst
+
+        ok, res = rqst
+        if ok == 'OK':
+            return (True, res)
+        else:
+            return (False, res)
 
     def _execute_ros(self, action):
         """ Execute a ros action.
@@ -238,8 +244,12 @@ class Robot(object):
             # Checks if the goal was achieved
             if client.get_state() == self.GoalStatus.SUCCEEDED:
                 robotlog.info('Action succeeded')
+                return (True, None)
             else:
                 robotlog.error("Action failed! " + client.get_goal_status_text())
+                return (False, client.get_goal_status_text())
+        else:
+            return (True, None)
 
     def _execute_python(self, action):
         
@@ -281,15 +291,17 @@ class Robot(object):
             robotlog.info("#Dummy mode# Executing actions " + str(actions))
             return None
             
-        result = None
+        result = (True, None) # by default, assume everything went fine with no return value
         if actions:
             robotlog.debug("Executing actions " + str(actions))
             for action in actions:
                 robotlog.info("Executing " + str(action))
                 if action["middleware"] == "pocolibs":
-                    res = self._execute_pocolibs(action)
+                    ok, res = self._execute_pocolibs(action)
+                    if not ok:
+                        return (False, res)
                     if res:
-                        result = res
+                        result = (ok, res)
                 elif action["middleware"] == "ros":
                     res = self._execute_ros(action)
                     if res:
@@ -299,9 +311,11 @@ class Robot(object):
                     if res:
                         result = res
                 elif action["middleware"] == "python":
-                    res = self._execute_python(action)
+                    ok, res = self._execute_python(action)
+                    if not ok:
+                        return (False, res)
                     if res:
-                        result = res
+                        result = (ok, res)
                 elif action["middleware"] == "knowledge":
                     res = self._execute_knowledge(action)
                     if res:

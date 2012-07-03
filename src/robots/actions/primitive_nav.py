@@ -33,7 +33,7 @@ def ros_translate(robot, x, y = 0.0, speed = 0.1):
         if (dist_moved > distance):
             done = True
 
-    return done
+    return (done, None)
 
 
 @tested("26/06/2012")
@@ -62,11 +62,7 @@ def dock(robot, distance = 0.2, max_distance = 1):
 
     def execute_dock(robot):
         if robot.state.distance2obstacle() > max_distance:
-            return False
-
-        if robot.state.distance2obstacle() < distance:
-            return True
-
+            return (False, "No obstacle to dock on")
 
         return ros_translate(robot, robot.state.distance2obstacle() - distance)
 

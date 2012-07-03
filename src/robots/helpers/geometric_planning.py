@@ -38,7 +38,7 @@ class PlanningManager:
         raw = self.robot.execute([genom_request("mhp", "ComputeObjectTransferRos", [human, standing, mobility])])
 
         ok, res = raw
-        if ok != 'OK':
+        if not ok:
             return None
         nbPoints = int(res[0])
         points = map(float, res[2:-8])
