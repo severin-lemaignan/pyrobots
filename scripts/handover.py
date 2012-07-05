@@ -19,8 +19,10 @@ import Queue as queue
 import pyoro
 import robots
 from robots import desires
+from robots.helpers.cb import nop
 
 human = "HERAKLES_HUMAN1"
+human_mood = "NORMAL"
 
 incoming_desires = queue.Queue()
 incoming_human_experiences = queue.Queue()
@@ -69,7 +71,15 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                         else:
                             logger.info("I think the human is in " + str(places))
                             logger.info("I go to " + places[0])
+                            pr2.manipose(nop)
+                            pr2.look_at([1.0,0.0,1.0,"base_link"])
                             pr2.goto(places[0])
+                            pr2.look_at([1.0,0.0,0.5,"base_link"])
+                            pr2.setpose("FALL")
+                            pr2.release_gripper()
+                            pr2.close_gripper()
+                            pr2.manipose(nop)
+                            pr2.translate(-0.2)
             except queue.Empty:
                 pass
 
