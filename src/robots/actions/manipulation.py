@@ -317,7 +317,11 @@ def handover(robot, human, mobility = 0.0, feedback = None):
             return []
 
     wps, pose = res
-    print(res)
+
+    torso = pose["TORSO"]
+    del pose["TORSO"]
+    actions += configuration.settorso(robot, torso, nop)
+
     actions += nav.waypoints(robot, wps, feedback = feedback)
     actions += look_at.look_at(robot, human,nop)
 
