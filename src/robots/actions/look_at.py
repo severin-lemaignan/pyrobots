@@ -111,18 +111,15 @@ class TrackAction(Thread):
         self.target = target
 
     def run(self):
-        logger.info("Starting task " + self.__class__.__name__)
         self.running = True
 
         while self.running:
-            self.target = self.robot.poses[self.target]
             if self.target:
                 self.robot.look_at(self.target)
                 #actionPerformerForTracking.execute(look_at, self.target)
             time.sleep(0.5)
     
     def stop(self):
-        logger.info("Stopping task " + self.__class__.__name__)
         self.running = False
 
 
