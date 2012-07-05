@@ -28,7 +28,7 @@ def ros_translate(robot, x, y = 0.0, speed = 0.1):
         rate.sleep()
 
         dist_moved = robot.poses.distance(init_pose, robot.poses.myself())
-        logger.info("Moved " + str(dist_moved) + "m")
+        logger.debug("Moved " + str(dist_moved) + "m")
 
         if (dist_moved > distance):
             done = True

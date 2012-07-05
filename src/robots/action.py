@@ -36,7 +36,8 @@ def genom_request(module, request, args = None, wait_for_completion = True, abor
     if callback:
         wait_for_completion = False
 
-    return {"middleware": "pocolibs",
+    return {"name": module + "." + request,
+            "middleware": "pocolibs",
             "module": module,
             "request": request,
             "args": args,
@@ -45,19 +46,22 @@ def genom_request(module, request, args = None, wait_for_completion = True, abor
         "callback": callback}
 
 def background_task(taskclass, args = None, wait_for_completion = True, abort = False, callback=None):
-	return {"middleware": "background",
+    return {"name": taskclass.__name__,
+            "middleware": "background",
             "class": taskclass,
             "args": args,
-	    "abort": abort,
-	    "wait_for_completion": wait_for_completion,
-	    "callback": callback}
+            "abort": abort,
+            "wait_for_completion": wait_for_completion,
+            "callback": callback}
 
 def ros_request(client, goal, wait_for_completion = True, callback = None, feedback = None):
     """
+    :param name: an arbitrary name that describe what is this action (for logging purposes)
     :param callback: an (optional) callback that is called when the action is completed.
     :param feedback: an (optional) callback that is called everytime the feedback topic is updated.
     """
-    return {"middleware": "ros",
+    return {"name": client.action_client.ns,
+            "middleware": "ros",
             "client": client,
             "goal": goal,
             "wait_for_completion": wait_for_completion,
@@ -68,28 +72,32 @@ def python_request(functor, args = [], wait_for_completion = True, callback = No
     """
     :param callback: an (optional) callback that is called when the action is completed.
     """
-    return {"middleware": "python",
+    return {"name": functor.__name__,
+            "middleware": "python",
             "functor": functor,
             "args": args,
             "wait_for_completion": wait_for_completion,
             "callback": callback}
 
 def add_knowledge(stmts, memory_profile = "LONGTERM"):
-	return [{"middleware": "knowledge",
+    return [{"name": "knowledge.add",
+            "middleware": "knowledge",
             "action": "add",
             "args": stmts,
             "memory_profile": memory_profile}]
 
 def retract_knowledge(stmts):
-	return [{"middleware": "knowledge",
+    return [{"name": "knowledge.retract",
+             "middleware": "knowledge",
             "action": "retract",
-	    "args": stmts}]
+            "args": stmts}]
 
 def wait(seconds):
-	""" This special action simply waits for a given amount of second before 
-	sending the next action.
-	"""
-	return {"middleware": "special",
+    """ This special action simply waits for a given amount of second before 
+    sending the next action.
+    """
+    return {"name": "wait",
+            "middleware": "special",
             "action": "wait",
             "args": seconds}
 

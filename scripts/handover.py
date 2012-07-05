@@ -4,12 +4,13 @@ import logging
 logger = logging.getLogger("robot")
 logger.setLevel(logging.DEBUG)
 
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)-15s %(name)s: %(levelname)s - %(message)s')
-console.setFormatter(formatter)
+#console = logging.StreamHandler()
+#console.setLevel(logging.INFO)
+#formatter = logging.Formatter('%(asctime)-15s %(name)s: %(levelname)s - %(message)s')
+#console.setFormatter(formatter)
 
-logger.addHandler(console)
+#logger.addHandler(console)
+
 
 import sys
 import time

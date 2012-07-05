@@ -35,17 +35,6 @@ class Robot(object):
     """
     def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True, knowledge = None, dummy = False):
 
-        # Import all modules under robots/actions/
-        import actions
-        path = sys.modules['robots.actions'].__path__
-        for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
-            __import__('robots.actions.' + module_name)
-
-        # Dynamically add available actions (ie, actions defined with @action in
-        # actions/* submodules.
-        for action in self.available_actions():
-            self.add_action(action)
-
         self.knowledge = knowledge 
         self.dummy = dummy
         self.use_pocolibs = use_pocolibs if not dummy else False
@@ -64,11 +53,29 @@ class Robot(object):
             if use_ros:
                 import roslib; roslib.load_manifest('pyrobots_actionlib')
                 import rospy
-                rospy.init_node('pyrobots_actionlib')
+                rospy.init_node('pyrobots')
                 import actionlib
                 from actionlib_msgs.msg import GoalStatus
                 self.GoalStatus = GoalStatus
-    
+
+                # Using ROS: automatically configure the logging to use
+                # ROS RX Console
+                import roslogger
+                rxconsole = roslogger.RXConsoleHandler()
+                logging.getLogger("robot").addHandler(rxconsole)
+
+        # Import all modules under robots/actions/
+        import actions
+        path = sys.modules['robots.actions'].__path__
+        for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
+            __import__('robots.actions.' + module_name)
+
+        # Dynamically add available actions (ie, actions defined with @action in
+        # actions/* submodules.
+        for action in self.available_actions():
+            self.add_action(action)
+
+   
         self.poses = PoseManager(self)
         self.planning = PlanningManager(self)
 
@@ -106,10 +113,12 @@ class Robot(object):
             m = sys.modules["robots.actions." + module_name]
             for member in [getattr(m, fn) for fn in dir(m)]:
                 if hasattr(member, "_action"):
-                    robotlog.info("Added " + m.__name__ + "." + member.__name__ + \
+                    robotlog.debug("Added " + m.__name__ + "." + member.__name__ + \
                                 " as available action.")
                     if hasattr(member, "_broken"):
-                        robotlog.warning("This action is marked as broken!")
+                        robotlog.warning("Action " + m.__name__ + "." + \
+                                         member.__name__ + " is marked as broken! " \
+                                         "Use it carefully.")
                     actions.append(member)
         return actions
     
@@ -168,7 +177,7 @@ class Robot(object):
         if action["abort"]:
             # We want to abort a previous request.
             self._pending_pocolibs_requests[action["module"] + "." + action["request"]].abort()
-            robotlog.warning("Aborted " + action["module"] + "." + action["request"])
+            robotlog.info("Aborted " + action["module"] + "." + action["request"])
             return
 
         args = []
@@ -181,7 +190,6 @@ class Robot(object):
             else:
                 args.append(arg)
 
-        robotlog.info("Executing " + action["request"] + " on " + action["module"] + " with params " + str(args))
         module = self.poco_modules[action["module"]]
         method = getattr(module, action["request"])
 
@@ -204,8 +212,7 @@ class Robot(object):
             self._pending_pocolibs_requests[action["module"] + "." + action["request"]] = rqst
             return (True, None)
 
-        robotlog.info("Execution done.")
-        robotlog.debug(str(rqst))
+        robotlog.debug("Execution done. Return value: " + str(rqst))
 
         ok, res = rqst
         if ok == 'OK':
@@ -243,7 +250,7 @@ class Robot(object):
 
             # Checks if the goal was achieved
             if client.get_state() == self.GoalStatus.SUCCEEDED:
-                robotlog.info('Action succeeded')
+                robotlog.debug('ROS Action succeeded')
                 return (True, None)
             else:
                 robotlog.error("Action failed! " + client.get_goal_status_text())
@@ -253,7 +260,6 @@ class Robot(object):
 
     def _execute_python(self, action):
         
-        robotlog.info("Starting Python task " + action["functor"].__name__ + " with params " + str(action["args"]))
         return action["functor"](self, *action["args"])
 
     def _execute_background(self, action):
@@ -266,7 +272,7 @@ class Robot(object):
                 pass #Likely a task already aborted
             return
 
-        robotlog.info("Starting Python background task " + action["class"].__name__ + " with params " + str(action["args"]))
+        robotlog.debug("Starting Python background task " + action["class"].__name__ + " with params " + str(action["args"]))
         instance = action["class"](self, *action["args"])
         self._pending_python_requests[action["class"]] = instance
         instance.start()
@@ -293,12 +299,13 @@ class Robot(object):
             
         result = (True, None) # by default, assume everything went fine with no return value
         if actions:
-            robotlog.debug("Executing actions " + str(actions))
             for action in actions:
-                robotlog.info("Executing " + str(action))
+                robotlog.info(action["name"] + " (" + action["middleware"] + " action) started.")
+                robotlog.debug(action["name"] + " details: " + str(action))
                 if action["middleware"] == "pocolibs":
                     ok, res = self._execute_pocolibs(action)
                     if not ok:
+                        robotlog.warning(action["name"] + " failed with message: " + str(res))
                         return (False, res)
                     if res:
                         result = (ok, res)
@@ -313,6 +320,7 @@ class Robot(object):
                 elif action["middleware"] == "python":
                     ok, res = self._execute_python(action)
                     if not ok:
+                        robotlog.warning(action["name"] + " failed with message: " + str(res))
                         return (False, res)
                     if res:
                         result = (ok, res)
@@ -325,7 +333,8 @@ class Robot(object):
                     if res:
                         result = res
                 else:
-                    robotlog.warning("Unsupported middleware. Skipping the action.")
+                    robotlog.error("Unsupported middleware. Skipping the action.")
+
         return result
         
 class PR2(Robot):
