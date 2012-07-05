@@ -61,7 +61,9 @@ class Move(Desire):
         self._robot.manipose(nop)
         self._robot.goto(target)
 
-        self._robot.cancel_track()
+        self._robot.cancel_track() # TODO: cancel track a bit before arriving
+
+        self._robot.look_at([1.0,0,1.0,"base_link"])
 
 class Get(Desire):
     def __init__(self, situation, robot):
