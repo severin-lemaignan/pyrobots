@@ -58,7 +58,7 @@ def translate(robot, x, y = 0, speed = 0.1):
 
 @tested("27/06/2012")
 @action
-def dock(robot, distance = 0.2, max_distance = 1):
+def dock(robot, distance = 0.2, max_distance = 0.5):
 
     def execute_dock(robot):
         if robot.state.distance2obstacle() > max_distance:
