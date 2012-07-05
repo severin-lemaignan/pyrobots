@@ -115,7 +115,7 @@ class Bring(Desire):
         
         self.objects = robot.knowledge[self._sit + " actsOnObject *"]
         self.doer = robot.knowledge[self._sit + " performedBy *"]
-        self.to = robot.knowledge[self._sit + " receivedBy *"]
+        self.to = robot.knowledge[self._sit + " receivedBy *"][0]
 
         self.in_safe_nav_pose = True
     
@@ -195,20 +195,21 @@ class Bring(Desire):
 
         robot = self._robot
 
+        robot.setpose("TUCK_LARM")
         robot.manipose(nop)
         logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
         obj = self.objects[0]
         if len(self.objects) > 1:
             logger.info("Let take care of " + obj + " for now.")
 
-        robot.say("Let's bring " + obj + " to you")
+        robot.say("Let's bring it to you")
 
         loc = self._robot.knowledge[obj + " isAt *"]
         if not loc:
             logger.warning("No place found for " + obj + "! I can not bring it")
-            robot.say("Humm. I do not know where " + obj + " is...")
+            robot.say("Humm. I do not know where is the object...")
             return
-        robot.say(obj + " is on " + loc[0] + ". Let go there.")
+        #robot.say(obj + " is on " + loc[0] + ". Let go there.")
 
         track_target = robot.poses[loc[0]]
         track_target["z"] += 1.0
@@ -219,14 +220,17 @@ class Bring(Desire):
         self._robot.look_at([1.0,0.0,0.5,"base_link"])
 
         #ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [loc[0]])])
-        ok, bb = robot.poco_modules["spark"].GetBBPoints(loc[0])
+        #ok, bb = robot.poco_modules["spark"].GetBBPoints(loc[0])
 
-        if ok=="OK":
-            support_height = float(bb[2])
-            logger.info("The object is placed on a support that is at " + str(support_height) + "m.")
+        #if ok=="OK":
+        #    support_height = float(bb[2])
+        #    logger.info("The object is placed on a support that is at " + str(support_height) + "m.")
 
-            if support_height > 0.9:
-                robot.settorso(0.3)
+        #    if support_height < 0.6:
+        #        robot.settorso(0.0)
+
+        #    if support_height > 0.9:
+        #        robot.settorso(0.3)
 
 
         robot.extractpose(nop)
@@ -240,22 +244,27 @@ class Bring(Desire):
         
         if not ok:
             logger.warning("I can not see the object " + obj + "! Giving up.")
-            try:
-                robot.look_at("HERAKLES_HUMAN1")
-            except Exception: # Human not here?
-                pass
+            robot.say("I did not see your object... Let's try again.")
+            ok = self.findobject(obj, max_attempts = 3)
+            if not ok:
+                logger.warning("Second Findobject also failed!")
+                try:
+                    robot.look_at("HERAKLES_HUMAN1")
+                except Exception: # Human not here?
+                    pass
 
-            robot.say("I can not find the object.")
-            self.giveup()
-            return
+                robot.say("I give up!")
+                self.giveup()
+                return
 
-        
         robot.say("Ok, I see the object. Let's try to pick it.")
         ok, res = robot.pick(obj)
 
         if not ok:
             logger.warning("Pick failed! Msg:" + str(res) )
             robot.say("I think I missed the object... Let's try one more time.")
+            robot.extractpose()
+            self.findobject(obj, max_attempts = 3)
             ok, res = robot.pick(obj)
             if not ok:
                 logger.warning("Second Pick also failed! Msg:" + str(res) )
@@ -280,7 +289,14 @@ class Bring(Desire):
 
         robot.say("And now, hand it over to you")
 
-        robot.handover(self.to[0], feedback = self.navprogress)
+        #if [self.to + " experiences " + robot.knowledge["* hasFeature lazy"][0]] in robot.knowledge:
+        #    logger.info("Human feels lazy! Let's move to him.")
+        #    mobility = 0.0
+        #else:
+        #    logger.info("Human looks fine. Let's both of us move.")
+        mobility = 0.0
+
+        robot.handover(self.to, mobility = mobility, feedback = self.navprogress)
         robot.manipose()
         robot.goto("BASE")
 
