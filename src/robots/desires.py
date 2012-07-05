@@ -72,7 +72,10 @@ class Get(Desire):
     def perform(self):
         super(Get, self).perform()
         logger.info("Wanna get smthg: " + str(self.objects))
-        self._robot.take(self.objects[0])
+        #self._robot.basictake()
+        self._robot.take("HERAKLES_HUMAN1", self.objects[0])
+        self._robot.manipose()
+        self._robot.translate(-0.2)
 
 class Show(Desire):
     def __init__(self, situation, robot):

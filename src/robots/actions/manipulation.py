@@ -185,6 +185,58 @@ def attachObject(robot, obj, attach):
 
     return actions
 
+@tested("05/07/2012")
+@action
+def basictake(robot):
+    """ The ultra stupid basic TAKE: simply hand the object in front of the
+    robot.
+    """
+
+    posture = postures.read()
+    
+    actions = configuration.setpose(robot, posture["GIVE"])
+    actions += open_gripper(robot)
+    actions += [wait(2)]
+    actions += grab_gripper(robot)
+    actions += configuration.manipose(robot)
+        
+    return actions
+
+@action
+def take(robot, human, obj):
+
+    actions = look_at.look_at(robot, human)
+    actions += configuration.manipose(robot, nop)
+    actions += look_at.look_at(robot, [1,0,0.7,"base_link"])
+
+    mobility = 0.0
+
+    res = robot.planning.handover(human, mobility = mobility)
+
+    if not res:
+        logger.warning("OTP planning failed. Retrying.")
+        robot.sorry()
+        res = robot.planning.handover(human, mobility=mobility)
+        if not res:
+            logger.error("OTP planning failed again. Giving up.")
+            return []
+
+    wps, pose = res
+
+    torso = pose["TORSO"]
+    del pose["TORSO"]
+    actions += configuration.settorso(robot, torso, nop)
+
+    actions += nav.waypoints(robot, wps)
+    actions += look_at.look_at(robot, human,nop)
+
+    actions += configuration.setpose(robot, pose)
+
+    actions += speech.say(robot, "Ok, I take it")
+    actions += open_gripper(robot)
+    actions += grab_gripper(robot)
+
+    return actions
 
 @tested("22/02/2012")
 @action
