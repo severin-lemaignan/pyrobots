@@ -325,7 +325,10 @@ class Look(Desire):
     def perform(self):
         super(Look, self).perform()
         logger.info(str(self.doer) + " wants to look at " + str(self.objects[0]))
-        self._robot.look_at(self.objects[0])
+        try:
+            self._robot.look_at(self.objects[0])
+        except Exception:
+            self._robot.say("I do not know this object!")
 
 class Display(Desire):
     def __init__(self, situation, robot):
