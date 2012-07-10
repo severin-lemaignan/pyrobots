@@ -351,6 +351,19 @@ class PR2(Robot):
             self.init()
             robotlog.info("Initialization done.")
 
+class JidoSimu(Robot):
+    def __init__(self, knowledge = None, dummy = False, init = False, host = "joyce"):
+        super(self.__class__,self).__init__([(host, 9472), (host, 9473)], port = None, use_ros = False, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
+        robotlog.info("Action loaded for Jido on MORSE simulator.")
+
+        self.id = "JIDO_ROBOT"
+
+        if init:
+            robotlog.info("Initializing modules...")
+            self.init()
+            robotlog.info("Initialization done.")
+
+
 import __main__ as main
 if not hasattr(main, '__file__'):
     # Running in interactive mode:
