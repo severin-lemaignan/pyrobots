@@ -29,8 +29,29 @@ def look_at(robot, place, callback = None):
 
     place = robot.poses.get(place)
 
-    return look_at_xyz_with_moveHead(robot, place['x'], place['y'], place['z'], place['frame'], callback)
-
+    pan = 30
+    tilt = 30
+    actions = [
+        genom_request("platine",
+            "CmdPosPan",
+            ["PLATINE_DEG",
+            "PLATINE_ABSOLUTE",
+            tilt,
+            "PLATINE_FALSE",
+            0],
+            wait_for_completion = False,
+            callback = nop),
+        genom_request("platine",
+            "CmdPosPan",
+            ["PLATINE_DEG",
+            "PLATINE_ABSOLUTE",
+            pan,
+            "PLATINE_FALSE",
+            0],
+            wait_for_completion = False if callback else True,
+            callback = callback)
+        ]
+    return actions
 ###############################################################################
 
 @tested("13/03/2012")
