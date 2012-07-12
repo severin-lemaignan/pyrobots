@@ -174,7 +174,7 @@ class Bring(Desire):
     def giveup(self):
         robot = self._robot
         robot.look_at([1.0,0.0,0.5,"base_link"])
-        robot.settorso(0.15, nop)
+        robot.settorso(0.15)
 
         robot.translate(-0.2) # undock
         robot.manipose()
@@ -280,7 +280,7 @@ class Bring(Desire):
     
         robot.extractpose()
 
-        robot.settorso(0.15, nop)
+        #robot.settorso(0.15)
 
         robot.translate(-0.2) # undock
         robot.manipose()
@@ -298,7 +298,9 @@ class Bring(Desire):
 
         robot.handover(self.to, mobility = mobility, feedback = self.navprogress)
         robot.manipose()
+        
         robot.goto("BASE")
+        robot.settorso(0.15)
 
 class Hide(Desire):
     def __init__(self, situation, robot):
