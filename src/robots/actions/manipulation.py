@@ -173,6 +173,8 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
                 return (True, None)
         except NameError: #no robot.state? consider the pick is successfull
             return (True, None)
+        except AttributeError as detail: #no robot.state? consider the pick is successfull
+            return (True, None)
 
     # Open gripper
     actions = open_gripper(robot)
@@ -202,13 +204,14 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
 
     elif robot.hasmodule("lwr"):
         actions += [
-                genom_request("lwr",
-                    "SetMonitorForceParam",
-                    [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
-                genom_request("lwr",
-                    "TrackQ",
-                    ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]
-                    ]
+                         genom_request("lwr",
+                             "SetMonitorForceParam",
+                             [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
+                         genom_request("lwr",
+                             "TrackQ",
+                             ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
+                         wait(7)
+                             ]
 
     else:
         logger.warning("No module for rm trajectory execution. Trajectory only " \
