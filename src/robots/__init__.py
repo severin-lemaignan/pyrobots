@@ -203,9 +203,8 @@ class Robot(object):
 
         try:
             rqst = method(*args)
-        except PocoRemoteError:
-            robotlog.error(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
-            robotlog.error(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" % (action["request"], str(action["args"])))
+        except PocoRemoteError as e:
+            robotlog.error("Pocolibs action %s (with args: %s) failed. Error message: %s" % (action["request"], str(action["args"]), str(e)))
             return (False, None)
         if not action["wait_for_completion"]:
             # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
