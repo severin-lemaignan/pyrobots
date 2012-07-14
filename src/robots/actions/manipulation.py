@@ -51,47 +51,78 @@ def grab_gripper(robot, gripper = "RIGHT"):
 @action
 def open_gripper(robot, gripper = "RIGHT", callback = None):
     """
-    Opens the right gripper.
+    Opens a gripper.
+
+    If pr2SoftMotion-genom is available, it tries with it. Else it tries with fingers-genom.
+    Parameter 'gripper' is ignored when using fingers-genom.
 
     :see: release_gripper
     :param gripper: "RIGHT" (default) or "LEFT"
     :param callback: if set, the action is non-blocking and the callback is invoked upon completion
     """
-    if gripper == "RIGHT":
-        return [genom_request("pr2SoftMotion", 
-                "GripperGrabRelease", 
-                ["ROPEN"],
-                wait_for_completion = False if callback else True,
-                callback = callback)]
 
-    else:
-        return [genom_request("pr2SoftMotion", 
-                "GripperGrabRelease", 
-                ["LOPEN"],
-                wait_for_completion = False if callback else True,
-                callback = callback)]
+    if robot.hasmodule("pr2SoftMotion"):
+        if gripper == "RIGHT":
+            return [genom_request("pr2SoftMotion", 
+                    "GripperGrabRelease", 
+                    ["ROPEN"],
+                    wait_for_completion = False if callback else True,
+                    callback = callback)]
+
+        else:
+            return [genom_request("pr2SoftMotion", 
+                    "GripperGrabRelease", 
+                    ["LOPEN"],
+                    wait_for_completion = False if callback else True,
+                    callback = callback)]
+
+    if robot.hasmodule("fingers"):
+            return [genom_request("fingers", 
+                    "OpenGrip", 
+                    [],
+                    wait_for_completion = False if callback else True,
+                    callback = callback)]
+
+    logger.warning("No module to open the gripper available. Skipping this action.")
+    return []
+
 
 @tested("22/02/2012")
 @action
 def close_gripper(robot, gripper = "RIGHT", callback = None):
     """ Closes the right gripper.
-    
+ 
+    If pr2SoftMotion-genom is available, it tries with it. Else it tries with fingers-genom.
+    Parameter 'gripper' is ignored when using fingers-genom.
+
     :see: grab_gripper
     :param gripper: "RIGHT" (default) or "LEFT"
     :param callback: if set, the action is non-blocking and the callback is invoked upon completion
     """
-    if gripper == "RIGHT":
-        return [genom_request("pr2SoftMotion", 
-                "GripperGrabRelease", 
-                ["RCLOSE"],
-                wait_for_completion = False if callback else True,
-                callback = callback)]
-    else:
-        return [genom_request("pr2SoftMotion", 
-                "GripperGrabRelease", 
-                ["LCLOSE"],
-                wait_for_completion = False if callback else True,
-                callback = callback)]
+    if robot.hasmodule("pr2SoftMotion"):
+        if gripper == "RIGHT":
+            return [genom_request("pr2SoftMotion", 
+                    "GripperGrabRelease", 
+                    ["RCLOSE"],
+                    wait_for_completion = False if callback else True,
+                    callback = callback)]
+        else:
+            return [genom_request("pr2SoftMotion", 
+                    "GripperGrabRelease", 
+                    ["LCLOSE"],
+                    wait_for_completion = False if callback else True,
+                    callback = callback)]
+
+    if robot.hasmodule("fingers"):
+            return [genom_request("fingers", 
+                    "CloseGrip", 
+                    [],
+                    wait_for_completion = False if callback else True,
+                    callback = callback)]
+
+    logger.warning("No module to close the gripper available. Skipping this action.")
+    return []
+
 
 @tested("23/02/2012")
 @action
@@ -123,16 +154,24 @@ def getplanid():
 def pick(robot, obj, use_cartesian = "GEN_FALSE"):
     """ Picks an object that is reachable by the robot.
 
+    Uses MHP to plan a trajectory.
+    The trajectory is executed with by pr2SoftMotion-genom if available, 
+    else with lwr-genom if available, else oonly exported to the mhpArmTraj poster.
+
     :param object: the object to pick.
     """
 
     def haspickedsmthg(robot):
-        gripper_joint = robot.state.getjoint('r_gripper_joint')
 
-        if gripper_joint < 0.01:
-            logger.warning("I think I've nothing in my right gripper...")
-            return (False, "gripper joint < 0.01")
-        else:
+        try:
+            gripper_joint = robot.state.getjoint('r_gripper_joint')
+
+            if gripper_joint < 0.01:
+                logger.warning("I think I've nothing in my right gripper...")
+                return (False, "gripper joint < 0.01")
+            else:
+                return (True, None)
+        except NameError: #no robot.state? consider the pick is successfull
             return (True, None)
 
     # Open gripper
@@ -153,8 +192,27 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
             0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
         genom_request("mhp", "ArmSelectTraj", [0]),
-        genom_request("pr2SoftMotion", "TrackQ", ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM'])
     ]
+
+    if robot.hasmodule("pr2SoftMotion"):
+        actions.append(
+                genom_request("pr2SoftMotion", 
+                    "TrackQ", 
+                    ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM']))
+
+    elif robot.hasmodule("lwr"):
+        actions += [
+                genom_request("lwr",
+                    "SetMonitorForceParam",
+                    [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
+                genom_request("lwr",
+                    "TrackQ",
+                    ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]
+                    ]
+
+    else:
+        logger.warning("No module for rm trajectory execution. Trajectory only " \
+                       "published on the mhpArmTraj poster.")
 
     # Close gripper
     actions += close_gripper(robot)
@@ -167,12 +225,12 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
 
 @tested("")
 @action
-def attachObject(robot, obj, attach):
+def attachobject(robot, obj, attach = True):
     """ attach or detach the object to the robot hand
     
     This function should be called after a release or a grab
     :param obj: the object to attach/dettach.
-    :param attach: true to attach an object
+    :param attach: true (default) to attach an object, false to detach it
     """
     i = 0
     if (attach) :
