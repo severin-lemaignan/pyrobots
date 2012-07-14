@@ -166,12 +166,32 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
                 0, # Rotation type
                 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), # x y z rx ry rz
         
-	    genom_request("mhp", "ArmSelectTraj", [0]),
-            genom_request("pr2SoftMotion", 
-            "TrackQ",['mhpArmTraj', 'PR2SM_TRACK_POSTER', part],
-            wait_for_completion = False if callback else True,
-            callback = callback)
-        ]
+	    genom_request("mhp", "ArmSelectTraj", [0])]
+
+        if robot.hasmodule("pr2SoftMotion"):
+            actions.append(
+                    genom_request("pr2SoftMotion", 
+                        "TrackQ", 
+                        ['mhpArmTraj', 'PR2SM_TRACK_POSTER', part],
+                        wait_for_completion = False if callback else True,
+                        callback = callback)
+                    )
+
+        elif robot.hasmodule("lwr"):
+            actions += [
+                            genom_request("lwr",
+                                "SetMonitorForceParam",
+                                [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
+                            genom_request("lwr",
+                                "TrackQ",
+                                ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
+                            wait(7)
+                                ]
+
+        else:
+            logger.warning("No module for rm trajectory execution. Trajectory only " \
+                        "published on the mhpArmTraj poster.")
+
 
     return actions
 
