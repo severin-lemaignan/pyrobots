@@ -1,6 +1,6 @@
 import time
 import logging
-logger = logging.getLogger("robots." + __name__)
+logger = logging.getLogger("robot." + __name__)
 
 #from robots.action import *
 #from robots.exception import *
