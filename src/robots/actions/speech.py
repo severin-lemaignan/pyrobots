@@ -23,9 +23,17 @@ def say(robot, msg):
             soundhandle = SoundClient()
             soundhandle.say(msg)
             return (True, None)
+        elif robot.hasmodule("textos"):
+            return robot.execute([
+                genom_request(
+                    "textos", 
+                    "Say",
+                    [msg],
+                wait_for_completion = False if callback else True,
+                callback = callback)])
         else:
-            logger.warning("No ROS, can not do speech synthesis.")
-            return (False, None)
+            logger.warning("No ROS, no textos module: can not do speech synthesis.")
+            return (True, None)
 
     return [python_request(execute)]
 

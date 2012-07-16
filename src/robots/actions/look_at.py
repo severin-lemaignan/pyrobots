@@ -22,14 +22,44 @@ actionPerformerForTracking = None
 def look_at(robot, place, callback = None):
     """ Orders the robot to look at a given place of object.
 
-    Uses look_at_xyz underneath.
+    If available, uses pr2SoftMotion::moveHead. Else tries with the platine-genom
+    module.
 
     :param place: any valid pyrobots place (spark id, ROS frame, [x,y,z],...)
     """
 
-    place = robot.poses.get(place)
+    if robot.hasmodule("pr2SoftMotion"):
+        return look_at_xyz_with_moveHead(robot, place['x'], place['y'], place['z'], place['frame'], callback)
 
-    return look_at_xyz_with_moveHead(robot, place['x'], place['y'], place['z'], place['frame'], callback)
+    elif robot.hasmodule("platine"):
+
+        raw = robot.execute([genom_request("spark", "GetJointAbsPose", [place, "HeadX"])])
+        
+        ok, res = raw
+        if not ok:
+            # Object probably does not exist
+            return []
+        yaw, pitch, roll, x, y, z = [float(x) for x in res]
+
+        actions = [
+            genom_request("platine",
+                "AimAtTargetPoint",
+                [0.0, 0.0, 0.0, 
+                0.0, 0.0, 0.0,
+                "POM_FRAME_ORIGIN",
+                0,
+                x,
+                y,
+                z
+                ],
+                wait_for_completion = False if callback else True,
+                callback = callback)
+            ]
+        return actions
+
+    else:
+        logger.warning("No module available to execute a 'look_at'. Skipping this action.")
+        return []
 
 ###############################################################################
 

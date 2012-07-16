@@ -203,9 +203,8 @@ class Robot(object):
 
         try:
             rqst = method(*args)
-        except PocoRemoteError:
-            robotlog.error(">>>>>>>>>>>>>> POCOREMOTE ERROR - Skipping it <<<<<<<<<<")
-            robotlog.error(">>>>>>>>>>>>>> was: %s with args: %s <<<<<<<<<<" % (action["request"], str(action["args"])))
+        except PocoRemoteError as e:
+            robotlog.error("Pocolibs action %s (with args: %s) failed. Error message: %s" % (action["request"], str(action["args"]), str(e)))
             return (False, None)
         if not action["wait_for_completion"]:
             # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
@@ -350,6 +349,19 @@ class PR2(Robot):
             robotlog.info("Initializing modules...")
             self.init()
             robotlog.info("Initialization done.")
+
+class JidoSimu(Robot):
+    def __init__(self, knowledge = None, dummy = False, init = False, host = "joyce"):
+        super(self.__class__,self).__init__([(host, 9472), (host, 9473)], port = None, use_ros = False, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
+        robotlog.info("Action loaded for Jido on MORSE simulator.")
+
+        self.id = "JIDO_ROBOT"
+
+        if init:
+            robotlog.info("Initializing modules...")
+            self.init()
+            robotlog.info("Initialization done.")
+
 
 import __main__ as main
 if not hasattr(main, '__file__'):

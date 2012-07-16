@@ -1,6 +1,6 @@
 import time
 import logging
-logger = logging.getLogger("robots." + __name__)
+logger = logging.getLogger("robot." + __name__)
 
 #from robots.action import *
 #from robots.exception import *
@@ -329,7 +329,8 @@ class Look(Desire):
         logger.info(str(self.doer) + " wants to look at " + str(self.objects[0]))
         try:
             self._robot.look_at(self.objects[0])
-        except Exception:
+        except Exception as e:
+            logger.error(str(e))
             self._robot.say("I do not know this object!")
 
 class Display(Desire):
