@@ -25,10 +25,13 @@ def release_gripper(robot, gripper = "RIGHT"):
     :param gripper: "RIGHT" (default) or "LEFT"
     """
     
-    if gripper == "RIGHT":
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
-    else:
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
+    if robot.hasmodule("pr2SoftMotion"):
+        if gripper == "RIGHT":
+            return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
+        else:
+            return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
+    elif robot.hasmodule("lwr"):
+            return [genom_request("fingers", "OpenGrip", [])]
 
 
 @tested("22/02/2012")
@@ -204,14 +207,14 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
 
     elif robot.hasmodule("lwr"):
         actions += [
-                         genom_request("lwr",
-                             "SetMonitorForceParam",
-                             [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
-                         genom_request("lwr",
-                             "TrackQ",
-                             ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
-                         wait(7)
-                             ]
+                 genom_request("lwr",
+                     "SetMonitorForceParam",
+                     [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
+                 genom_request("lwr",
+                     "TrackQ",
+                     ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
+                 wait(7)
+                     ]
 
     else:
         logger.warning("No module for rm trajectory execution. Trajectory only " \
@@ -252,10 +255,7 @@ def basictake(robot):
     """ The ultra stupid basic TAKE: simply hand the object in front of the
     robot.
     """
-
-    posture = postures.read()
-    
-    actions = configuration.setpose(robot, posture["GIVE"])
+    actions = configuration.setpose(robot, robot.postures["GIVE"])
     actions += open_gripper(robot)
     actions += [wait(2)]
     actions += grab_gripper(robot)
@@ -308,10 +308,7 @@ def basicgive(robot):
     After handing the object, the robot waits for someone to take it, and
     stay in this posture. 
     """
-
-    posture = postures.read()
-    
-    actions = configuration.setpose(robot, posture["GIVE"])
+    actions = configuration.setpose(robot, robot.postures["GIVE"])
     actions += release_gripper(robot)
     actions += [wait(2)]
     actions += close_gripper(robot, callback = nop)
@@ -327,11 +324,8 @@ def basicgrab(robot):
     After handing its gripper, the robot waits for someone to put an object in
     it, and stay in this posture.
     """
-
-    posture = postures.read()
-    
     actions = open_gripper(nop)
-    actions += configuration.setpose(robot, posture["GIVE"])
+    actions += configuration.setpose(robot, robot.postures["GIVE"])
     actions += grab_gripper(robot)
         
     return actions
