@@ -4,7 +4,7 @@ logger.setLevel(logging.DEBUG)
 import random
 from robots.exception import RobotError
 from robots.action import *
-from robots.helpers import trajectory, postures
+from robots.helpers import trajectory
 
 import os
 
@@ -72,7 +72,7 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
 
     if not isinstance(posture, dict):
         try:
-            posture = postures.read()[posture]
+            posture = robot.postures[posture]
         except KeyError:
             raise RobotError("Posture %s not found!" % posture)
 
@@ -126,22 +126,53 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
 
 
     if not collision_avoidance:
-        actions = [
-        genom_request(
-                    "pr2SoftMotion", 
-                    "GotoQ",
-                [forced_part if forced_part else part,
-                1 if relative else 0,
-                x,y,z,
-                rx,ry,rz,
-                torso, 
-                pan, tilt, # head
-                0.0, # laser tilt
-                rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
-                lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
-                wait_for_completion = False if callback else True,
-                callback = callback)
-            ]
+        if robot.hasmodule("pr2SoftMotion"):
+            actions = [
+            genom_request(
+                        "pr2SoftMotion", 
+                        "GotoQ",
+                    [forced_part if forced_part else part,
+                    1 if relative else 0,
+                    x,y,z,
+                    rx,ry,rz,
+                    torso, 
+                    pan, tilt, # head
+                    0.0, # laser tilt
+                    rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
+                    lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
+                    wait_for_completion = False if callback else True,
+                    callback = callback)
+                ]
+        elif robot.hasmodule("lwr"):
+            actions = [
+            genom_request(
+                "mhp",
+                "ArmPlanTask",
+                    [0,
+                    'GEN_TRUE',
+                     'MHP_ARM_FREE',
+                    0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    rq1, rq2, rq3, rq4, rq5, rq6, rq7,
+                    'NO_NAME',
+                    'NO_NAME',
+                    'NO_NAME',
+                    'GEN_FALSE',
+                    0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0,
+                    0, # Rotation type
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), # x y z rx ry rz
+            
+            genom_request("mhp", "ArmSelectTraj", [0]),
+            genom_request("lwr",
+                "SetMonitorForceParam",
+                [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
+            genom_request("lwr",
+                "TrackQ",
+                ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
+            wait(7)
+                ]
+
 
     else: #collision_avoidance == True
         if not part == 'RARM':
@@ -198,34 +229,44 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
 def getpose(robot):
     """Returns to current whole-body pose of the PR2 robot.
     """
-    try:
-        import rospy
-        from sensor_msgs.msg import JointState
-        logger.debug("Reading PR2 pose... (10 sec timeout)")
-        msg = rospy.client.wait_for_message('/joint_states', JointState, timeout = 10)
-    except rospy.exceptions.ROSException:
-        logger.error("Could not read topic /joint_states. Right ROS_MASTER_URI? "
-        "PR2 started?")
-        return None
 
-    raw = msg.position
+    if robot.hasROS():
+        try:
+            import rospy
+            from sensor_msgs.msg import JointState
+            logger.debug("Reading PR2 pose... (10 sec timeout)")
+            msg = rospy.client.wait_for_message('/joint_states', JointState, timeout = 10)
+        except rospy.exceptions.ROSException:
+            logger.error("Could not read topic /joint_states. Right ROS_MASTER_URI? "
+            "PR2 started?")
+            return None
 
-    pose = {}
-    pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
-    pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
+        raw = msg.position
 
-    # Arm joints order:
-    # shoulder_pan_joint
-    # shoulder_lift_joint
-    # upper_arm_roll_joint 
-    # elbow_flex_joint
-    # forearm_roll_joint
-    # wrist_flex_joint
-    # wrist_roll_joint
+        pose = {}
+        pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
+        pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
 
-    pose["RARM"] = [round(raw[18], 3), round(raw[19], 3), round(raw[17], 3), round(raw[21], 3), round(raw[20], 3), round(raw[22], 3), round(raw[23], 3), ]
-    pose["LARM"] = [round(raw[32], 3), round(raw[33], 3), round(raw[31], 3), round(raw[35], 3), round(raw[34], 3), round(raw[36], 3), round(raw[37], 3), ]
-    return pose
+        # Arm joints order:
+        # shoulder_pan_joint
+        # shoulder_lift_joint
+        # upper_arm_roll_joint 
+        # elbow_flex_joint
+        # forearm_roll_joint
+        # wrist_flex_joint
+        # wrist_roll_joint
+
+        pose["RARM"] = [round(raw[18], 3), round(raw[19], 3), round(raw[17], 3), round(raw[21], 3), round(raw[20], 3), round(raw[22], 3), round(raw[23], 3), ]
+        pose["LARM"] = [round(raw[32], 3), round(raw[33], 3), round(raw[31], 3), round(raw[35], 3), round(raw[34], 3), round(raw[36], 3), round(raw[37], 3), ]
+        return pose
+    
+    else:
+        pose = {}
+        pose["HEAD"] = [0,0] # head_pan_joint, head_tilt_joint
+        pose["TORSO"] = [0] # torso_lift_joint
+        pose["RARM"] = [0,0,0,0,0,0,0]
+        pose["LARM"] = [0,0,0,0,0,0,0]
+        return pose
 
 @tested("15/06/2012")
 @action
@@ -246,8 +287,7 @@ def manipose(robot, nohead = True, callback = None):
     else:
         part = 'PR2'
     
-    pose = postures.read()
-    posture = pose['MANIP']
+    posture = robot.postures['MANIP']
     
     return setpose(robot, posture, callback, part)
 
@@ -288,8 +328,7 @@ def restpose(robot, nohead = True, callback = None):
         part = 'PR2'
 
     n = random.randint(1,3)
-    pose = postures.read()
-    posture = pose['REST' + str(n)]
+    posture = robot.postures['REST' + str(n)]
 
     return setpose(robot, posture, callback, part)
 
@@ -332,8 +371,7 @@ def tuckedpose(robot, callback = None, nohead = True):
     else:
         part = 'PR2'
 
-    pose = postures.read()
-    posture = pose['TUCKED']
+    posture = robot.postures['TUCKED']
 
     return setpose(robot, posture, callback, part)
 
@@ -356,12 +394,11 @@ def idle(robot, choice = None,callback = None):
        c = choice
 
     part = 'PR2'
-    pose = postures.read()
  
     actions = []
     if (c == 0):
-        posture1 = pose['TUCKED']
-        posture2 = pose['WATCH_LOOKING']
+        posture1 = robot.postures['TUCKED']
+        posture2 = robot.postures['WATCH_LOOKING']
         actions = setpose(robot, posture1,callback,part) + setpose(robot, posture2,callback,part) + setpose(robot, posture1,callback,part) 
     elif(c == 1):
         short1 = trajectory.Trajectory('short1')
@@ -425,12 +462,12 @@ def idle(robot, choice = None,callback = None):
                ]
 
     elif(c == 8):
-        posture1 = pose['TUCKED']
-        posture2 = pose['WATCH_LOOKING']
+        posture1 = robot.postures['TUCKED']
+        posture2 = robot.postures['WATCH_LOOKING']
         actions = setpose(robot, posture1,callback,part) + setpose(robot, posture2,callback,part) + setpose(robot, posture1,callback,part)
     elif(c == 9):
-        posture1 = pose['TUCKED']
-        posture2 = pose['WATCH_LOOKING']
+        posture1 = robot.postures['TUCKED']
+        posture2 = robot.postures['WATCH_LOOKING']
         actions = setpose(robot, posture1,callback,part) + setpose(robot, posture2,callback,part) + setpose(robot, posture1,callback,part)
 
     return actions 

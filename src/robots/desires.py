@@ -107,7 +107,11 @@ class Give(Desire):
         self._robot.say("Let's give " + self.objects[0] + " to " + self.to[0])
         
         #self._robot.give(self.objects[0], self.to[0])
-        self._robot.basicgive()
+        #self._robot.basicgive()
+        self._robot.look_at(self.objects[0])
+        self._robot.pick(self.objects[0])
+        jido.setpose("MANIP", collision_avoidance=True, obj=self.objects[0], support="HRP2TABLE")
+        self._robot.look_at(self.to[0])
 
 class Bring(Desire):
     def __init__(self, situation, robot):

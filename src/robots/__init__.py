@@ -18,6 +18,7 @@ robotlog.addHandler(h)
 from exception import RobotError
 
 from helpers.position import PoseManager
+from helpers import postures
 from helpers.geometric_planning import PlanningManager
 from helpers.state import PR2StateManager
 
@@ -342,6 +343,7 @@ class PR2(Robot):
         robotlog.info("PR2 actions loaded.")
 
         self.id = "PR2_ROBOT"
+        self.postures = postures.read("pr2_postures.json")
 
         self.state = PR2StateManager(self)
 
@@ -356,6 +358,7 @@ class JidoSimu(Robot):
         robotlog.info("Action loaded for Jido on MORSE simulator.")
 
         self.id = "JIDO_ROBOT"
+        self.postures = postures.read("jido_postures.json")
 
         if init:
             robotlog.info("Initializing modules...")
