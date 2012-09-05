@@ -200,7 +200,12 @@ class PoseManager:
         """
         Returns the current PR2 base pose.
         """
-        return self.get("base_link")
+        try:
+            return self.get("base_link")
+        except RobotError as e:
+            if "base_link" in e.value:
+                logger.error("The robot is not localized!")
+                return None
 
     @helper("poses")
     def human(self, human, part = 'Pelvis'):
