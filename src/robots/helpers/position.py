@@ -4,7 +4,7 @@ logger.setLevel(logging.DEBUG)
 import math
 
 from robots.action import *
-from robots.exception import RobotError
+from robots.exception import UnknownFrameError, RobotError
 import places
 
 POS_EPSILON = 0.1 # Min distance in meters from origin to be considered as 'in game'
@@ -167,7 +167,7 @@ class PoseManager:
                 if self.spark:
                     pose = self.spark.getabspose(raw)
                 if not pose:
-                    raise RobotError("Unknown object or frame '%s'" % raw)
+                    raise UnknownFrameError("Unknown object or frame '%s'" % raw)
                 else:
                     return self.normalize(pose)
             else:
@@ -181,11 +181,11 @@ class PoseManager:
                     if self.spark:
                         pose = self.spark.getabspose(raw)
                     if not pose:
-                        raise RobotError("Unknown object or part '%s'" % raw)
+                        raise UnknownFrameError("Unknown object or part '%s'" % raw)
                     else:
                         return self.normalizelist(pose)
                 else:
-                    raise RobotError("Unable to recognize the pose %s" % raw)
+                    raise UnknownFrameError("Unable to recognize the pose %s" % raw)
             except TypeError:
                 raise RobotError("Unable to process the pose '%s'" % raw)
             except ValueError:
