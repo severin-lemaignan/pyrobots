@@ -28,6 +28,8 @@ def look_at(robot, place, callback = None):
     :param place: any valid pyrobots place (spark id, ROS frame, [x,y,z],...)
     """
 
+    place = robot.poses[place]
+
     if robot.hasmodule("pr2SoftMotion"):
         return look_at_xyz_with_moveHead(robot, place['x'], place['y'], place['z'], place['frame'], callback)
 
