@@ -213,7 +213,7 @@ class PoseManager:
         Head -> part="HeadX"
         """
         # Where is the human?
-        return self.get((human, part))
+        return self.spark.getabspose(human, part)
 
     @helper("poses")
     def distance(self, pose1, pose2):
