@@ -420,7 +420,8 @@ class Bring(Desire):
 
         robot.handover(self.to, mobility = mobility, feedback = self.navprogress)
         robot.wait(2)
-        if haspickedsmthg(robot):
+        ok, res = haspickedsmthg(robot)
+        if ok:
             robot.say("You do not want your object? Fine.")
         else:
             robot.attachobject(obj, attach = False)
