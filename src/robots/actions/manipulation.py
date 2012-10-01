@@ -399,10 +399,12 @@ def handover(robot, human, mobility = 0.0, feedback = None):
     wps, pose = res
     torso = pose["TORSO"]
     logger.debug("the torso should be at height : " + str(torso[0]))
-    actions += configuration.settorso(robot, torso[0])
+    actions += configuration.settorso(robot, torso[0], nop)
 
     actions += nav.waypoints(robot, wps, feedback = feedback)
     actions += look_at.look_at(robot, human,nop)
+    
+    actions += configuration.settorso(robot, torso[0]) #ensure the torso had time to actually reach the right height
 
     # Collision avoidance
     #pose_rarm = {'RARM':pose['RARM']}
