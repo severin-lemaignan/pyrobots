@@ -407,7 +407,7 @@ class Bring(Desire):
         #    mobility = 0.0
         #else:
         #    logger.info("Human looks fine. Let's both of us move.")
-        mobility = 0.1
+        mobility = 0.2
 
         if not robot.poses.human(self.to):
             robot.say("Where are you?")

@@ -393,6 +393,7 @@ def handover(robot, human, mobility = 0.0, feedback = None):
         res = robot.planning.handover(human, mobility=mobility)
         if not res:
             logger.error("OTP planning failed again. Giving up.")
+            robot.say("I'm sorry, I got confused with my trajectory...")
             return []
 
     wps, pose = res
