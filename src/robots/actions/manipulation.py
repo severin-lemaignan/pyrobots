@@ -317,8 +317,9 @@ def take(robot, human, obj):
     actions += configuration.setpose(robot, pose)
 
     actions += speech.say(robot, "Ok, I take it")
+    actions += [genom_request("mhp", "ErasePath", [])] # remove the display of the trajectory
     actions += open_gripper(robot)
-    actions += wait(0.5)
+    actions += [wait(0.5)]
     actions += grab_gripper(robot)
 
     return actions

@@ -1,5 +1,6 @@
 import time
 import logging
+import math
 logger = logging.getLogger("robots." + __name__)
 logger.setLevel(logging.DEBUG)
 
@@ -105,7 +106,6 @@ class Move(Desire):
             self._robot.extractpose(nop)
             self._robot.track(self.to)
             self._robot.manipose(nop)
-            print("Coordinates: " + str(target))
             logger.info("Coordinates " + str(target))
             self._robot.goto(target)
 
@@ -140,11 +140,11 @@ class Get(Desire):
             return
 
 
-        if robot.poses.human(self.to):
+        if not robot.poses.human(self.to):
             robot.say("Where are you?")
             robot.wait(5)
             
-            if robot.poses.human(self.to):
+            if not robot.poses.human(self.to):
                 robot.say("When you are ready, ask me again.")
                 robot.manipose()
                 robot.goto("BASE")
@@ -152,7 +152,6 @@ class Get(Desire):
 
         self._robot.take(self.to, self.objects[0])
         self._robot.manipose()
-        self._robot.translate(-0.2)
 
 class Show(Desire):
     def __init__(self, situation, robot):
