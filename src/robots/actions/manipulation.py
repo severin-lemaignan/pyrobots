@@ -256,7 +256,9 @@ def attachobject(robot, obj, attach = True, hand = "right"):
     """
     actions = []
     if attach:
-        actions += add_knowledge(["myself hasIn" + hand.capitalize() + "Hand " + obj])
+        #causes a inconsistency in ORO!
+        #actions += add_knowledge(["myself hasIn" + hand.capitalize() + "Hand " + obj])
+        pass
     else:
         actions += retract_knowledge(["myself hasIn" + hand.capitalize() + "Hand " + obj])
 

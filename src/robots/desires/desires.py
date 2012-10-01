@@ -291,17 +291,21 @@ class Bring(Desire):
         ok, res = haspickedsmthg(robot)
         if ok:
             logger.info("I already have something in my hand...")
-            try:
-                currentobj = robot.knowledge["myself hasInRightHand *"][0]
-            except IndexError: #We have smthg in hand, but it's not in the ontology...
-                currentobj = "UNKNOWN"
-
-            if currentobj == obj:
-                robot.say("I have it already. Good.")
-                objectinhand = True
-            else:
-                robot.say("My hands are full!")
-                return
+            robot.say("My hands are full, I first bring that to you.")
+            objectinhand = True
+            
+# Do not check the object type for now because of an inconsistency in ORO
+#            try:
+#                currentobj = robot.knowledge["myself hasInRightHand *"][0]
+#            except IndexError: #We have smthg in hand, but it's not in the ontology...
+#                currentobj = "UNKNOWN"
+#
+#            if currentobj == obj:
+#                robot.say("I have it already. Good.")
+#                objectinhand = True
+#            else:
+#                robot.say("My hands are full!")
+#                return
 
         if not objectinhand:
             robot.setpose("TUCK_LARM")
