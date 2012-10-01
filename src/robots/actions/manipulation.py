@@ -4,6 +4,7 @@ logger.setLevel(logging.DEBUG)
 import random
 
 from robots.action import *
+from robots.exception import UnknownFrameError
 
 from robots.helpers import postures
 from robots.helpers.cb import *
@@ -153,6 +154,36 @@ def getplanid():
     used_plan_id.append(plan_id)
     return plan_id
 
+def haspickedsmthg(robot, gripper = "right"):
+    """
+    Returns a tuple (True, None) if something is detected in the
+    gripper (based on the joint angle, not the force sensing!),
+    else return a tuple (False, [error msg]).
+
+    Meant to by used as a pyRobots' "python_request".
+
+    If not access to the robot joints, assume always true.
+
+    :param gripper: "right" or "left". By default, right gripper.
+    """
+
+    try:
+        gripper_joint = robot.state.getjoint(gripper[0] + '_gripper_joint')
+
+        if gripper_joint < 0.01:
+            logger.info("I think I've nothing in my " + gripper + " gripper: gripper fully closed")
+            return (False, "gripper joint < 0.01")
+        else:
+            if robot.state.fingerpressed(gripper):
+                return (True, None)
+            else:
+                logger.info("I think I've nothing in my " + gripper + " gripper: no pressure on the finger tip")
+                return (False, "no pressure on the finger tips")
+    except NameError: #no robot.state? consider the pick is successfull
+        return (True, None)
+    except AttributeError as detail: #no robot.state? consider the pick is successfull
+        return (True, None)
+
 @action
 def pick(robot, obj, use_cartesian = "GEN_FALSE"):
     """ Picks an object that is reachable by the robot.
@@ -163,21 +194,6 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
 
     :param object: the object to pick.
     """
-
-    def haspickedsmthg(robot):
-
-        try:
-            gripper_joint = robot.state.getjoint('r_gripper_joint')
-
-            if gripper_joint < 0.01:
-                logger.warning("I think I've nothing in my right gripper...")
-                return (False, "gripper joint < 0.01")
-            else:
-                return (True, None)
-        except NameError: #no robot.state? consider the pick is successfull
-            return (True, None)
-        except AttributeError as detail: #no robot.state? consider the pick is successfull
-            return (True, None)
 
     # Open gripper
     actions = open_gripper(robot)
@@ -231,17 +247,23 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
 
 @tested("")
 @action
-def attachobject(robot, obj, attach = True):
+def attachobject(robot, obj, attach = True, hand = "right"):
     """ attach or detach the object to the robot hand
     
     This function should be called after a release or a grab
     :param obj: the object to attach/dettach.
     :param attach: true (default) to attach an object, false to detach it
     """
+    actions = []
+    if attach:
+        actions += add_knowledge(["myself hasIn" + hand.capitalize() + "Hand " + obj])
+    else:
+        actions += retract_knowledge(["myself hasIn" + hand.capitalize() + "Hand " + obj])
+
     i = 0
     if (attach) :
       i = 1
-    actions = [
+    actions += [
         genom_request("spark","SetGraspedObject", [obj, i, 0]),
         genom_request("spark","SetInferrenceForObject", [obj, i, robot.id, 0,
             "SPARK_PRECISE_ROBOT_HAND", 1.0])
@@ -270,7 +292,7 @@ def take(robot, human, obj):
     actions += configuration.manipose(robot, nop)
     actions += look_at.look_at(robot, [1,0,0.7,"base_link"])
 
-    mobility = 0.0
+    mobility = 0.1
 
     res = robot.planning.handover(human, mobility = mobility)
 
@@ -294,6 +316,7 @@ def take(robot, human, obj):
 
     actions += speech.say(robot, "Ok, I take it")
     actions += open_gripper(robot)
+    actions += wait(0.5)
     actions += grab_gripper(robot)
 
     return actions
@@ -390,6 +413,7 @@ def handover(robot, human, mobility = 0.0, feedback = None):
     actions += release_gripper(robot)
     actions += [wait(1)]
     actions += close_gripper(robot, callback=nop)
+    actions += [genom_request("mhp", "ErasePath", [])] # remove the display of the trajectory
 
     return actions
 

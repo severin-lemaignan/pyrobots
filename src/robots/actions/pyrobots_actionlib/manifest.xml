@@ -15,6 +15,7 @@
   <depend package="rospy"/>
   <depend package="tf"/>
   <depend package="pr2_controllers_msgs"/>
+  <depend package="pr2_msgs"/>
   <depend package="sensor_msgs"/>
   <depend package="geometry_msgs"/>
   <depend package="actionlib_msgs"/>
