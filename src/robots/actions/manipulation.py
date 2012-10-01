@@ -284,8 +284,7 @@ def take(robot, human, obj):
 
     wps, pose = res
 
-    torso = pose["TORSO"]
-    del pose["TORSO"]
+    torso = pose["TORSO"][0]
     actions += configuration.settorso(robot, torso, nop)
 
     actions += nav.waypoints(robot, wps)
@@ -372,9 +371,7 @@ def handover(robot, human, mobility = 0.0, feedback = None):
             return []
 
     wps, pose = res
-    logger.debug("the torso should be at height : " + str(pose["TORSO"]))
     torso = pose["TORSO"]
-    del pose["TORSO"]
     logger.debug("the torso should be at height : " + str(torso[0]))
     actions += configuration.settorso(robot, torso[0])
 
