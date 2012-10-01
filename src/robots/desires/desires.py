@@ -1,9 +1,11 @@
 import time
 import logging
-logger = logging.getLogger("robot." + __name__)
+logger = logging.getLogger("robots." + __name__)
+logger.setLevel(logging.DEBUG)
 
-#from robots.action import *
-#from robots.exception import *
+from robots.actions.manipulation import haspickedsmthg
+
+from robots.exception import RobotError, UnknownFrameError
 
 def nop(void, void2=None):
     pass
@@ -44,38 +46,111 @@ class Move(Desire):
     def __init__(self, situation, robot):
         super(Move, self).__init__(situation, robot)
         
-        self.to = robot.knowledge[self._sit + " hasGoal *"]
+        self.to = robot.knowledge[self._sit + " hasGoal *"][0]
         if not self.to:
-            self.to = robot.knowledge[self._sit + " actsOnObject *"]
+            self.to = robot.knowledge[self._sit + " actsOnObject *"][0]
+
+        # Check if our target is an object or not. If it's an object, we
+        # move close to it, but not *on* it.
+        if self.to + " rdf:type cyc:PartiallyTangible" in robot.knowledge:
+            self.target_is_object = True
+        else:
+            self.target_is_object = False # We assume then it's a general location. We move *on* it.
 
     def perform(self):
         super(Move, self).perform()
-        logger.info("Moving to: " + str(self.to))
+        logger.info("Moving to: " + self.to)
         
-        target = self._robot.poses[self.to[0]]
+        already_at_destination = False
+        
+        target = []
+
+        if self.target_is_object:
+            logger.info("Moving towards an object/human: I'll try not to hurt it.")
+            print("Moving towards an object/human: I'll try not to hurt it.")
+        else:
+            print("Moving towards a location: I'll try to go as near as possible.")
+
+        try:
+            target = self._robot.poses[self.to]
+        except RobotError:
+            self._robot.say("Hum. I don't know where this is...")
+            return
+
         target["z"] = 0
-        target["qx"] = 0
-        target["qy"] = 0
-        self._robot.extractpose(nop)
-        self._robot.track(self.to[0])
-        self._robot.manipose(nop)
-        self._robot.goto(target)
+        
+        if self.target_is_object:
+            myself = self._robot.poses.myself()
+            dir_x = target["x"] - myself["x"]
+            dir_y = target["y"] - myself["y"]
+            distance = math.sqrt(math.pow(dir_x, 2) + \
+                                 math.pow(dir_y, 2))
 
-        self._robot.cancel_track() # TODO: cancel track a bit before arriving
+            target_distance = 1 # we want to stop at 1m of the target.
 
-        self._robot.look_at([1.0,0,1.0,"base_link"])
+            if distance < target_distance:
+                already_at_destination = True
+            else:
+                target["x"] = myself["x"] + dir_x * (1 - target_distance/distance)
+                target["y"] = myself["y"] + dir_y * (1 - target_distance/distance)
+
+                # Rotate to face the target
+                target["qz"] = - target["qw"]
+                target["qw"] = target["qz"]
+        else:
+            target["qx"] = 0
+            target["qy"] = 0
+
+        if not already_at_destination:
+            self._robot.extractpose(nop)
+            self._robot.track(self.to)
+            self._robot.manipose(nop)
+            print("Coordinates: " + str(target))
+            logger.info("Coordinates " + str(target))
+            self._robot.goto(target)
+
+            self._robot.cancel_track() # TODO: cancel track a bit before arriving
+
+        if self.target_is_object:
+            self._robot.look_at(target)
+        else:
+            self._robot.look_at([1.0,0,1.0,"base_link"])
 
 class Get(Desire):
     def __init__(self, situation, robot):
         super(Get, self).__init__(situation, robot)
         
         self.objects = robot.knowledge[self._sit + " actsOnObject *"]
+        try:
+            self.to = robot.knowledge[self._sit + " receivedBy *"][0]
+        except IndexError:
+            self.to = robot.knowledge["* desires " + self._sit][0] # if no destinary, use the desire issuer.
     
     def perform(self):
         super(Get, self).perform()
+
+        robot = self._robot
+
         logger.info("Wanna get smthg: " + str(self.objects))
         #self._robot.basictake()
-        self._robot.take("HERAKLES_HUMAN1", self.objects[0])
+
+        picked, res = haspickedsmthg(robot) # Already smthg in hand?
+        if picked:
+            robot.say("Soon Mamoun will have implemented the object transfer. Cool!")
+            return
+
+
+        if robot.poses.human(self.to):
+            robot.say("Where are you?")
+            robot.wait(5)
+            
+            if robot.poses.human(self.to):
+                robot.say("When you are ready, ask me again.")
+                robot.manipose()
+                robot.goto("BASE")
+                return
+
+        self._robot.take(self.to, self.objects[0])
         self._robot.manipose()
         self._robot.translate(-0.2)
 
@@ -107,11 +182,7 @@ class Give(Desire):
         self._robot.say("Let's give " + self.objects[0] + " to " + self.to[0])
         
         #self._robot.give(self.objects[0], self.to[0])
-        #self._robot.basicgive()
-        self._robot.look_at(self.objects[0])
-        self._robot.pick(self.objects[0])
-        jido.setpose("MANIP", collision_avoidance=True, obj=self.objects[0], support="HRP2TABLE")
-        self._robot.look_at(self.to[0])
+        self._robot.basicgive()
 
 class Bring(Desire):
     def __init__(self, situation, robot):
@@ -119,7 +190,11 @@ class Bring(Desire):
         
         self.objects = robot.knowledge[self._sit + " actsOnObject *"]
         self.doer = robot.knowledge[self._sit + " performedBy *"]
-        self.to = robot.knowledge[self._sit + " receivedBy *"][0]
+        try:
+            self.to = robot.knowledge[self._sit + " receivedBy *"][0]
+        except IndexError:
+            self.to = robot.knowledge["* desires " + self._sit][0] # if no destinary, use the desire issuer.
+
 
         self.in_safe_nav_pose = True
     
@@ -154,7 +229,7 @@ class Bring(Desire):
 
         self._robot.look_at([1.0,0.0,0.5,"base_link"])
 
-        time.sleep(3)
+        self._robot.wait(2)
 
         attempts = 1
         #while not (["myself sees " + obj] in self._robot.knowledge) \
@@ -163,8 +238,17 @@ class Bring(Desire):
 
             # Looks once left, once right
             self._robot.look_at([1.0, 0.3 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
+            self._robot.wait(2)
+            if self.isseen(obj):
+                break
+
             self._robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
-            time.sleep(1)
+            self._robot.wait(2)
+            if self.isseen(obj):
+                break
+
+            self._robot.look_at([1.0, 0 , 0.5,"base_link"])
+            self._robot.wait(1)
             attempts += 1
 
 
@@ -178,18 +262,18 @@ class Bring(Desire):
     def giveup(self):
         robot = self._robot
         robot.look_at([1.0,0.0,0.5,"base_link"])
-        robot.settorso(0.15)
 
-        robot.translate(-0.2) # undock
+        robot.translate(-0.3) # undock
         robot.manipose()
+        robot.settorso(0.15, nop)
         try:
-            robot.look_at("HERAKLES_HUMAN1")
+            robot.look_at(self.to)
         except Exception: # Human not here?
             pass
 
 
     def navprogress(self, progress):
-        print(str(progress.percentage_covered) + "% of traj covered (" +  str(progress.distance_to_go) + "m to go).")
+        logger.debug("Waypoints node feedback: " + str(progress.percentage_covered) + "% of traj covered (" +  str(progress.distance_to_go) + "m to go).")
         if progress.distance_covered > 0.5: # 50cm off the initial position
             self._robot.manipose()
             self.in_safe_nav_pose = True
@@ -198,113 +282,147 @@ class Bring(Desire):
         super(Bring, self).perform()
 
         robot = self._robot
-
-        robot.setpose("TUCK_LARM")
-        robot.manipose(nop)
-        logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
         obj = self.objects[0]
-        if len(self.objects) > 1:
-            logger.info("Let take care of " + obj + " for now.")
+        robot.say("Bring bring bring") #this first sound is always discarded...
 
-        robot.say("Let's bring it to you")
+        logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
 
-        loc = self._robot.knowledge[obj + " isAt *"]
-        if not loc:
-            logger.warning("No place found for " + obj + "! I can not bring it")
-            robot.say("Humm. I do not know where is the object...")
-            return
-        #robot.say(obj + " is on " + loc[0] + ". Let go there.")
+        objectinhand = False
+        ok, res = haspickedsmthg(robot)
+        if ok:
+            logger.info("I already have something in my hand...")
+            try:
+                currentobj = robot.knowledge["myself hasInRightHand *"][0]
+            except IndexError: #We have smthg in hand, but it's not in the ontology...
+                currentobj = "UNKNOWN"
 
-        track_target = robot.poses[loc[0]]
-        track_target["z"] += 1.0
-        robot.track(track_target)
+            if currentobj == obj:
+                robot.say("I have it already. Good.")
+                objectinhand = True
+            else:
+                robot.say("My hands are full!")
+                return
 
-        robot.goto(loc[0])
-        robot.cancel_track()
-        self._robot.look_at([1.0,0.0,0.5,"base_link"])
+        if not objectinhand:
+            robot.setpose("TUCK_LARM")
+            robot.manipose(nop)
+            if len(self.objects) > 1:
+                logger.info("Let take care of " + obj + " for now.")
 
-        #ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [loc[0]])])
-        #ok, bb = robot.poco_modules["spark"].GetBBPoints(loc[0])
+            robot.say("Let's bring it to you")
 
-        #if ok=="OK":
-        #    support_height = float(bb[2])
-        #    logger.info("The object is placed on a support that is at " + str(support_height) + "m.")
+            loc = self._robot.knowledge[obj + " isAt *"]
+            if not loc:
+                logger.warning("No place found for " + obj + "! I can not bring it")
+                robot.say("Humm. I do not know where is the object...")
+                return
+            #robot.say(obj + " is on " + loc[0] + ". Let go there.")
 
-        #    if support_height < 0.6:
-        #        robot.settorso(0.0)
+            track_target = robot.poses[loc[0]]
+            track_target["z"] += 1.0
+            robot.track(track_target)
 
-        #    if support_height > 0.9:
-        #        robot.settorso(0.3)
+            robot.goto(loc[0])
+            robot.cancel_track()
+            self._robot.look_at([1.0,0.0,0.5,"base_link"])
+
+            #ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [loc[0]])])
+            #ok, bb = robot.poco_modules["spark"].GetBBPoints(loc[0])
+
+            #if ok=="OK":
+            #    support_height = float(bb[2])
+            #    logger.info("The object is placed on a support that is at " + str(support_height) + "m.")
+
+            #    if support_height < 0.6:
+            #        robot.settorso(0.0)
+
+            #    if support_height > 0.9:
+            #        robot.settorso(0.3)
 
 
-        robot.extractpose(nop)
-        hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
-        if not hasdocked:
-            robot.translate(0.3)
+            robot.extractpose(nop)
+            hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
+            if not hasdocked:
+                robot.translate(0.3)
 
-        robot.say("Ok. Now, where is my object?")
-        
-        ok = self.findobject(obj, max_attempts = 3)
-        
-        if not ok:
-            logger.warning("I can not see the object " + obj + "! Giving up.")
-            robot.say("I did not see your object... Let's try again.")
+            robot.say("Ok. Now, where is my object?")
+            
             ok = self.findobject(obj, max_attempts = 3)
+            
             if not ok:
-                logger.warning("Second Findobject also failed!")
-                try:
-                    robot.look_at("HERAKLES_HUMAN1")
-                except Exception: # Human not here?
-                    pass
+                logger.warning("I can not see the object " + obj + "! Giving up.")
+                robot.say("I did not see your object... Let's try again.")
+                ok = self.findobject(obj, max_attempts = 3)
+                if not ok:
+                    logger.warning("Second Findobject also failed!")
+                    try:
+                        robot.look_at(self.to)
+                    except Exception: # Human not here?
+                        pass
 
-                robot.say("I give up!")
-                self.giveup()
-                return
+                    robot.say("I give up!")
+                    self.giveup()
+                    return
 
-        robot.say("Ok, I see the object. Let's try to pick it.")
-        ok, res = robot.pick(obj)
-
-        if not ok:
-            logger.warning("Pick failed! Msg:" + str(res) )
-            robot.say("I think I missed the object... Let's try one more time.")
-            robot.extractpose()
-            self.findobject(obj, max_attempts = 3)
+            robot.say("Ok, I see the object. Let's try to pick it.")
             ok, res = robot.pick(obj)
+
             if not ok:
-                logger.warning("Second Pick also failed! Msg:" + str(res) )
-                try:
-                    robot.look_at("HERAKLES_HUMAN1")
-                except Exception: # Human not here?
-                    pass
+                logger.warning("Pick failed! Msg:" + str(res) )
+                robot.say("I think I missed the object... Let's try one more time.")
+                robot.extractpose()
+                self.findobject(obj, max_attempts = 3)
+                ok, res = robot.pick(obj)
+                if not ok:
+                    logger.warning("Second Pick also failed! Msg:" + str(res) )
+                    try:
+                        robot.look_at(self.to)
+                    except Exception: # Human not here?
+                        pass
 
-                robot.say("I give up!")
-                self.giveup()
-                return
+                    robot.say("I give up!")
+                    self.giveup()
+                    return
 
-    
-        robot.extractpose()
+            robot.attachobject(obj)
 
-        #robot.settorso(0.15)
+            robot.extractpose()
 
-        robot.translate(-0.2) # undock
-        robot.manipose()
+            robot.translate(-0.2) # undock
+
+
+        ####################################
+        #### Bring the object to the human
+
+        robot.manipose(nop)
 
         self.in_safe_nav_pose = False
-
-        robot.say("And now, hand it over to you")
 
         #if [self.to + " experiences " + robot.knowledge["* hasFeature lazy"][0]] in robot.knowledge:
         #    logger.info("Human feels lazy! Let's move to him.")
         #    mobility = 0.0
         #else:
         #    logger.info("Human looks fine. Let's both of us move.")
-        mobility = 0.0
+        mobility = 0.1
+
+        if not robot.poses.human(self.to):
+            robot.say("Where are you?")
+            robot.wait(5)
+            if not robot.poses.human(self.to):
+                robot.say("When you are ready, ask me again.")
+                robot.manipose()
+                robot.goto("BASE")
+                return
 
         robot.handover(self.to, mobility = mobility, feedback = self.navprogress)
+        robot.wait(2)
+        if haspickedsmthg(robot):
+            robot.say("You do not want your object? Fine.")
+        else:
+            robot.attachobject(obj, attach = False)
+
         robot.manipose()
-        
         robot.goto("BASE")
-        robot.settorso(0.15)
 
 class Hide(Desire):
     def __init__(self, situation, robot):
@@ -333,8 +451,7 @@ class Look(Desire):
         logger.info(str(self.doer) + " wants to look at " + str(self.objects[0]))
         try:
             self._robot.look_at(self.objects[0])
-        except Exception as e:
-            logger.error(str(e))
+        except Exception:
             self._robot.say("I do not know this object!")
 
 class Display(Desire):

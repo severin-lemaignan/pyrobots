@@ -18,7 +18,7 @@ import Queue as queue
 
 import pyoro
 import robots
-from robots import desires
+from robots.desires import desires
 from robots.helpers.cb import nop
 
 human = "HERAKLES_HUMAN1"
@@ -90,7 +90,7 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                         desire = desires.desire_factory(sit, pr2)
                         desire.perform()
                     except desires.NotExistingDesireTypeError as e:
-                        logger.error(e)
+                        logger.error(str(e))
                         logger.info("Skipping this desire.")
             except queue.Empty:
                 pass
