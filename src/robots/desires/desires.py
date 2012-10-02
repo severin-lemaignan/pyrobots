@@ -263,7 +263,6 @@ class Bring(Desire):
 
         robot.translate(-0.3) # undock
         robot.manipose()
-        robot.settorso(0.15, nop)
         try:
             robot.look_at(self.to)
         except Exception: # Human not here?
