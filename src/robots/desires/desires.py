@@ -95,8 +95,9 @@ class Move(Desire):
                 target["y"] = myself["y"] + dir_y * (1 - target_distance/distance)
 
                 # Rotate to face the target
+                qz = target["qz"]
                 target["qz"] = - target["qw"]
-                target["qw"] = target["qz"]
+                target["qw"] = qz
 
         target["qx"] = 0
         target["qy"] = 0
