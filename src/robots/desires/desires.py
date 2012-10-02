@@ -68,14 +68,13 @@ class Move(Desire):
 
         if self.target_is_object:
             logger.info("Moving towards an object/human: I'll try not to hurt it.")
-            print("Moving towards an object/human: I'll try not to hurt it.")
         else:
-            print("Moving towards a location: I'll try to go as near as possible.")
+            logger.info("Moving towards a location: I'll try to go as near as possible.")
 
         try:
             target = self._robot.poses[self.to]
         except RobotError:
-            self._robot.say("Hum. I don't know where this is...")
+            self._robot.say("I don't know such object...")
             return
 
         target["z"] = 0
@@ -98,21 +97,21 @@ class Move(Desire):
                 # Rotate to face the target
                 target["qz"] = - target["qw"]
                 target["qw"] = target["qz"]
-        else:
-            target["qx"] = 0
-            target["qy"] = 0
+
+        target["qx"] = 0
+        target["qy"] = 0
 
         if not already_at_destination:
             self._robot.extractpose(nop)
             self._robot.track(self.to)
             self._robot.manipose(nop)
-            logger.info("Coordinates " + str(target))
+            logger.info("Destination coordinates: " + str(target))
             self._robot.goto(target)
 
             self._robot.cancel_track() # TODO: cancel track a bit before arriving
 
         if self.target_is_object:
-            self._robot.look_at(target)
+            self._robot.look_at(self.to)
         else:
             self._robot.look_at([1.0,0,1.0,"base_link"])
 
