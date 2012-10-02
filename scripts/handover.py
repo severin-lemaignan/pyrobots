@@ -62,8 +62,9 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                 human_evt = incoming_human_experiences.get(False)
 
                 if human_evt:
-                    evt_type = pr2.knowledge.getDirectClassesOf(human_evt).keys()[0]
-                    if evt_type == "Fall":
+                    evt_type = pr2.knowledge.getDirectClassesOf(human_evt).keys()
+                    logger.debug("Type of human event: " + str(evt_type))
+                    if "Fall" in evt_type:
                         logger.info("The human falled down! Carambar!")
                         places = pr2.knowledge[human + " isAt *"]
                         if not places:
