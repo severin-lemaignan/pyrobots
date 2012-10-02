@@ -426,6 +426,17 @@ class Bring(Desire):
         robot.manipose()
         robot.goto("BASE")
 
+class Test(Desire):
+    def __init__(self, situation, robot):
+        super(Test, self).__init__(situation, robot)
+        
+        self.doer = robot.knowledge[self._sit + " performedBy *"]
+    
+    def perform(self):
+        super(Test, self).perform()
+        self._robot.look_at("LOW_TABLE_LARGE")
+
+
 class Hide(Desire):
     def __init__(self, situation, robot):
         super(Hide, self).__init__(situation, robot)
