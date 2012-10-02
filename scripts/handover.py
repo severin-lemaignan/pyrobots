@@ -78,6 +78,7 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                             pr2.look_at([1.0,0.0,0.5,"base_link"])
                             pr2.setpose("FALL")
                             pr2.release_gripper()
+                            pr2.wait(1.5)
                             pr2.close_gripper()
                             pr2.manipose(nop)
                             pr2.translate(-0.2)
