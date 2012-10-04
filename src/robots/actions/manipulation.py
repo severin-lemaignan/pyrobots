@@ -13,7 +13,7 @@ from robots.actions import configuration, nav, look_at, speech
 
 used_plan_id = []
 
-@tested("22/02/2012")
+@tested("04/10/2012")
 @action
 def release_gripper(robot, gripper = "RIGHT"):
     """
@@ -35,7 +35,7 @@ def release_gripper(robot, gripper = "RIGHT"):
             return [genom_request("fingers", "OpenGrip", [])]
 
 
-@tested("22/02/2012")
+@tested("04/10/2012")
 @action
 def grab_gripper(robot, gripper = "RIGHT"):
     """
@@ -51,7 +51,7 @@ def grab_gripper(robot, gripper = "RIGHT"):
     else:
         return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LGRAB"])]
 
-@tested("22/02/2012")
+@tested("04/10/2012")
 @action
 def open_gripper(robot, gripper = "RIGHT", callback = None):
     """
@@ -91,7 +91,7 @@ def open_gripper(robot, gripper = "RIGHT", callback = None):
     return []
 
 
-@tested("22/02/2012")
+@tested("04/10/2012")
 @action
 def close_gripper(robot, gripper = "RIGHT", callback = None):
     """ Closes the right gripper.
@@ -184,6 +184,7 @@ def haspickedsmthg(robot, gripper = "right"):
     except AttributeError as detail: #no robot.state? consider the pick is successfull
         return (True, None)
 
+@tested("04/10/2012")
 @action
 def pick(robot, obj, use_cartesian = "GEN_FALSE"):
     """ Picks an object that is reachable by the robot.
@@ -245,7 +246,7 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
     return actions
 
 
-@tested("")
+@tested("04/10/2012")
 @action
 def attachobject(robot, obj, attach = True, hand = "right"):
     """ attach or detach the object to the robot hand
@@ -273,7 +274,7 @@ def attachobject(robot, obj, attach = True, hand = "right"):
 
     return actions
 
-@tested("05/07/2012")
+@tested("04/10/2012")
 @action
 def basictake(robot):
     """ The ultra stupid basic TAKE: simply hand the object in front of the
@@ -287,8 +288,14 @@ def basictake(robot):
         
     return actions
 
+@tested("04/10/2012")
 @action
 def take(robot, human, obj):
+    """ Go to the human and take an object.
+
+    Uses the OTP algorithm to find a path + posture to
+    take an object from the human.
+    """
 
     actions = look_at.look_at(robot, human)
     actions += configuration.manipose(robot, nop)
@@ -324,7 +331,7 @@ def take(robot, human, obj):
 
     return actions
 
-@tested("22/02/2012")
+@tested("04/10/2012")
 @action
 def basicgive(robot):
     """ The ultra stupid basic GIVE: simply hand the object in front of the
@@ -340,27 +347,7 @@ def basicgive(robot):
         
     return actions
 
-@tested("22/02/2012")
-@action
-def basicgrab(robot):
-    """ The ultra stupid basic GRAB: simply take the object in front of the
-    robot.
-    
-    After handing its gripper, the robot waits for someone to put an object in
-    it, and stay in this posture.
-    """
-    actions = open_gripper(nop)
-    actions += configuration.setpose(robot, robot.postures["GIVE"])
-    actions += grab_gripper(robot)
-        
-    return actions
-
-#def chained_handover_feedback_cb(previous_cb = None):
-#    def cb(progress):
-#        if progress >
-
-
-@tested("15/06/2012")
+@tested("04/10/2012")
 @action
 def handover(robot, human, mobility = 0.0, feedback = None):
     """ Computes and executes a move for a 'hand-over': given a

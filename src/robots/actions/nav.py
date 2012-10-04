@@ -9,7 +9,7 @@ from robots.action import *
 ###############################################################################
 ###############################################################################
 
-@tested("22/06/2012")
+@tested("04/10/2012")
 @action
 def goto(robot, target, callback = None, feedback = None):
     """ Moves the robot base to a given target, using ROS 2D navigation stack.
@@ -129,7 +129,7 @@ def carry(robot, target, callback = None):
 
 ################################################################################
 
-@tested("14/06/2012")
+@tested("04/10/2012")
 @action
 def waypoints(robot, points, callback = None, feedback = None):
     """ Moves the robot base along a set of waypoints, using ROS 2D navigation 

@@ -8,17 +8,17 @@ from robots.helpers import trajectory
 
 import os
 
-@tested("22/02/2012")
+@tested("04/10/2012")
 @action
 def enabledevileye(robot):
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 3")
 
-@tested("22/02/2012")
+@tested("04/10/2012")
 @action
 def disabledevileye(robot):
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 1")
  
-@tested("15/06/2012")
+@tested("04/10/2012")
 @action
 def setpose(robot, posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
@@ -268,7 +268,7 @@ def getpose(robot):
         pose["LARM"] = [0,0,0,0,0,0,0]
         return pose
 
-@tested("15/06/2012")
+@tested("04/10/2012")
 @action
 def manipose(robot, nohead = True, callback = None):
     """
@@ -291,6 +291,7 @@ def manipose(robot, nohead = True, callback = None):
     
     return setpose(robot, posture, callback, part)
 
+@tested("04/10/2012")
 @action
 def extractpose(robot, callback = None):
     """
@@ -307,7 +308,7 @@ def extractpose(robot, callback = None):
     
     return setpose(robot, "EXTRACTION", callback)
 
-@tested("15/06/2012")
+@tested("04/10/2012")
 @action
 def restpose(robot, nohead = True, callback = None):
     """
@@ -332,7 +333,7 @@ def restpose(robot, nohead = True, callback = None):
 
     return setpose(robot, posture, callback, part)
 
-@tested("15/06/2012")
+@tested("04/10/2012")
 @action
 def settorso(robot, height = 0.15, callback = None):
     """
@@ -354,7 +355,7 @@ def settorso(robot, height = 0.15, callback = None):
     return setpose(robot, {'TORSO': [float(height)]}, callback)
 
 
-@tested("15/06/2012")
+@tested("04/10/2012")
 @action
 def tuckedpose(robot, callback = None, nohead = True):
     """
