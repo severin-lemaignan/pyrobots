@@ -65,6 +65,8 @@ class Robot(object):
                 rxconsole = roslogger.RXConsoleHandler()
                 logging.getLogger("robot").addHandler(rxconsole)
 
+                self._pending_ros_actionservers = []
+
         # Import all modules under robots/actions/
         import actions
         path = sys.modules['robots.actions'].__path__
@@ -220,6 +222,12 @@ class Robot(object):
         else:
             return (False, res)
 
+    def cancel_all_ros_actions(self):
+        for client in self._pending_ros_actionservers:
+            client.cancel_all_goals()
+        self._pending_ros_actionservers = []
+        
+
     def _execute_ros(self, action):
         """ Execute a ros action.
 
@@ -234,6 +242,8 @@ class Robot(object):
                      "has been started without it.")
 
         client = action['client']
+        self._pending_ros_actionservers.append(client) # store the action servers if we need to cancel the goals
+
         goal = action['goal']
         
         #state = self.GoalStatus
@@ -247,6 +257,9 @@ class Robot(object):
         if action['wait_for_completion']:
             # Waits for the server to finish performing the action
             client.wait_for_result()
+
+            if client in self._pending_ros_actionservers: # may be absent after a general cancelling
+                self._pending_ros_actionservers.remove(client)
 
             # Checks if the goal was achieved
             if client.get_state() == self.GoalStatus.SUCCEEDED:
