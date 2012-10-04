@@ -42,6 +42,7 @@ class Robot(object):
         self.servers = {} # holds the list of tclserv servers when using pocolibs
         self.use_ros = use_ros if not dummy else False
 
+        self.invalid_context = False # when true, all tasks are skipped. Used to cancel an action, for instance
         if not dummy:
 
             if use_pocolibs:
@@ -306,6 +307,10 @@ class Robot(object):
     
     def execute(self, actions):
     
+        if self.invalid_context:
+            robotlog.info("Invalid context: probably canceling a desire")
+            return (False, "Context is invalid")
+
         if self.dummy:
             robotlog.info("#Dummy mode# Executing actions " + str(actions))
             return None
