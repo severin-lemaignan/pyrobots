@@ -74,38 +74,6 @@ def goto(robot, target, callback = None, feedback = None):
 ###############################################################################
 
 @action
-def cancel(robot):
-    """ Interrupt a 'goto' navigation task.
-    """
-    
-    client = None
-    goal = None
-    
-    if robot.hasROS():
-        import rospy
-        import actionlib
-        import move_base_msgs.msg
-        client = actionlib.SimpleActionClient('move_base', move_base_msgs.msg.MoveBaseAction)
-        
-        ok = client.wait_for_server()
-        if not ok:
-            #logger.error("Could not connect to the ROS client! Aborting action")
-            print("Could not connect to the ROS client! Aborting action")
-            return
-
-        # Creates a goal to send to the action server.  
-        goal = move_base_msgs.msg.MoveBaseGoal()
-    else:
-        # Useful for debugging purpose, without the actual robot
-        goal = "cancel navigation"
-
-    return [ros_request(client, goal)]
-
-
-
-###############################################################################
-
-@action
 def carry(robot, target, callback = None):
     """ Moves to a place, taking into account door crossing.
 
