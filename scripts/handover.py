@@ -32,15 +32,24 @@ def on_human_experience(e):
     for d in e:
         incoming_human_experiences.put(d)
 
-def ondesires(e):
-    logger.info("Incomig desires:" + str(e))
-    for d in e:
-        incoming_desires.put(d)
-
 def onemotion(e):
     logger.info("New emotional state:" + str(e))
 
 with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
+
+    desires_performer = desires.DesiresPerformer(pr2)
+
+    # Callback for desires
+    def ondesires(e):
+        logger.info("Incomig desires:" + str(e))
+        for sit in e:
+            try:
+                desire = desires.desire_factory(sit, pr2)
+                desires_performer.trysuperseed(desire)
+                incoming_desires.put(desire)
+            except desires.NotExistingDesireTypeError as e:
+                logger.warning(str(e))
+                logger.warning("Skipping this desire.")
 
     if "--init" in sys.argv:
         logger.info("Initializing the robot...")
@@ -86,14 +95,8 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                 pass
 
             try:
-                sit = incoming_desires.get(False)
-                if sit:
-                    try:
-                        desire = desires.desire_factory(sit, pr2)
-                        desire.perform()
-                    except desires.NotExistingDesireTypeError as e:
-                        logger.error(str(e))
-                        logger.info("Skipping this desire.")
+                desire = incoming_desires.get(False)
+                desires_performer.perform(desire)
             except queue.Empty:
                 pass
 

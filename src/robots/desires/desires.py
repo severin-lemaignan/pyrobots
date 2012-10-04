@@ -1,6 +1,7 @@
 import time
 import logging
 import math
+import threading
 logger = logging.getLogger("robots." + __name__)
 logger.setLevel(logging.DEBUG)
 
@@ -11,6 +12,47 @@ from robots.exception import RobotError, UnknownFrameError
 def nop(void, void2=None):
     pass
 
+class DesiresPerformer():
+
+    def __init__(self, robot):
+        self.robot = robot
+        self.isperforming = False
+        self.done = threading.Condition()
+
+    def perform(self, desire):
+        if self.isperforming:
+            raise RobotError("Trying to execute 2 desires at the same time! Threading issue!")
+        self.isperforming = True
+        self.currentpriority = desire._priority
+        desire.perform()
+
+        self.done.acquire()
+        self.isperforming = False
+        self.robot.invalid_context = False # reset the context
+        self.done.notify()
+        self.done.release()
+
+    def trysuperseed(self, desire):
+        """ Check if the priority of the given desire
+        is higher than the desire currently performing.
+
+        If yes, cancel the execution of of current
+        desire.
+
+        The new desire is not started. DesiresPerformer.perform() must
+        be call to this end.
+        """
+        if not self.isperforming:
+            return
+
+        if desire._priority < self.currentpriority:
+            self.robot.cancel_all_ros_actions()
+            self.robot.invalid_context = True
+            self.done.acquire()
+            self.done.wait()
+            self.done.release()
+
+
 class Desire(object):
     """ This class encapsulates a desire (or goal) as formalized in the
     OpenRobot ontology.
@@ -20,6 +62,7 @@ class Desire(object):
     def __init__(self, situation, robot):
         self._sit = situation
         self._robot = robot
+        self._priority = 10 # default priority. 0 is the highest priority.
         
         self.owners = robot.knowledge["* desires " + self._sit]
         if not self.owners:
