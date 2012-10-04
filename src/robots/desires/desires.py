@@ -479,7 +479,45 @@ class Test(Desire):
     
     def perform(self):
         super(Test, self).perform()
-        self._robot.look_at("LOW_TABLE_LARGE")
+        obj = "LOW_TABLE_LARGE"
+        self._robot.look_at(obj)
+        ok, bb = self._robot.execute([genom_request("spark", "GetBBPoints", [obj])])
+        ok, bb = self._robot.poco_modules["spark"].GetBBPoints(obj)
+        logger.info("heelllo")
+        print("########################")
+        if ok=="OK":
+           support_height = float(bb[2])
+           p1 = (float(bb[0]),float(bb[1]))
+           p2 = (float(bb[3]),float(bb[4]))
+           p3 = (float(bb[6]),float(bb[7]))
+           p4 = (float(bb[9]),float(bb[10]))
+           t = self._robot.poses.myself()
+           pr = (t["x"],t["y"])
+
+           (near,far) = self.getNearAndFarPoints(p1,p1,p2,p3,p4)
+           print("near(0)(0) = " +str(near[0][0]))
+           print("near(0)(1) = " +str(near[0][1]))
+           print("near(1)(0) = " +str(near[1][0]))
+           print("near(1)(1) = " +str(near[1][1]))
+           print("far(0)(0) = " +str(far[0][0]))
+           print("far(0)(1) = " +str(far[0][1]))
+           print("far(1)(0) = " +str(far[1][0]))
+           print("far(1)(1) = " +str(far[1][1]))
+
+          # print("near(0) = " +str(near(0)(0)) + " , near(0) = " +str(near(0)(1)) +" , near(1) = " +str(near(1)(0)) +" , near(1) = " +str(near(1)(1)) + " , far(0) = " str(far(0)(0))+ " , far(0) = " str(far(0)(1)))
+
+           #computing the nearest point:
+           cx = (0,0)
+           if near[0][0] - near[1][0] == 0:
+             cx = (near[0][0], pr[2])
+           else:
+             m = (near[0][1] - near[1][1])/(near[0][0] - near[1][0])
+             c = near[0][1] -m* near[0][0]
+             cons = pr[1] + pr[0]/m
+             cx = (((cons-c)*m)/(1+m*m), ((c - cons)/(1+m*m))+cons)
+
+           
+           
 
 class Stop(Desire):
     def __init__(self, situation, robot):
