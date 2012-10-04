@@ -117,7 +117,7 @@ class Move(Desire):
         try:
             target = self._robot.poses[self.to]
         except RobotError:
-            self._robot.say("I don't know such object...")
+            self._robot.say("I don't know such an object...")
             return
 
         target["z"] = 0
@@ -475,10 +475,26 @@ class Test(Desire):
         super(Test, self).__init__(situation, robot)
         
         self.doer = robot.knowledge[self._sit + " performedBy *"]
+        self._priority = 0
     
     def perform(self):
         super(Test, self).perform()
         self._robot.look_at("LOW_TABLE_LARGE")
+
+class Stop(Desire):
+    def __init__(self, situation, robot):
+        super(Stop, self).__init__(situation, robot)
+        
+        self.doer = robot.knowledge[self._sit + " performedBy *"]
+        self._priority = 5
+    
+    def perform(self):
+        super(Stop, self).perform()
+        self._robot.say("Alright, I stop")
+        self._robot.manipose()
+        self._robot.cancel_track()
+        self._robot.look_at([1,0,0.7,"base_link"])
+
 
 
 class Hide(Desire):
