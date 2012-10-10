@@ -228,3 +228,52 @@ def waypoints(robot, points, callback = None, feedback = None):
 ###############################################################################
 
 
+@action
+def follow(robot, target):
+    """ Follows a target until cancelled.
+
+    Every 3 seconds, it re-evaluate the pose of the target, and move to it.
+
+    This is a background action. Can be cancelled with cancel_follow.
+
+    :param target: a pyRobots pose to follow. At each step, the pose is re-evaluated is needed (eg for a TF frame or a SPARK object)    
+    """
+
+    return [background_task(FollowAction, [target])]
+
+
+###############################################################################
+
+from threading import Thread
+import time
+
+class FollowAction(Thread):
+    def __init__(self, robot, target):
+
+        Thread.__init__(self)
+
+        self.running = False
+        self.robot = robot
+        self.target = target
+
+    def run(self):
+        self.running = True
+
+        while self.running:
+            if self.target:
+                self.robot.moveclose(self.target, 1.5, nop) # move, not closer that 1.5 meters
+            time.sleep(3)
+    
+    def stop(self):
+        self.running = False
+
+
+###############################################################################
+
+@action
+def cancel_follow(robot):
+    """ If running, interrupt a current follow action.
+    """
+    return [background_task(FollowAction, abort=True)]
+
+
