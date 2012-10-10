@@ -47,6 +47,7 @@ class DesiresPerformer():
             return
 
         if desire._priority < self.currentpriority:
+            self.robot.cancel_all_background_actions()
             self.robot.cancel_all_ros_actions()
             self.robot.invalid_context = True
             self.done.acquire()
@@ -476,13 +477,13 @@ class Stop(Desire):
         super(Stop, self).__init__(situation, robot)
         
         self.doer = robot.knowledge[self._sit + " performedBy *"]
-        self._priority = 5
+        self._priority = 1
     
     def perform(self):
         super(Stop, self).perform()
         self._robot.say("Alright, I stop")
+        # stop has a high priority: it will cancel all currently running actions
         self._robot.manipose()
-        self._robot.cancel_track()
         self._robot.look_at([1,0,0.7,"base_link"])
 
 

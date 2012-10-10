@@ -291,6 +291,13 @@ class Robot(object):
         self._pending_python_requests[action["class"]] = instance
         instance.start()
 
+    def cancel_all_background_actions(self):
+        robotlog.warning("Aborting all background tasks...")
+        for action in self._pending_python_requests:
+            action.stop()
+            robotlog.warning(action.__class__.__name__ + " instance aborted.")
+        robotlog.warning("Done aborting all background tasks.")
+
     def _execute_knowledge(self, action):
         if action["action"] == "add":
             robotlog.debug("Adding facts to the knowledge base: " + str(action["args"]))
