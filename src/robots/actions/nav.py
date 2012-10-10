@@ -5,6 +5,7 @@ from robots.helpers.cb import *
 
 from robots.action import *
 
+import math
 
 ###############################################################################
 ###############################################################################
@@ -15,12 +16,14 @@ def goto(robot, target, callback = None, feedback = None):
     """ Moves the robot base to a given target, using ROS 2D navigation stack.
 
         Only (x,y,theta), ie (x, y, qw, qz), are considered for the target. 
-	All other values are ignored.
-    
+        All other values are ignored.
+
         :param target: the destination, as a valid pyRobots position.
         :param callback: (optional) a callback to be called when the destination
         is reached. If nothing is provided, the action blocks until the 
         destination is reached.
+        :param feedback: (optional) a callback that is called at regular intervals
+        with an update of the current robot position
     """
 
     pose = robot.poses[target]
@@ -72,6 +75,47 @@ def goto(robot, target, callback = None, feedback = None):
         )] # Return a non-blocking action. Useful to be able to cancel it later!
 
 ###############################################################################
+@action
+def moveclose(robot, target, distance = 1, callback = None, feedback = None):
+    """ Moves towards a target, stopping close to it.
+
+        Underneath, it uses the ROS 2D navigation stack.
+
+        Only (x,y,theta), ie (x, y, qw, qz), are considered for the target.
+        All other values are ignored.
+
+        :param target: the destination, as a valid pyRobots position.
+        :param distance: the distance from the target, in meter, where to stop.
+        :param callback: (optional) a callback to be called when the destination
+        is reached. If nothing is provided, the action blocks until the 
+        destination is reached.
+        :param feedback: (optional) a callback that is called at regular intervals
+        with an update of the current robot position
+
+    """
+    myself = robot.poses.myself()
+    target = robot.poses[target]
+    target_distance = distance
+
+    dir_x = target["x"] - myself["x"]
+    dir_y = target["y"] - myself["y"]
+    distance = math.sqrt(math.pow(dir_x, 2) + \
+                            math.pow(dir_y, 2))
+
+
+    if distance < target_distance:
+        return []
+    else:
+        target["x"] = myself["x"] + dir_x * (1 - target_distance/distance)
+        target["y"] = myself["y"] + dir_y * (1 - target_distance/distance)
+
+        # Rotate to face the target
+        #TODO: fix that: turning make no sense if we do not select a target position in front of the object!
+        #qz = target["qz"]
+        #target["qz"] = - target["qw"]
+        #target["qw"] = qz
+
+        return goto(robot, target, callback, feedback)
 
 @action
 def carry(robot, target, callback = None):

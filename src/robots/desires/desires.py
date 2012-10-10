@@ -1,6 +1,5 @@
 import time
 import logging
-import math
 import threading
 logger = logging.getLogger("robots." + __name__)
 logger.setLevel(logging.DEBUG)
@@ -106,6 +105,8 @@ class Move(Desire):
     def perform(self):
         super(Move, self).perform()
         logger.info("Moving to: " + self.to)
+
+        robot = self._robot
         
         already_at_destination = False
         
@@ -117,49 +118,35 @@ class Move(Desire):
             logger.info("Moving towards a location: I'll try to go as near as possible.")
 
         try:
-            target = self._robot.poses[self.to]
-        except RobotError:
+            target = robot.poses[self.to]
+        except UnknownFrameError:
             self._robot.say("I don't know such an object...")
             return
 
         target["z"] = 0
         
         if self.target_is_object:
-            myself = self._robot.poses.myself()
-            dir_x = target["x"] - myself["x"]
-            dir_y = target["y"] - myself["y"]
-            distance = math.sqrt(math.pow(dir_x, 2) + \
-                                 math.pow(dir_y, 2))
 
             target_distance = 1 # we want to stop at 1m of the target.
-
-            if distance < target_distance:
+            if robot.poses.distance(robot.poses.myself(), target) < target_distance:
                 already_at_destination = True
-            else:
-                target["x"] = myself["x"] + dir_x * (1 - target_distance/distance)
-                target["y"] = myself["y"] + dir_y * (1 - target_distance/distance)
-
-                # Rotate to face the target
-                qz = target["qz"]
-                target["qz"] = - target["qw"]
-                target["qw"] = qz
-
-        target["qx"] = 0
-        target["qy"] = 0
 
         if not already_at_destination:
-            self._robot.extractpose(nop)
-            self._robot.track(self.to)
-            self._robot.manipose(nop)
+            robot.extractpose(nop)
+            robot.track(self.to)
+            robot.manipose(nop)
             logger.info("Destination coordinates: " + str(target))
-            self._robot.goto(target)
+            if self.target_is_object:
+                robot.moveclose(target)
+            else:
+                robot.goto(target)
 
-            self._robot.cancel_track() # TODO: cancel track a bit before arriving
+            robot.cancel_track() # TODO: cancel track a bit before arriving
 
         if self.target_is_object:
-            self._robot.look_at(self.to)
+            robot.look_at(self.to)
         else:
-            self._robot.look_at([1.0,0,1.0,"base_link"])
+            robot.look_at([1.0,0,1.0,"base_link"])
 
 class Get(Desire):
     def __init__(self, situation, robot):
