@@ -216,20 +216,13 @@ class Give(Desire):
         #self._robot.give(self.objects[0], self.to[0])
         self._robot.basicgive()
 
-class Bring(Desire):
+class Pick(Desire):
     def __init__(self, situation, robot):
-        super(Bring, self).__init__(situation, robot)
+        super(Pick, self).__init__(situation, robot)
         
         self.objects = robot.knowledge[self._sit + " actsOnObject *"]
         self.doer = robot.knowledge[self._sit + " performedBy *"]
-        try:
-            self.to = robot.knowledge[self._sit + " receivedBy *"][0]
-        except IndexError:
-            self.to = robot.knowledge["* desires " + self._sit][0] # if no destinary, use the desire issuer.
 
-
-        self.in_safe_nav_pose = True
-    
     def isseen(self, obj):
         """ Hackish!!"""
         spark = self._robot.poco_modules["spark"]
@@ -302,21 +295,12 @@ class Bring(Desire):
         except Exception: # Human not here?
             pass
 
-
-    def navprogress(self, progress):
-        logger.debug("Waypoints node feedback: " + str(progress.percentage_covered) + "% of traj covered (" +  str(progress.distance_to_go) + "m to go).")
-        if progress.distance_covered > 0.5: # 50cm off the initial position
-            self._robot.manipose()
-            self.in_safe_nav_pose = True
-
-    def perform(self):
-        super(Bring, self).perform()
+    def pick(self):
 
         robot = self._robot
         obj = self.objects[0]
-        robot.say("Bring bring bring") #this first sound is always discarded...
 
-        logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
+        logger.info(str(self.doer) + " wants to pick " + str(self.objects))
 
         objectinhand = False
         ok, res = haspickedsmthg(robot)
@@ -350,7 +334,7 @@ class Bring(Desire):
             if not loc:
                 logger.warning("No place found for " + obj + "! I can not bring it")
                 robot.say("Humm. I do not know where is the object...")
-                return
+                return False
             #robot.say(obj + " is on " + loc[0] + ". Let go there.")
 
             track_target = robot.poses[loc[0]]
@@ -397,7 +381,7 @@ class Bring(Desire):
 
                     robot.say("I give up!")
                     self.giveup()
-                    return
+                    return False
 
             robot.say("Ok, I see the object. Let's try to pick it.")
             ok, res = robot.pick(obj)
@@ -417,13 +401,55 @@ class Bring(Desire):
 
                     robot.say("I give up!")
                     self.giveup()
-                    return
+                    return False
 
             robot.attachobject(obj)
 
             robot.extractpose()
 
             robot.translate(-0.2) # undock
+
+        return True
+
+    def perform(self):
+        self.pick()
+
+class Bring(Desire):
+    def __init__(self, situation, robot):
+        super(Bring, self).__init__(situation, robot)
+
+        self.pickDesire = Pick(situation, robot)
+
+        self.objects = robot.knowledge[self._sit + " actsOnObject *"]
+        self.doer = robot.knowledge[self._sit + " performedBy *"]
+        try:
+            self.to = robot.knowledge[self._sit + " receivedBy *"][0]
+        except IndexError:
+            self.to = robot.knowledge["* desires " + self._sit][0] # if no destinary, use the desire issuer.
+
+
+        self.in_safe_nav_pose = True
+
+    def navprogress(self, progress):
+        logger.debug("Waypoints node feedback: " + str(progress.percentage_covered) + "% of traj covered (" +  str(progress.distance_to_go) + "m to go).")
+        if progress.distance_covered > 0.5: # 50cm off the initial position
+            self._robot.manipose()
+            self.in_safe_nav_pose = True
+
+    def perform(self):
+        super(Bring, self).perform()
+
+        robot = self._robot
+        obj = self.objects[0]
+        robot.say("Bring bring bring") #this first sound is always discarded...
+
+        logger.info(str(self.doer) + " wants to bring " + str(self.objects) + " to " + str(self.to))
+
+        ####################################
+        #### First, pick the object
+
+        if not self.pickDesire.pick():
+            return
 
 
         ####################################
