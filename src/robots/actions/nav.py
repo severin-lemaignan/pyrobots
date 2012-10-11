@@ -54,10 +54,10 @@ def goto(robot, target, callback = None, feedback = None):
 
         goal.target_pose.pose.position.x = pose['x']
         goal.target_pose.pose.position.y = pose['y']
-        goal.target_pose.pose.position.z = pose['z']
+        goal.target_pose.pose.position.z = 0
 
-        goal.target_pose.pose.orientation.x = pose['qx']
-        goal.target_pose.pose.orientation.y = pose['qy']
+        goal.target_pose.pose.orientation.x = 0
+        goal.target_pose.pose.orientation.y = 0
         goal.target_pose.pose.orientation.z = pose['qz']
         goal.target_pose.pose.orientation.w = pose['qw']
         
