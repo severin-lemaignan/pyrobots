@@ -2,6 +2,7 @@ import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 import random
+import math
 
 from robots.action import *
 from robots.exception import UnknownFrameError
@@ -239,6 +240,201 @@ def pick(robot, obj, use_cartesian = "GEN_FALSE"):
 
     # Close gripper
     actions += close_gripper(robot)
+
+    actions += [python_request(haspickedsmthg)]
+
+
+    return actions
+
+def twoPointDist(p1,p2):
+    """ compute the distance between two point
+
+        point in form : (x,y)
+
+        :param p1: first point
+        :param p2: second point
+    """
+    return math.sqrt(math.pow(p1[0]-p2[0],2) + math.pow(p1[1]-p2[1],2))
+
+def computeDist(pr,p1,p2):
+    """ compute the distance between a point and a segment
+      
+        pr is the point and p1 p2 constitute the segment vertices (all in 2d)
+        if the orthonormal projection is not in the segment, the nearest vertice is 
+        selected to compute the distance.
+
+       :param pr: the point
+       :param p1,p2: the segment
+    """
+    x1 = p1[0]
+    y1 = p1[1]
+    x2 = p2[0]
+    y2 = p2[1]
+    x3 = pr[0]
+    y3 = pr[1]
+       
+
+    px = x2-x1
+    py = y2-y1
+
+    something = px*px + py*py
+
+    u =  ((x3 - x1) * px + (y3 - y1) * py) / something
+
+    if u > 1:
+        u = 1
+    elif u < 0:
+        u = 0
+
+    x = x1 + u * px
+    y = y1 + u * py
+
+    dx = x - x3
+    dy = y - y3
+
+    dist = math.sqrt(dx*dx + dy*dy)
+
+    return dist
+
+
+def getNearAndFarPoints(pr,p1,p2,p3,p4):
+    """ Compute the nearest edge
+  
+        Compute the nearest edge between pr and all the edges possible between
+        the 2d points p1, p2, p3, p4. return the distance to the nearest edge,
+        a pair of points from the nearest edge, and a pair of point from the
+        fartest edge
+
+        :param pr:          point from where to compute the distances
+        :param p1,p2,p3,p4: points that constitute the edges
+    """
+    dists = {"d1":(computeDist(pr,p1,p2), (p1,p2), (p3,p4)),
+             "d2":(computeDist(pr,p1,p3), (p1,p3), (p2,p4)),
+             "d3":(computeDist(pr,p1,p4), (p1,p4), (p2,p3)),
+             "d4":(computeDist(pr,p2,p3), (p2,p3), (p1,p4)),
+             "d5":(computeDist(pr,p2,p4), (p2,p4), (p1,p3)),
+             "d6":(computeDist(pr,p3,p4), (p3,p4), (p1,p2))}
+    item= "d1"
+    d = dists[item][0]
+    for i in dists:
+     # print("id = " + str(i) + " dist = " + str(dists[i][0]))
+      if dists[i][0] < d :
+        d = dists[i][0]
+        item = i
+
+    return (dists[item][0], dists[item][1],dists[item][2])
+
+
+
+def getPlaceFromObject(robot, support, poseDist):
+   """ Compute a 3d place to place an object
+       
+       use the bounding box of the support to find a place separated from the edge with dist
+
+       :param robot: the robot
+       :param support: the object on what we want to put something
+       :param dist:    the distance between the edge and the position in meters
+   """
+   ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [support])])
+   ok, bb = robot.poco_modules["spark"].GetBBPoints(support)
+   logger.info("The robot will try to put the object in hand in support : " + support)
+   if ok=="OK":
+      #the height is unique!
+      support_height = float(bb[2])
+
+      #point of 2d Bounding box :
+      p1 = (float(bb[0]),float(bb[1]))
+      p2 = (float(bb[3]),float(bb[4]))
+      p3 = (float(bb[6]),float(bb[7]))
+      p4 = (float(bb[9]),float(bb[10]))
+
+      #robot 2d pose
+      t = robot.poses.myself()
+      pr = (t["x"],t["y"])
+      
+      #geting the near edge and the far edge
+      (dist,near,far) = getNearAndFarPoints(pr,p1,p2,p3,p4)
+      
+      #computing the nearest point:
+      cx = (0,0)
+
+      if dist == twoPointDist(pr,near[0]):
+        cx = near[0]
+      elif dist == twoPointDist(pr,near[1]):
+        cx = near[1]
+      elif near[0][0] - near[1][0] == 0:
+        cx = (near[0][0], pr[2])
+      else:
+        m = (near[0][1] - near[1][1])/(near[0][0] - near[1][0])
+        c = near[0][1] -m* near[0][0]
+        cons = pr[1] + pr[0]/m
+        cx = (((cons-c)*m)/(1+m*m), ((c - cons)/(1+m*m))+cons)
+      scale = poseDist/(twoPointDist(pr,cx) + poseDist)
+      ppt = (cx[0] - scale*(pr[0]-cx[0]), cx[1] - scale*(pr[1]-cx[1]) )
+      logger.info("the placing point : ( " + str(ppt[0]) + " , " + str(ppt[1]) + " , " + str(support_height) + " )")
+      return (ppt[0], ppt[1], support_height)
+
+
+
+
+
+@action
+def put(robot, obj, support):
+    """ Put an object on a given support
+
+    Uses MHP to plan a trajectory.
+    The trajectory is executed with by pr2SoftMotion-genom if available, 
+    else with lwr-genom if available, else oonly exported to the mhpArmTraj poster.
+
+    :param object: the object to put.
+    :param support: the support to put the object
+    """
+   
+    (x,y,z) = getPlaceFromObject(robot, support, 0.1)
+    # Plan trajectory to object and execute it
+    actions = [
+    genom_request("mhp", "ArmPlanTask",
+            [0,
+            'GEN_TRUE',
+            'MHP_ARM_PLACE_FROM_FREE',
+            0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            obj,
+            'NO_NAME',
+            support,
+            'GEN_FALSE',
+            0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+            0, 
+            9, #whichrot (rotation of the objet) 
+            x, y, z, 
+            0.0, 0.0, 0.0]),
+        genom_request("mhp", "ArmSelectTraj", [0]),
+    ]
+
+    if robot.hasmodule("pr2SoftMotion"):
+        actions.append(
+                genom_request("pr2SoftMotion", 
+                    "TrackQ", 
+                    ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM']))
+
+    elif robot.hasmodule("lwr"):
+        actions += [
+                 genom_request("lwr",
+                     "SetMonitorForceParam",
+                     [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
+                 genom_request("lwr",
+                     "TrackQ",
+                     ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
+                 wait(7)
+                     ]
+
+    else:
+        logger.warning("No module for rm trajectory execution. Trajectory only " \
+                       "published on the mhpArmTraj poster.")
+
+    # Close gripper
+    actions += open_gripper(robot)
 
     actions += [python_request(haspickedsmthg)]
 
