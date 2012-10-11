@@ -486,6 +486,73 @@ class Bring(Desire):
         robot.manipose()
         robot.goto("BASE")
 
+class Put(Desire):
+    def __init__(self, situation, robot):
+        super(Put, self).__init__(situation, robot)
+        
+        self.doer = robot.knowledge[self._sit + " performedBy *"]
+
+        self.objects = robot.knowledge[self._sit + " actsOnObject *"]
+        self.doer = robot.knowledge[self._sit + " performedBy *"][0]
+        self.to = robot.knowledge[self._sit + " receivedBy *"][0]
+
+
+    def perform(self):
+        super(Put, self).perform()
+
+        robot = self._robot
+
+        logger.info(str(self.doer) + " wants to put " + str(self.objects) + " on " + str(self.to))
+
+        obj = self.objects[0]
+        if len(self.objects) > 1:
+            logger.info("Currently, I'm only able to process one object (" + obj + ") for 'put' action.")
+
+        objectinhand = False
+        ok, res = haspickedsmthg(robot)
+        if not ok:
+            logger.info("No object in hand!")
+            robot.manipose(nop)
+            robot.say("My hands are empty!")
+            return
+
+# Do not check the object type for now because of an inconsistency in ORO
+#            try:
+#                currentobj = robot.knowledge["myself hasInRightHand *"][0]
+#            except IndexError: #We have smthg in hand, but it's not in the ontology...
+#                currentobj = "UNKNOWN"
+#
+#            if currentobj == obj:
+#                robot.say("I have it already. Good.")
+#                objectinhand = True
+#            else:
+#                robot.say("My hands are full!")
+#                return
+
+        track_target = robot.poses[self.to]
+        track_target["z"] += 1.0
+        robot.track(track_target)
+
+        robot.goto(self.to)
+        robot.cancel_track()
+        robot.look_at([1.0,0.0,0.5,"base_link"])
+
+        robot.extractpose(nop)
+        hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
+        if not hasdocked:
+            robot.translate(0.3)
+
+        robot.say("Ok. Now, let's put it.")
+
+        robot.attachobject(obj, False) # detach the object
+
+        robot.put(obj, self.to)
+
+        robot.extractpose()
+
+        robot.translate(-0.2) # undock
+
+
 class Test(Desire):
     def __init__(self, situation, robot):
         super(Test, self).__init__(situation, robot)
