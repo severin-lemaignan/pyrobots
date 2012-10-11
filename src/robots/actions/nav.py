@@ -94,7 +94,11 @@ def moveclose(robot, target, distance = 1, callback = None, feedback = None):
 
     """
     myself = robot.poses.myself()
+
     target = robot.poses[target]
+    import copy
+    orig_target = copy.deepcopy(target)
+
     target_distance = distance
 
     dir_x = target["x"] - myself["x"]
@@ -110,10 +114,9 @@ def moveclose(robot, target, distance = 1, callback = None, feedback = None):
         target["y"] = myself["y"] + dir_y * (1 - target_distance/distance)
 
         # Rotate to face the target
-        #TODO: fix that: turning make no sense if we do not select a target position in front of the object!
-        #qz = target["qz"]
-        #target["qz"] = - target["qw"]
-        #target["qw"] = qz
+        heading = math.atan2(orig_target["y"] - target["y"], orig_target["x"] - target["x"])
+        target["qz"] = math.sin(heading/2)
+        target["qw"] = math.cos(heading/2)
 
         return goto(robot, target, callback, feedback)
 
