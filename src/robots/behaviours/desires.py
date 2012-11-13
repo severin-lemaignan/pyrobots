@@ -204,8 +204,14 @@ class Show(Desire):
         super(Show, self).perform()
         logger.info(str(self.doer) + " wants to show " + str(self.objects) + " to " + str(self.to))
         
-        self._robot.show(self.objects[0], self.to[0])
-    
+        self._robot.show(self.doer[0], self.objects[0], self.to[0])
+        self._robot.say("Here your object")
+        self._robot.wait(2)
+        self._robot.put_accessible(self.doer[0], self.objects[0], self.to[0])
+        self._robot.extractpose()
+        self._robot.manipose()
+
+ 
 class Give(Desire):
     def __init__(self, situation, robot):
         super(Give, self).__init__(situation, robot)
@@ -599,7 +605,7 @@ class Hide(Desire):
         super(Hide, self).perform()
         logger.info(str(self.doer) + " wants to hide " + str(self.objects) + " to " + str(self.to))
         
-        self._robot.hide(self.objects[0], self.to[0])
+        self._robot.hide(self.doer[0], self.objects[0], self.to[0])
 
 class Look(Desire):
     def __init__(self, situation, robot):

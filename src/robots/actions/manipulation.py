@@ -607,23 +607,14 @@ def handover(robot, human, mobility = 0.0, feedback = None):
     return actions
 
 
+@tested("13/11/2012")
 @action
 def amit_give(robot, performer, obj, receiver):
-    """ The 'Amit' GIVE.
-    """
-    plan_id = getplanid()
-    actions = [
-        genom_request("mhp",
-            "Plan_HRI_Task",
-            [plan_id, "GIVE_OBJECT", obj, performer,  receiver, 0, 0, 0]
-        ),
-        genom_request(	"mhp",
-            "Get_SM_Traj_HRI_Task",
-            [plan_id]
-        ),
+    actions = common_amit_action_init(robot, "GIVE_OBJECT", performer, obj, receiver)
+    actions += [
         genom_request(	"pr2SoftMotion",
             "GripperGrabRelease",
-            ["OPEN"]
+            ["ROPEN"]
         ),
         genom_request(	"mhp",
             "Write_this_SM_Traj_to_Poster",
@@ -643,7 +634,7 @@ def amit_give(robot, performer, obj, receiver):
         ),
         genom_request(	"pr2SoftMotion",
             "GripperGrabRelease",
-            ["CLOSE"]
+            ["RCLOSE"]
         ),
         genom_request(	"mhp",
             "Write_this_SM_Traj_to_Poster",
@@ -663,7 +654,191 @@ def amit_give(robot, performer, obj, receiver):
         ),
         genom_request(	"pr2SoftMotion",
             "GripperGrabRelease",
-            ["RELEASE"]
+            ["RRELEASE"]
+        )
+    ]
+    return actions
+
+@tested("13/11/2012")
+@action
+def put_accessible(robot, performer, obj, receiver):
+    """ Grasps + shows the object to a 'receiver'
+    """
+    actions = common_amit_action_init(robot, "MAKE_OBJECT_ACCESSIBLE", performer, obj, receiver,)
+    actions += [
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["ROPEN"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [0]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [1]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["RCLOSE"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [3]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [4]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["ROPEN"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [5]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        )
+    ]
+
+    return actions
+
+@tested("13/11/2012")
+@action
+def show(robot, performer, obj, receiver):
+    """ Grasps + shows the object to a 'receiver'
+    """
+    actions = common_amit_action_init(robot, "SHOW_OBJECT", performer, obj, receiver)
+    actions += [
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["ROPEN"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [0]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [1]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["RCLOSE"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [3]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [4]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        )
+    ]
+    return actions
+
+@tested("13/11/2012")
+@broken
+@action
+def hide(robot, performer, obj, receiver):
+    actions = common_amit_action_init(robot, "HIDE_OBJECT", performer, obj, receiver, adapt_candidate_search_space_with_object = True)
+    actions += [
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["ROPEN"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [0]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [1]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["RCLOSE"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [3]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"mhp",
+            "Write_this_SM_Traj_to_Poster",
+            [4]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "TrackQ",
+            ["mhpArmTraj", "PR2SM_TRACK_POSTER", "RARM"]
+        ),
+        genom_request(	"pr2SoftMotion",
+            "GripperGrabRelease",
+            ["ROPEN"]
+        )
+    ]
+    return actions
+
+
+
+def common_amit_action_init(robot, action, performer, obj, receiver, adapt_candidate_search_space_with_object = False):
+    """ The 'Amit' GIVE.
+    """
+    plan_id = getplanid()
+    actions = [
+        genom_request("mhp",
+            "Plan_HRI_Task",
+            [plan_id, action, obj, performer,  receiver, 0, 0, 1 if adapt_candidate_search_space_with_object else 0]
+        ),
+        genom_request(	"mhp",
+            "Get_SM_Traj_HRI_Task",
+            [plan_id]
         )
     ]
 
