@@ -1,7 +1,7 @@
 import time
 import logging
 import threading
-logger = logging.getLogger("robots." + __name__)
+logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 from robots.actions.manipulation import haspickedsmthg
@@ -30,14 +30,14 @@ class DesiresPerformer():
         self.done.acquire()
         self.isperforming = False
         self.robot.invalid_context = False # reset the context
-        self.done.notify()
+        self.done.notifyAll()
         self.done.release()
 
     def trysuperseed(self, desire):
         """ Check if the priority of the given desire
         is higher than the desire currently performing.
 
-        If yes, cancel the execution of of current
+        If yes, cancel the execution of the current
         desire.
 
         The new desire is not started. DesiresPerformer.perform() must
@@ -50,6 +50,12 @@ class DesiresPerformer():
             self.robot.cancel_all_background_actions()
             self.robot.cancel_all_ros_actions()
             self.robot.invalid_context = True
+            self.done.acquire()
+            self.done.wait()
+            self.done.release()
+
+    def waitfortermination(self):
+        if self.isperforming:
             self.done.acquire()
             self.done.wait()
             self.done.release()

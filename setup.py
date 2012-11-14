@@ -11,7 +11,7 @@ setup(name='pyRobots',
       author='OpenRobots team',
       author_email='openrobots@laas.fr',
       package_dir = {'': 'src'},
-      packages=['robots', 'robots.actions', 'robots.helpers', 'robots.desires'],
+      packages=['robots', 'robots.actions', 'robots.helpers', 'robots.behaviours'],
       #scripts=['scripts/robots_test'], # Do not exist yet :-(
       data_files=[('share/pyrobots', ['share/' + f for f in ['pr2_postures.json', 'appart_places.json', 'jido_postures.json']]),
                   ('share/doc/pyrobots', ['AUTHORS', 'LICENSE', 'README'])]

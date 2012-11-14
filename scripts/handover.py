@@ -4,12 +4,12 @@ import logging
 logger = logging.getLogger("robot")
 logger.setLevel(logging.DEBUG)
 
-#console = logging.StreamHandler()
-#console.setLevel(logging.INFO)
-#formatter = logging.Formatter('%(asctime)-15s %(name)s: %(levelname)s - %(message)s')
-#console.setFormatter(formatter)
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)-15s %(name)s: %(levelname)s - %(message)s')
+console.setFormatter(formatter)
 
-#logger.addHandler(console)
+logger.addHandler(console)
 
 
 import sys
@@ -18,7 +18,7 @@ import Queue as queue
 
 import pyoro
 import robots
-from robots.desires import desires
+from robots.behaviours import desires, interrogation
 from robots.helpers.cb import nop
 
 human = "HERAKLES_HUMAN1"
@@ -33,7 +33,7 @@ def on_human_experience(e):
         incoming_human_experiences.put(d)
 
 def onemotion(e):
-    logger.info("New emotional state:" + str(e))
+    logger.warning("New emotional state:" + str(e))
 
 with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
 
@@ -45,6 +45,8 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
         for sit in e:
             try:
                 desire = desires.desire_factory(sit, pr2)
+
+                # Has the new desire an higher priority? if yes, interrupt current one.
                 desires_performer.trysuperseed(desire)
                 incoming_desires.put(desire)
             except desires.NotExistingDesireTypeError as e:
@@ -73,6 +75,11 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                 if human_evt:
                     evt_type = pr2.knowledge.getDirectClassesOf(human_evt).keys()
                     logger.debug("Type of human event: " + str(evt_type))
+                    if "InterrogativeState" in evt_type:
+                        logger.info("The interactor is asking a question. Let's handle it.")
+                        question = interrogation.question_factory(human_evt, pr2)
+                        question.perform()
+
                     if "Fall" in evt_type:
                         logger.info("The human falled down! Carambar!")
                         places = pr2.knowledge[human + " isAt *"]
