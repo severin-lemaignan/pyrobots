@@ -296,7 +296,7 @@ class Robot(object):
 
     def cancel_all_background_actions(self):
         robotlog.warning("Aborting all background tasks...")
-        for action in self._pending_python_requests:
+        for action in self._pending_python_requests.values():
             action.stop()
             robotlog.warning(action.__class__.__name__ + " instance aborted.")
         robotlog.warning("Done aborting all background tasks.")
