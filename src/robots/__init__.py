@@ -90,7 +90,10 @@ class Robot(object):
         return self.use_pocolibs
     
     def hasmodule(self, module):
-        return True if module in self.poco_modules else False
+        if self.hasPocolibs():
+            return True if module in self.poco_modules else False
+        else:
+            return False
       
     def __enter__(self):
 	return self

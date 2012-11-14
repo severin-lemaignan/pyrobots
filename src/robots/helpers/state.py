@@ -15,13 +15,16 @@ class PR2StateManager:
     @helper("state")
     def getjoint(self, name):
         
-        import roslib; roslib.load_manifest('pyrobots_actionlib')
-        import rospy
-        from sensor_msgs.msg import JointState
-        
-        data = rospy.wait_for_message("/joint_states", JointState)
-        idx = data.name.index(name)
-        return data.position[idx]
+        if self.robot.hasROS():
+            import roslib; roslib.load_manifest('pyrobots_actionlib')
+            import rospy
+            from sensor_msgs.msg import JointState
+            
+            data = rospy.wait_for_message("/joint_states", JointState)
+            idx = data.name.index(name)
+            return data.position[idx]
+        else:
+            return 0.0
 
     @helper("state")
     def fingerpressed(self, hand = "right"):
