@@ -104,7 +104,8 @@ class Move(Desire):
 
         # Check if our target is an object or not. If it's an object, we
         # move close to it, but not *on* it.
-        if self.to + " rdf:type cyc:PartiallyTangible" in robot.knowledge:
+        if (self.to not in ["CTL_TABLE"]) and \
+           (self.to + " rdf:type cyc:PartiallyTangible" in robot.knowledge):
             self.target_is_object = True
         else:
             self.target_is_object = False # We assume then it's a general location. We move *on* it.
@@ -227,6 +228,7 @@ class Give(Desire):
         
         #self._robot.give(self.objects[0], self.to[0])
         self._robot.basicgive()
+        robot.attachobject(obj, attach = False)
 
 class Pick(Desire):
     def __init__(self, situation, robot):
@@ -352,7 +354,7 @@ class Pick(Desire):
             if len(self.objects) > 1:
                 logger.info("Let take care of " + obj + " for now.")
 
-            robot.say("Let's bring it to you")
+            robot.say("Let's take it")
 
             loc = self._robot.knowledge[obj + " isAt *"]
             if not loc:
@@ -390,12 +392,12 @@ class Pick(Desire):
 
             robot.say("Ok. Now, where is my object?")
             
-            ok = self.findobject(obj, max_attempts = 3)
+            ok = self.findobject(obj, max_attempts = 1)
             
             if not ok:
                 logger.warning("I can not see the object " + obj + "! Giving up.")
                 robot.say("I did not see your object... Let's try again.")
-                ok = self.findobject(obj, max_attempts = 3)
+                ok = self.findobject(obj, max_attempts = 2)
                 if not ok:
                     logger.warning("Second Findobject also failed!")
                     try:
