@@ -257,12 +257,14 @@ class Pick(Desire):
                 return True
             return False
 
-    def findobject(self, obj, max_attempts = 4):
+    def findobject(self, obj, max_attempts = 4, mode = "wide_stereo"):
         """ Moves left and right the head to try to see an object.
         Uses the knowledge base to check the object visibily.
 
         :returns: True is the object is seen, False if it failed.
         """
+
+        self._robot.switch_active_stereo_pair(mode)
 
         self._robot.look_at([1.0,0.0,0.5,"base_link"])
 
@@ -291,9 +293,19 @@ class Pick(Desire):
 
         if (attempts <= max_attempts): #ok, found
             self._robot.look_at(obj)
+            if mode == "wide_stereo":
+                # focus on object to get an accurate position
+                self._robot.switch_active_stereo_pair("narrow_stereo")
+                self._robot.wait(2)
+            self._robot.switch_active_stereo_pair("wide_stereo")
             return True
+        elif mode == "wide_stereo":
+            # try by looking more closely
+            return self.findobject(obj, max_attempts, mode = "narrow_stereo")
         else: # not found
+            #
             self._robot.look_at([1.0,0.0,1.0,"base_link"])
+            self._robot.switch_active_stereo_pair("wide_stereo")
             return False
 
     def giveup(self):

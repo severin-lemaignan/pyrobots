@@ -1,6 +1,8 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
+import os
+
 from robots.exception import RobotError
 
 from robots.action import *
@@ -274,4 +276,10 @@ def sweep_look(robot, amplitude = 90, speed = 0.2):
     actions += setpose(robot, pose_head_base) 
 
     return actions
+
+###############################################################################
+
+@action
+def switch_active_stereo_pair(robot, pair = "wide_stereo"):
+    os.system("rosservice call /viman_bridge/switch_cameras %s" % pair)
 
