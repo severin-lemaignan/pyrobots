@@ -7,10 +7,14 @@ from robots.action import *
 
 
 @action
-def say(robot, msg):
+def say(robot, msg, callback = None, feedback =None):
     """ Says loudly the message.
 
-    Speech synthesis relies on the ROS wrapper around Festival.
+    Several TTS systems are tested:
+    - first, try the Acapela TTS (through the acapela-ros Genom module)
+    - then the ROS 'sound_play' node
+    - eventually, the Genom 'textos' module
+
     :param msg: a text to say.
     """
     def execute(robot):
@@ -18,7 +22,6 @@ def say(robot, msg):
         if robot.hasROS():
             import roslib; roslib.load_manifest('sound_play')
             import rospy, os, sys
-            from sound_play.msg import SoundRequest
             from sound_play.libsoundplay import SoundClient
             soundhandle = SoundClient()
             soundhandle.say(msg)
@@ -34,6 +37,34 @@ def say(robot, msg):
         else:
             logger.warning("No ROS, no textos module: can not do speech synthesis.")
             return (True, None)
+
+    if robot.hasROS():
+        import rosnode
+        nodes = rosnode.get_node_names()
+        if "/acapela" in nodes:
+            import actionlib
+            from acapela.msg import SayGoal, SayAction
+
+            # use Acapela TTS
+            client = actionlib.SimpleActionClient('/acapela/Say', SayAction)
+
+            ok = client.wait_for_server()
+            if not ok:
+                print("Could not connect to the Acapela ROS action server! Aborting action")
+                return
+
+            # Creates a goal to send to the action server.  
+            goal = SayGoal()
+            goal.message = msg
+            
+
+            return [ros_request(client, 
+                    goal, 
+                    wait_for_completion = False if callback else True,
+                    callback = callback,
+                    feedback=feedback
+                )] # Return a non-blocking action. Useful to be able to cancel it later!
+
 
     return [python_request(execute)]
 
