@@ -9,6 +9,7 @@ logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 from robots.exception import RobotError, UnknownFrameError
+from robots.behaviours.desires import Show
 
 def nop(void, void2=None):
     pass
@@ -38,7 +39,17 @@ class Interrogation(object):
         self.answered = True if ("%s hasAnswer true" % self._sit) in robot.knowledge else False
 
         self.objects = robot.knowledge["%s hasObject *" % self._sit]
+        #If only one object, create an alias
+        if len(self.objects) == 1:
+            [self.object] = self.objects
+        else:
+            self.object = None
+
         self.verbalisation = robot.knowledge["%s verbalisesTo *" % self._sit]
+        if self.verbalisation:
+            self.verbalisation = self.verbalisation[0]
+        else:
+            self.verbalisation = ""
 
         self.name = self.__class__.__name__
     
@@ -56,7 +67,24 @@ class Place(Interrogation):
 
         if self.answered:
             logger.info("I known the answer. Saying: %s" % self.verbalisation)
+            self._robot.look_at(self.object)
             self._robot.say(self.verbalisation)
+            #if ("myself reaches %s" % self.object) in robot.knowledge:
+            #TODO: random sit ID
+            show = Show(situation = "showplace",
+                        robot = self._robot,
+                        owners = self.owners,
+                        performer = 'myself',
+                        objects = self.objects,
+                        receivers = self.owners)
+            show.perform()
+
+            #else:
+            #    #TODO: pointing!
+            #    pass
+
+            self._robot.look_at(self.owner)
+
         else:
             logger.info("I do not known the answer :-( Saying: %s" % self.verbalisation)
             self._robot.say(self.verbalisation)

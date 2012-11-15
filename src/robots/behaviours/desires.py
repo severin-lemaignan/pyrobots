@@ -67,25 +67,31 @@ class Desire(object):
     
     An instance of Desire is constructed by passing an existing desire ID.
     """
-    def __init__(self, situation, robot):
+    def __init__(self, situation, robot, owners = [], performer = None):
         self._sit = situation
         self._robot = robot
         self._priority = 10 # default priority. 0 is the highest priority.
         
-        self.owners = robot.knowledge["* desires " + self._sit]
-        if not self.owners:
-            raise NotExistingDesireError("I couldn't find anyone actually desiring " + self._sit)
-            
+        if owners:
+            self.owners = owners
+        else:
+            self.owners = robot.knowledge["* desires " + self._sit]
+            if not self.owners:
+                raise NotExistingDesireError("I couldn't find anyone actually desiring " + self._sit)
+
         #If only one owner, create an alias
         if len(self.owners) == 1:
             [self.owner] = self.owners
         else:
             self.owner = None
         
-        #TODO: for now, we only keep the first performer (useful when several equivalent instances are returned)
-        self.performer = robot.knowledge[self._sit + " performedBy *"][0]
-        if not self.performer:
-            raise NoPerformerDesireError("I couldn't find anyone to perform " + self._sit)
+        if performer:
+            self.performer = performer
+        else:
+            #TODO: for now, we only keep the first performer (useful when several equivalent instances are returned)
+            self.performer = robot.knowledge[self._sit + " performedBy *"][0]
+            if not self.performer:
+                raise NoPerformerDesireError("I couldn't find anyone to perform " + self._sit)
         
         self.name = self.__class__.__name__
     
@@ -194,23 +200,43 @@ class Get(Desire):
         self._robot.manipose()
 
 class Show(Desire):
-    def __init__(self, situation, robot):
-        super(Show, self).__init__(situation, robot)
+    def __init__(self, situation, robot, owners = [], performer = None, objects = [], receivers = []):
+
+        super(Show, self).__init__(situation, robot, owners, performer)
         
-        self.objects = robot.knowledge[self._sit + " actsOnObject *"]
-        self.doer = robot.knowledge[self._sit + " performedBy *"]
-        self.to = robot.knowledge[self._sit + " receivedBy *"]
+        if objects:
+            self.objects= objects
+        else:
+            self.objects = robot.knowledge[self._sit + " actsOnObject *"]
+
+        if receivers:
+            self.to = receivers
+        else:
+            self.to = robot.knowledge[self._sit + " receivedBy *"]
     
     def perform(self):
         super(Show, self).perform()
-        logger.info(str(self.doer) + " wants to show " + str(self.objects) + " to " + str(self.to))
-        
-        self._robot.show(self.doer[0], self.objects[0], self.to[0])
-        self._robot.say("Here your object")
-        self._robot.wait(2)
-        self._robot.put_accessible(self.doer[0], self.objects[0], self.to[0])
-        self._robot.extractpose()
-        self._robot.manipose()
+        robot = self._robot
+
+        logger.info(str(self.performer) + " wants to show " + str(self.objects) + " to " + str(self.to))
+
+        planid = robot.planning.actionplanning(robot.planning.SHOW, self.performer[0], self.objects[0], self.to[0])
+
+        if planid:
+            robot.show(planid)
+            planid2 = robot.planning.actionplanning(robot.planning.PUT_ACCESSIBLE, self.performer[0], self.objects[0], self.to[0])
+            robot.say("Here your object")
+            robot.wait(2)
+
+            if planid2:
+                robot.put_accessible(planid)
+
+            robot.extractpose()
+
+        else:
+            robot.say("The object is next to me")
+
+        robot.manipose()
 
  
 class Give(Desire):
@@ -619,7 +645,15 @@ class Hide(Desire):
         super(Hide, self).perform()
         logger.info(str(self.doer) + " wants to hide " + str(self.objects) + " to " + str(self.to))
         
-        self._robot.hide(self.doer[0], self.objects[0], self.to[0])
+        planid = robot.planning.actionplanning(robot.planning.HIDE, self.doer[0], self.objects[0], self.to[0])
+
+        if planid:
+            robot.hide(planid)
+            robot.extractpose()
+            robot.manipose()
+            robot.say("He he, I've hidden it!")
+            
+
 
 class Look(Desire):
     def __init__(self, situation, robot):

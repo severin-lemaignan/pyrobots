@@ -12,7 +12,6 @@ from robots.helpers.cb import *
 
 from robots.actions import configuration, nav, look_at, speech
 
-used_plan_id = []
 
 @tested("04/10/2012")
 @action
@@ -144,16 +143,6 @@ def configure_grippers(robot, grab_acc = 8.0, grab_slip = 0.2, release_acc = 4.0
             "SetGripperTresholds", 
             [grab_acc, grab_slip, release_acc, release_slip, force])]
 
-
-def getplanid():
-    """ Returns a random plan id (for Amit planification routines) which is
-    guaranteed to be 'fresh'.
-    """
-    plan_id = random.randint(1, 1000)
-    while plan_id in used_plan_id:
-        plan_id = random.randint(1, 1000)
-    used_plan_id.append(plan_id)
-    return plan_id
 
 def haspickedsmthg(robot, gripper = "right"):
     """
@@ -609,9 +598,12 @@ def handover(robot, human, mobility = 0.0, feedback = None):
 
 @tested("13/11/2012")
 @action
-def amit_give(robot, performer, obj, receiver):
-    actions = common_amit_action_init(robot, "GIVE_OBJECT", performer, obj, receiver)
-    actions += [
+def amit_give(robot, plan_id):
+    actions = [
+        genom_request(	"mhp",
+            "Get_SM_Traj_HRI_Task",
+            [plan_id]
+        ),
         genom_request(	"pr2SoftMotion",
             "GripperGrabRelease",
             ["ROPEN"]
@@ -661,11 +653,14 @@ def amit_give(robot, performer, obj, receiver):
 
 @tested("13/11/2012")
 @action
-def put_accessible(robot, performer, obj, receiver):
+def put_accessible(robot, plan_id):
     """ Grasps + shows the object to a 'receiver'
     """
-    actions = common_amit_action_init(robot, "MAKE_OBJECT_ACCESSIBLE", performer, obj, receiver,)
     actions += [
+        genom_request(	"mhp",
+            "Get_SM_Traj_HRI_Task",
+            [plan_id]
+        ),
         genom_request(	"pr2SoftMotion",
             "GripperGrabRelease",
             ["ROPEN"]
@@ -724,11 +719,14 @@ def put_accessible(robot, performer, obj, receiver):
 
 @tested("13/11/2012")
 @action
-def show(robot, performer, obj, receiver):
+def show(robot, plan_id):
     """ Grasps + shows the object to a 'receiver'
     """
-    actions = common_amit_action_init(robot, "SHOW_OBJECT", performer, obj, receiver)
     actions += [
+        genom_request(	"mhp",
+            "Get_SM_Traj_HRI_Task",
+            [plan_id]
+        ),
         genom_request(	"pr2SoftMotion",
             "GripperGrabRelease",
             ["ROPEN"]
@@ -775,9 +773,12 @@ def show(robot, performer, obj, receiver):
 @tested("13/11/2012")
 @broken
 @action
-def hide(robot, performer, obj, receiver):
-    actions = common_amit_action_init(robot, "HIDE_OBJECT", performer, obj, receiver, adapt_candidate_search_space_with_object = True)
+def hide(robot, plan_id):
     actions += [
+        genom_request(	"mhp",
+            "Get_SM_Traj_HRI_Task",
+            [plan_id]
+        ),
         genom_request(	"pr2SoftMotion",
             "GripperGrabRelease",
             ["ROPEN"]
@@ -827,20 +828,4 @@ def hide(robot, performer, obj, receiver):
 
 
 
-def common_amit_action_init(robot, action, performer, obj, receiver, adapt_candidate_search_space_with_object = False):
-    """ The 'Amit' GIVE.
-    """
-    plan_id = getplanid()
-    actions = [
-        genom_request("mhp",
-            "Plan_HRI_Task",
-            [plan_id, action, obj, performer,  receiver, 0, 0, 1 if adapt_candidate_search_space_with_object else 0]
-        ),
-        genom_request(	"mhp",
-            "Get_SM_Traj_HRI_Task",
-            [plan_id]
-        )
-    ]
-
-    return actions
 

@@ -14,6 +14,8 @@ class PlanningManager:
 
     def __init__(self, robot):
         self.robot = robot
+
+        self.used_plan_id = [] # used by 'actionplanning'
     
     @tested("14/06/2012")
     @helper("planning")
@@ -53,4 +55,55 @@ class PlanningManager:
 
         return (wps[:nbPoints], pose)
 
+
+    ## list of possible actions for low-level action planning
+    PUT_ACCESSIBLE = "MAKE_OBJECT_ACCESSIBLE"
+    GIVE = "GIVE_OBJECT"
+    SHOW = "SHOW_OBJECT"
+    HIDE = "HIDE_OBJECT"
+
+    @helper
+    def actionplanning(self, action, obj, receiver, performer = "myself", adapt_candidate_search_space_with_object = False, wait = True, callback = None):
+        """ Low-level action planner
+
+        :param action: Possible actions. Cf the list of actions above.
+        :param obj: object that is acted upon
+        :param receiver: agent that will receive the action
+        :param performer: (default: 'myself') The agent that will perform the action
+        :param adapt_candidate_search_space_with_object: (default: false) Adapt the 'mightability' computation to the object's dimensions
+
+        :returns: a plan ID, that is used to execute actual actions
+        """
+        plan_id = _getplanid()
+        actions = [
+            genom_request("mhp",
+                "Plan_HRI_Task",
+                [plan_id, action, obj, performer,  receiver, 0, 0, 1 if adapt_candidate_search_space_with_object else 0],
+                wait_for_completion = wait,
+                callback = callback
+                )
+        ]
+
+
+        raw = self.robot.execute(actions)
+
+        if not wait_for_completion:
+            return None
+
+        ok, res = raw
+        if not ok:
+            logger.warning("Planning for action %s failed! Error: %s" % (action, res))
+            return None
+
+        return plan_id
+
+    def _getplanid():
+        """ Returns a random plan id (for Amit planification routines) which is
+        guaranteed to be 'fresh'.
+        """
+        plan_id = random.randint(1, 1000)
+        while plan_id in used_plan_id:
+            plan_id = random.randint(1, 1000)
+        used_plan_id.append(plan_id)
+        return plan_id
 
