@@ -379,7 +379,7 @@ def put(robot, obj, support):
     :param support: the support to put the object
     """
    
-    (x,y,z) = getPlaceFromObject(robot, support, 0.1)
+    (x,y,z) = getPlaceFromObject(robot, support, 0.2)
     # Plan trajectory to object and execute it
     actions = [
     genom_request("mhp", "ArmPlanTask",
@@ -425,7 +425,44 @@ def put(robot, obj, support):
     # Close gripper
     actions += open_gripper(robot)
 
-    actions += [python_request(haspickedsmthg)]
+    #actions += [python_request(haspickedsmthg)]
+
+    actions += [
+    genom_request("mhp", "ArmPlanTask",
+            [0,
+            'GEN_TRUE',
+            'MHP_ARM_ESCAPE_OBJECT',
+            0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            obj,
+            'NO_NAME',
+            'NO_NAME',
+            'GEN_FALSE',
+            0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0,
+            0, #whichrot (rotation of the objet) 
+            0, 0, 0,
+            0.0, 0.0, 0.0]),
+        genom_request("mhp", "ArmSelectTraj", [0])]
+
+    if robot.hasmodule("pr2SoftMotion"):
+        actions.append(
+                genom_request("pr2SoftMotion",
+                    "TrackQ",
+                    ['mhpArmTraj', 'PR2SM_TRACK_POSTER', 'RARM']))
+
+    elif robot.hasmodule("lwr"):
+        actions += [
+                 genom_request("lwr",
+                     "SetMonitorForceParam",
+                     [1, 0.5, 0.1, 0.3, 0.005, 0.1]),
+                 genom_request("lwr",
+                     "TrackQ",
+                     ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
+                 wait(7)
+                     ]
+
 
 
     return actions
