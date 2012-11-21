@@ -40,7 +40,10 @@ class PR2StateManager:
         from pr2_msgs.msg import PressureState
         
         data = rospy.wait_for_message("/pressure/" + hand[0] + "_gripper_motor", PressureState)
-        if data.l_finger_tip[11] > 4000 or data.r_finger_tip[11] > 4000:
+        av1 = sum(data.l_finger_tip) / len(data.l_finger_tip)
+        av2 = sum(data.r_finger_tip) / len(data.r_finger_tip)
+        av = (av1 + av2) / 2
+        if av > 3500:
             return True
         else:
             return False
