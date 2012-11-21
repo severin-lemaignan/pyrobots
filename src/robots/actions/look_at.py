@@ -19,7 +19,7 @@ actionPerformerForTracking = None
 ###############################################################################
 ###############################################################################
 
-@tested("13/03/2012")
+@tested("21/11/2012")
 @action
 def look_at(robot, place, callback = None):
     """ Orders the robot to look at a given place of object.
@@ -245,7 +245,7 @@ def glance_to(robot, place):
 
 @tested("22/02/2012")
 @action
-def sweep_look(robot, amplitude = 90, speed = 0.2):
+def sweep(robot, amplitude = 90, speed = 0.2):
     """ Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
     
     :param amplitude: Number of degrees of the sweeping head movement (default:
@@ -279,6 +279,7 @@ def sweep_look(robot, amplitude = 90, speed = 0.2):
 
 ###############################################################################
 
+@tested("21/11/2012")
 @action
 def switch_active_stereo_pair(robot, pair = "wide_stereo"):
     os.system("rosservice call /viman_bridge/switch_cameras %s" % pair)
