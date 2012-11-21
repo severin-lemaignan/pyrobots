@@ -561,7 +561,6 @@ class Bring(Desire):
             robot.attachobject(obj, attach = False)
 
         robot.manipose()
-        robot.goto("BASE")
 
 class Put(Desire):
     def __init__(self, situation, robot):
@@ -617,7 +616,7 @@ class Put(Desire):
         robot.extractpose(nop)
         hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
         if not hasdocked:
-            robot.translate(0.3)
+            robot.translate(0.2)
 
         robot.say("Ok. Now, let's put it.")
 
