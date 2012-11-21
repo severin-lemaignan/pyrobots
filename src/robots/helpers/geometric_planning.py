@@ -1,6 +1,7 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
+import random
 from robots.action import *
 from robots.exception import RobotError
 
@@ -16,7 +17,17 @@ class PlanningManager:
         self.robot = robot
 
         self.used_plan_id = [] # used by 'actionplanning'
-    
+
+    def _getplanid(self):
+        """ Returns a random plan id (for Amit planification routines) which is
+        guaranteed to be 'fresh'.
+        """
+        plan_id = random.randint(1, 1000)
+        while plan_id in self.used_plan_id:
+            plan_id = random.randint(1, 1000)
+        self.used_plan_id.append(plan_id)
+        return plan_id
+   
     @tested("14/06/2012")
     @helper("planning")
     def handover(self, human = "HERAKLES_HUMAN1", standing = True, mobility = 0.0):
@@ -62,8 +73,8 @@ class PlanningManager:
     SHOW = "SHOW_OBJECT"
     HIDE = "HIDE_OBJECT"
 
-    @helper
-    def actionplanning(self, action, obj, receiver, performer = "myself", adapt_candidate_search_space_with_object = False, wait = True, callback = None):
+    @helper("planning")
+    def actionplanning(self, action, obj, receiver, performer, adapt_candidate_search_space_with_object = False, wait = True, callback = None):
         """ Low-level action planner
 
         :param action: Possible actions. Cf the list of actions above.
@@ -74,7 +85,7 @@ class PlanningManager:
 
         :returns: a plan ID, that is used to execute actual actions
         """
-        plan_id = _getplanid()
+        plan_id = self._getplanid()
         actions = [
             genom_request("mhp",
                 "Plan_HRI_Task",
@@ -87,7 +98,7 @@ class PlanningManager:
 
         raw = self.robot.execute(actions)
 
-        if not wait_for_completion:
+        if not wait:
             return None
 
         ok, res = raw
@@ -97,13 +108,4 @@ class PlanningManager:
 
         return plan_id
 
-    def _getplanid():
-        """ Returns a random plan id (for Amit planification routines) which is
-        guaranteed to be 'fresh'.
-        """
-        plan_id = random.randint(1, 1000)
-        while plan_id in used_plan_id:
-            plan_id = random.randint(1, 1000)
-        used_plan_id.append(plan_id)
-        return plan_id
 

@@ -220,11 +220,11 @@ class Show(Desire):
 
         logger.info(str(self.performer) + " wants to show " + str(self.objects) + " to " + str(self.to))
 
-        planid = robot.planning.actionplanning(robot.planning.SHOW, self.performer[0], self.objects[0], self.to[0])
+        planid = robot.planning.actionplanning(robot.planning.SHOW, self.objects[0], self.to[0], self.performer)
 
         if planid:
             robot.show(planid)
-            planid2 = robot.planning.actionplanning(robot.planning.PUT_ACCESSIBLE, self.performer[0], self.objects[0], self.to[0])
+            planid2 = robot.planning.actionplanning(robot.planning.PUT_ACCESSIBLE, self.objects[0], self.to[0], self.performer)
             robot.say("Here your object")
             robot.wait(2)
 
@@ -645,7 +645,7 @@ class Hide(Desire):
         super(Hide, self).perform()
         logger.info(str(self.doer) + " wants to hide " + str(self.objects) + " to " + str(self.to))
         
-        planid = robot.planning.actionplanning(robot.planning.HIDE, self.doer[0], self.objects[0], self.to[0])
+        planid = robot.planning.actionplanning(robot.planning.HIDE, self.objects[0], self.to[0], self.doer[0])
 
         if planid:
             robot.hide(planid)

@@ -693,7 +693,7 @@ def amit_give(robot, plan_id):
 def put_accessible(robot, plan_id):
     """ Grasps + shows the object to a 'receiver'
     """
-    actions += [
+    actions = [
         genom_request(	"mhp",
             "Get_SM_Traj_HRI_Task",
             [plan_id]
@@ -759,7 +759,7 @@ def put_accessible(robot, plan_id):
 def show(robot, plan_id):
     """ Grasps + shows the object to a 'receiver'
     """
-    actions += [
+    actions = [
         genom_request(	"mhp",
             "Get_SM_Traj_HRI_Task",
             [plan_id]
@@ -811,7 +811,7 @@ def show(robot, plan_id):
 @broken
 @action
 def hide(robot, plan_id):
-    actions += [
+    actions = [
         genom_request(	"mhp",
             "Get_SM_Traj_HRI_Task",
             [plan_id]
