@@ -5,7 +5,6 @@ from configuration import setpose
 
 def ros_translate(robot, x, y = 0.0, speed = 0.1):
     import math
-    import roslib; roslib.load_manifest('pyrobots_actionlib')
     import rospy
     from geometry_msgs.msg import Twist
 
