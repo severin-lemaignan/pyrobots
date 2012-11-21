@@ -470,27 +470,31 @@ def put(robot, obj, support):
 
 @tested("04/10/2012")
 @action
-def attachobject(robot, obj, attach = True, hand = "right"):
+def attachobject(robot, obj, attach = True, hand = "right", holder = None):
     """ attach or detach the object to the robot hand
     
     This function should be called after a release or a grab
     :param obj: the object to attach/dettach.
     :param attach: true (default) to attach an object, false to detach it
     """
+
+    if not holder:
+        holder = robot.id
+
     actions = []
     if attach:
         #causes a inconsistency in ORO!
-        #actions += add_knowledge(["myself hasIn" + hand.capitalize() + "Hand " + obj])
-        pass
+        actions += add_knowledge([holder + " hasIn" + hand.capitalize() + "Hand " + obj])
+        #pass
     else:
-        actions += retract_knowledge(["myself hasIn" + hand.capitalize() + "Hand " + obj])
+        actions += retract_knowledge([holder + " hasIn" + hand.capitalize() + "Hand " + obj])
 
     i = 0
     if (attach) :
       i = 1
     actions += [
         genom_request("spark","SetGraspedObject", [obj, i, 0]),
-        genom_request("spark","SetInferrenceForObject", [obj, i, robot.id, 0,
+        genom_request("spark","SetInferrenceForObject", [obj, i, holder, 0,
             "SPARK_PRECISE_ROBOT_HAND", 1.0])
     ]
 
