@@ -288,16 +288,19 @@ class Give(Desire):
         
         self.objects = robot.knowledge[self._sit + " actsOnObject *"]
         self.doer = robot.knowledge[self._sit + " performedBy *"]
-        self.to = robot.knowledge[self._sit + " receivedBy *"]
-    
+        try:
+            self.to = robot.knowledge[self._sit + " receivedBy *"][0]
+        except IndexError:
+            self.to = robot.knowledge["* desires " + self._sit][0] # if no destinary, use the desire issuer.
+ 
     def perform(self):
         super(Give, self).perform()
         logger.info(str(self.doer) + " wants to give " + str(self.objects) + " to " + str(self.to))
-        self._robot.say("Let's give " + self.objects[0] + " to " + self.to[0])
+        self._robot.say("Let's give " + self.objects[0] + " to " + self.to)
         
         #self._robot.give(self.objects[0], self.to[0])
         self._robot.basicgive()
-        robot.attachobject(obj, attach = False)
+        self._robot.attachobject(self.objects[0], attach = False)
 
 class Pick(Desire):
     def __init__(self, situation, robot):
