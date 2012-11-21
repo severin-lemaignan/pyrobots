@@ -55,12 +55,24 @@ class Interrogation(object):
     
     def perform(self):
         logger.info("Now performing " + self.name)
+        self._process()
+
+    def _process(self):
+        """ Default processing: simply answer what the dialogs module
+        says.
+        """
+        if self.owner:
+            try:
+                self._robot.look_at(self.owner)
+            except UnknownFrameError: # the speaker is not in sight?
+                pass
+        self._robot.say(self.verbalisation)
 
 class Place(Interrogation):
     def __init__(self, situation, robot):
         super(Place, self).__init__(situation, robot)
 
-    def perform(self):
+    def _process(self):
         super(Place, self).perform()
 
         logger.info("The human is looking for the localization of %s." % self.objects)
@@ -104,6 +116,7 @@ def question_factory(sit, robot):
         logger.info("Human has a question related to a %s. Let's handle it." % aim)
         interrogation = eval(aim)(sit, robot)
     except NameError:
-        raise NotExistingQuestionTypeError("I don't know the type of question \"%s\"!" % aim )
+        logger.warning("No specific handler for this type of question: \"%s\". Using generic one." % aim )
+        interrogation = Interrogation(sit, robot)
     
     return interrogation
