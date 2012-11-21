@@ -13,6 +13,30 @@ from robots.action import genom_request
 def nop(void, void2=None):
     pass
 
+def isseen(robot, obj):
+    """ Hackish!! Bypass SPARK and directly check visibility from 
+    viman poster
+    """
+    spark = robot.poco_modules["spark"]
+    state = spark.poster("PositionsInfopositionsStatus")
+
+    lastseen = -1
+    for i in range(len(state)):
+        if state[i] == obj:
+            lastseen = int(state[i+5])
+
+    if lastseen == -1:
+        raise Exception("Object " + obj + " is not a special SPARK object (cf hri_knowledge.cpp:117. Argh!)")
+
+    if lastseen == 0:
+        return False
+    else:
+        seenago = int(time.time()) - lastseen
+        logger.debug("Last seen " + str(seenago) + " sec ago")
+        if seenago < 2:
+            return True
+        return False
+
 class DesiresPerformer():
 
     def __init__(self, robot):
@@ -134,7 +158,7 @@ class Move(Desire):
         try:
             target = robot.poses[self.to]
         except UnknownFrameError:
-            self._robot.say("I don't know such an object...")
+            self._robot.say("I don't know such a place...")
             return
 
         target["z"] = 0
@@ -197,6 +221,25 @@ class Get(Desire):
                 return
 
         self._robot.take(self.to, self.objects[0])
+
+        # look in the hand where the object is
+        #self._robot.switch_active_stereo_pair("narrow_stereo")
+        self._robot.extractpose()
+        self._robot.look_at([0.2,0,0.1,"r_gripper_r_finger_link"])
+        self._robot.wait(2)
+        if not isseen(self._robot, self.objects[0]):
+            self._robot.wait(2)
+
+        #self._robot.switch_active_stereo_pair("wide_stereo")
+
+        if not isseen(self._robot, self.objects[0]):
+            self._robot.say("I do not see your object...")
+        else:
+            self._robot.attachobject(self.objects[0])
+
+        if robot.poses.human(self.to):
+            self._robot.look_at(self.to)
+
         self._robot.manipose()
 
 class Show(Desire):
@@ -263,27 +306,6 @@ class Pick(Desire):
         self.objects = robot.knowledge[self._sit + " actsOnObject *"]
         self.doer = robot.knowledge[self._sit + " performedBy *"]
 
-    def isseen(self, obj):
-        """ Hackish!!"""
-        spark = self._robot.poco_modules["spark"]
-        state = spark.poster("PositionsInfopositionsStatus")
-
-        lastseen = -1
-        for i in range(len(state)):
-            if state[i] == obj:
-                lastseen = int(state[i+5])
-
-        if lastseen == -1:
-            raise Exception("Object " + obj + " is not a special SPARK object (cf hri_knowledge.cpp:117. Argh!)")
-
-        if lastseen == 0:
-            return False
-        else:
-            seenago = int(time.time()) - lastseen
-            logger.debug("Last seen " + str(seenago) + " sec ago")
-            if seenago < 2:
-                return True
-            return False
 
     def findobject(self, obj, max_attempts = 4, mode = "wide_stereo"):
         """ Moves left and right the head to try to see an object.
@@ -300,18 +322,18 @@ class Pick(Desire):
 
         attempts = 1
         #while not (["myself sees " + obj] in self._robot.knowledge) \
-        while not self.isseen(obj) \
+        while not isseen(self._robot, obj) \
               and attempts <= max_attempts:
 
             # Looks once left, once right
             self._robot.look_at([1.0, 0.3 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
             self._robot.wait(2)
-            if self.isseen(obj):
+            if isseen(self._robot, obj):
                 break
 
             self._robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
             self._robot.wait(2)
-            if self.isseen(obj):
+            if isseen(self._robot, obj):
                 break
 
             self._robot.look_at([1.0, 0 , 0.5,"base_link"])
