@@ -13,13 +13,12 @@ from robots.helpers import postures
 
 places = {}
 if len(sys.argv) == 2: # assume argument is posture file to load
-    places = postures.load(sys.argv[1])
+    places = postures.read(sys.argv[1])
 else:
-    places = postures.read()
+    print("usage: jsonpose <posture file>")
+    sys.exit(2)
 
 pr2 = robots.PR2(init = False)
-
-rospy.init_node('pyrobots_actionlib')
 
 def getpose():
 	try:
