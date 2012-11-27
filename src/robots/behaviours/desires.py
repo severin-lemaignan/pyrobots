@@ -195,20 +195,21 @@ class Move(Desire):
         try:
             target = robot.poses[self.to]
         except UnknownFrameError:
-            self._robot.say("I don't know such a place...")
+            robot.say("I don't know such a place...")
             return
 
         target["z"] = 0
         
         if self.target_is_object:
 
-            target_distance = 1 # we want to stop at 1m of the target.
+            target_distance = self.distance # we want to stop at 1m of the target.
             if robot.poses.distance(robot.poses.myself(), target) < target_distance:
                 already_at_destination = True
 
         if not already_at_destination:
             robot.extractpose(nop)
-            robot.track(self.to)
+            if self.track:
+                robot.track(self.to)
             robot.manipose(nop)
             logger.info("Destination coordinates: " + str(target))
             if self.target_is_object:
@@ -216,9 +217,10 @@ class Move(Desire):
             else:
                 robot.goto(target)
 
-            robot.cancel_track() # TODO: cancel track a bit before arriving
+            if self.track:
+                robot.cancel_track() # TODO: cancel track a bit before arriving
 
-        if self.target_is_object:
+        if self.target_is_object and robot.poses.human(self.to):
             robot.look_at(self.to)
         else:
             robot.look_at([1.0,0,1.0,"base_link"])
