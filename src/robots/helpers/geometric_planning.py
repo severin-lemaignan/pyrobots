@@ -69,34 +69,39 @@ class PlanningManager:
 
     ## list of possible actions for low-level action planning
     PUT_ACCESSIBLE = "MAKE_OBJECT_ACCESSIBLE"
+    PUT_VISIBLE = "PUT_OBJECT_VISIBLE"
     GIVE = "GIVE_OBJECT"
     SHOW = "SHOW_OBJECT"
     HIDE = "HIDE_OBJECT"
 
     @helper("planning")
-    def actionplanning(self, action, obj, receiver, performer, adapt_candidate_search_space_with_object = False, wait = True, callback = None):
+    def manipulation(self, action, obj, receiver, performer, pick_first = False, timeout = 10, adapt_candidate_search_space_with_object = False, wait = True, callback = None):
         """ Low-level action planner
 
         :param action: Possible actions. Cf the list of actions above.
         :param obj: object that is acted upon
         :param receiver: agent that will receive the action
-        :param performer: (default: 'myself') The agent that will perform the action
+        :param performer: The agent that will perform the action
+        :param pick_first: (default: False) if true, first pick the object,
+        then do the action. Else, assume the object is already in hand.
+        :param timeout: timeout (in second, default: 10) before giving up with the
+        planning attempt
         :param adapt_candidate_search_space_with_object: (default: false) Adapt the 'mightability' computation to the object's dimensions
 
         :returns: a plan ID, that is used to execute actual actions
         """
         plan_id = self._getplanid()
-        actions = [
+        action = [
             genom_request("mhp",
                 "Plan_HRI_Task",
-                [plan_id, action, obj, performer,  receiver, 0, 0, 1 if adapt_candidate_search_space_with_object else 0],
+                [plan_id, action, obj, performer,  receiver, 0, 0, 1 if adapt_candidate_search_space_with_object else 0, timeout],
                 wait_for_completion = wait,
                 callback = callback
                 )
         ]
 
 
-        raw = self.robot.execute(actions)
+        raw = self.robot.execute(action)
 
         if not wait:
             return None
