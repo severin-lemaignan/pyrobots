@@ -307,7 +307,10 @@ class Show(Desire):
 
         logger.info(str(self.performer) + " wants to show " + str(self.objects) + " to " + str(self.to))
 
-        planid = robot.planning.actionplanning(robot.planning.SHOW, self.objects[0], self.to[0], self.performer)
+        if "%s hasInHand %s" % (self.performer, self.object) in robot.knowledge:
+            planid = robot.planning.manipulation(robot.planning.SHOW, self.objects[0], self.to[0], self.performer)
+        else:
+            planid = robot.planning.manipulation(robot.planning.SHOW, self.objects[0], self.to[0], self.performer)
 
         if planid:
             robot.show(planid)
