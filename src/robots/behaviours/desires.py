@@ -599,7 +599,9 @@ class Put(Desire):
         track_target["z"] += 1.0
         robot.track(track_target)
 
-        robot.goto(self.to)
+        move = Move(self._sit, robot, self.to, track = False)
+        move.perform()
+
         robot.cancel_track()
         robot.look_at([1.0,0.0,0.5,"base_link"])
 
@@ -690,7 +692,7 @@ class Look(Desire):
 
         self.object = None
 
-        self.zonetype = None # type ('above', 'under'...), relative to object
+        self.zone = None # type ('above', 'under'...), relative to object
 
         self.objects = robot.knowledge[self._sit + " hasGoal *"]
         if self.objects:
@@ -702,10 +704,12 @@ class Look(Desire):
                 robot.poses[self.object]
             except UnknownFrameError:
                 logger.info("Unknown frame %s. Checking if it is a zone..." % self.object)
-                self.zonetype, self.object = self.findzone(self.objects)
+                self.zone, self.object = self.findzone(self.objects)
         else:
             candidate_zones = robot.knowledge[self._sit + " involves *"]
-            self.zonetype, self.object = self.findzone(candidate_zones)
+            self.zone, self.object = self.findzone(candidate_zones)
+
+        self.qualification = robot.knowledge[self._sit + " actionQualification *"]
 
     def findzone(self, zones):
         for z in zones:
@@ -718,13 +722,13 @@ class Look(Desire):
 
             # Not a special zone.
             if 'Location' in types:
-                place = robot.knowledge["%s isAt *" % z]
+                place = self.robot.knowledge["%s isAt *" % z]
                 if not place:
                     logger.warning("No place found to look at!")
                     return None, None
                 place = place[0]
 
-                rel = robot.knowledge["%s * %s" % (z, place)]
+                rel = self.robot.knowledge["%s * %s" % (z, place)]
 
                 if 'isOn' in rel:
                     rel = self.ON
@@ -739,31 +743,40 @@ class Look(Desire):
 
                 return rel, place
 
+        return None, None
 
-    def perform(self):
-        super(Look, self).perform()
-        if self.zonetype:
-            logger.info(str(self.doer) + " wants to look '%s' relative to %s." % (self.zonetype, self.object))
+    def _process(self):
+
+        robot = self._robot
+
+        if "CLOSE" in self.qualification:
+            robot.switch_active_stereo_pair("narrow_stereo")
+        elif "NORMAL" in self.qualification or "WIDE" in self.qualification:
+            robot.switch_active_stereo_pair("wide_stereo")
+
+
+        if self.zone:
+            logger.info(str(self.doer) + " wants to look '%s' relative to %s." % (self.zone, self.object))
             
             # First, special abstract zones
             if self.zone == self.UP:
-                self._robot.look_at([1.0,0,0.5,'head_plate_frame'])
+                robot.look_at([1.0,0,0.5,'head_plate_frame'])
             elif self.zone == self.DOWN:
-                self._robot.look_at([1.0,0,-0.5,'head_plate_frame'])
+                robot.look_at([1.0,0,-0.5,'head_plate_frame'])
             elif self.zone == self.LEFT:
-                self._robot.look_at([1.0,0.5,0.0,'head_plate_frame'])
+                robot.look_at([0.5,1.0,1.0,'base_link'])
             elif self.zone == self.RIGHT:
-                self._robot.look_at([1.0,-0.5,0.0,'head_plate_frame'])
+                robot.look_at([0.5,-1.0,1.0,'base_link'])
             elif self.zone == self.FORWARD:
-                self._robot.look_at([1.0,0,1.0,'base_link'])
+                robot.look_at([1.0,0,1.0,'base_link'])
             elif self.zone == self.BEHIND:
-                self._robot.look_at([-2.0,0,1.0,'base_link'])
+                robot.look_at([-2.0,0,1.0,'base_link'])
 
             # Then, zone relative to an object
             elif self.zone in [self.ON, self.ABOVE]:
-                pose = self._robot.poses[self.object]
+                pose = robot.poses[self.object]
 
-                ok, bb = self._robot.execute([genom_request("spark", "GetBBPoints", [self.object])])
+                ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [self.object])])
 
                 if ok == 'OK': # we got the bounding box. Cool.
                     support_height = float(bb[2])
@@ -772,28 +785,27 @@ class Look(Desire):
                     logger.warning("No bounding-box for object %s. Can not reliably look 'on' it." % self.object)
                     pose['z'] += 0.2 #look 20 cm above the object.
 
-                self._robot.look_at(pose)
-                self._robot.sweep(45)
+                robot.look_at(pose)
+                robot.sweep(45)
 
             else:
-                logger.warning("Zone '%s' for look is not implemented. Looking directly at %s instead." % (self.zonetype, self.object))
+                logger.warning("Zone '%s' for look is not implemented. Looking directly at %s instead." % (self.zone, self.object))
                 try:
-                    self._robot.look_at(self.object)
+                    robot.look_at(self.object)
                 except UnknownFrameError:
-                    self._robot.say("I do not know this object!")
+                    robot.say("I do not know this object!")
 
 
 
         elif self.object:
             logger.info("%s wants to look at %s" % (self.doer, self.object))
             try:
-                self._robot.look_at(self.object)
+                robot.look_at(self.object)
             except UnknownFrameError:
-                self._robot.say("I do not know this object!")
+                robot.say("I do not know this object!")
         else:
-            if self._robot.poses.human(self.to):
-                self._robot.look_at(self.to)
-
+            if robot.poses.human(self.to):
+                robot.look_at(self.to)
 
 
 
