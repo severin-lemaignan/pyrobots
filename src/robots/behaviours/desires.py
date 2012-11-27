@@ -168,12 +168,19 @@ class Move(Desire):
             if not self.to:
                 self.to = robot.knowledge[self._sit + " actsOnObject *"][0]
 
-        # Check if our target is an object or not. If it's an object, we
-        # move close to it, but not *on* it.
-        if self.to + " rdf:type cyc:PartiallyTangible" in robot.knowledge:
-            self.target_is_object = True
+        # Do we have a special 'hard-coded' destination for manipulation?
+        if "%s_MANIPULATION" % str(self.to) in places.places():
+            self.target_is_object = False
+            logger.warning("Found a special manipulation place for %s. Overriding the destination with it." % self.to)
+            self.to = "%s_MANIPULATION" % self.to
         else:
-            self.target_is_object = False # We assume then it's a general location. We move *on* it.
+
+            # Check if our target is an object or not. If it's an object, we
+            # move close to it, but not *on* it.
+            if self.to + " rdf:type cyc:PartiallyTangible" in robot.knowledge:
+                self.target_is_object = True
+            else:
+                self.target_is_object = False # We assume then it's a general location. We move *on* it.
 
         self.track = track
         self.distance = distance
