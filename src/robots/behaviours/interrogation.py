@@ -4,9 +4,9 @@ an incoming question from the human.
 
 import time
 import logging
-import threading
 logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
+import threading
 
 from robots.exception import RobotError, UnknownFrameError
 from robots.behaviours.desires import Show
@@ -45,13 +45,24 @@ class Interrogation(object):
         else:
             self.object = None
 
-        self.verbalisation = robot.knowledge["%s verbalisesTo *" % self._sit]
-        if self.verbalisation:
-            self.verbalisation = self.verbalisation[0]
-        else:
-            self.verbalisation = ""
-
         self.name = self.__class__.__name__
+
+    def get_verbalization(self, timeout = 15):
+        attempts = 0
+        verbalisation = ""
+        while not verbalisation:
+            verbalisation = self._robot.knowledge["%s verbalisesTo *" % self._sit]
+            if verbalisation:
+                verbalisation = verbalisation[0]
+            else:
+                attempts +=1
+                time.sleep(1)
+
+            if attempts > timeout:
+                break
+
+        return verbalisation
+
     
     def perform(self):
         logger.info("Now performing " + self.name)
@@ -66,21 +77,17 @@ class Interrogation(object):
                 self._robot.look_at(self.owner)
             except UnknownFrameError: # the speaker is not in sight?
                 pass
-        self._robot.say(self.verbalisation)
 
 class Place(Interrogation):
     def __init__(self, situation, robot):
         super(Place, self).__init__(situation, robot)
 
     def _process(self):
-        super(Place, self).perform()
 
         logger.info("The human is looking for the localization of %s." % self.objects)
 
         if self.answered:
-            logger.info("I known the answer. Saying: %s" % self.verbalisation)
             self._robot.look_at(self.object)
-            self._robot.say(self.verbalisation)
             #if ("myself reaches %s" % self.object) in robot.knowledge:
             #TODO: random sit ID
             show = Show(situation = "showplace",
@@ -89,17 +96,20 @@ class Place(Interrogation):
                         performer = 'myself',
                         objects = self.objects,
                         receivers = self.owners)
-            show.perform()
+
+            #show.perform()
 
             #else:
             #    #TODO: pointing!
             #    pass
 
-            self._robot.look_at(self.owner)
+            try:
+                self._robot.look_at(self.owner)
+            except UnknownFrameError:
+                pass
 
         else:
-            logger.info("I do not known the answer :-( Saying: %s" % self.verbalisation)
-            self._robot.say(self.verbalisation)
+            logger.info("I do not known the answer :-(")
 
 class NotExistingQuestionTypeError(Exception):
     def __init__(self, value):
