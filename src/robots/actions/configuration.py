@@ -126,24 +126,7 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
 
 
     if not collision_avoidance:
-        if robot.hasmodule("pr2SoftMotion"):
-            actions = [
-            genom_request(
-                        "pr2SoftMotion", 
-                        "GotoQ",
-                    [forced_part if forced_part else part,
-                    1 if relative else 0,
-                    x,y,z,
-                    rx,ry,rz,
-                    torso, 
-                    pan, tilt, # head
-                    0.0, # laser tilt
-                    rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
-                    lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
-                    wait_for_completion = False if callback else True,
-                    callback = callback)
-                ]
-        elif robot.hasmodule("lwr"):
+        if robot.hasmodule("lwr"):
             actions = [
             genom_request(
                 "mhp",
@@ -171,6 +154,23 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
                 "TrackQ",
                 ["LWR_ARM_RIGHT", "mhpArmTraj", "LWR_TRACK_POSTER"]),
             wait(7)
+                ]
+        else: #default with PR2SoftMotion
+            actions = [
+            genom_request(
+                        "pr2SoftMotion", 
+                        "GotoQ",
+                    [forced_part if forced_part else part,
+                    1 if relative else 0,
+                    x,y,z,
+                    rx,ry,rz,
+                    torso, 
+                    pan, tilt, # head
+                    0.0, # laser tilt
+                    rq1, rq2, rq3, rq4, rq5, rq6, rq7, 0.0, 0.0, # Right arm
+                    lq1, lq2, lq3, lq4, lq5, lq6, lq7, 0.0, 0.0], # Left arm
+                    wait_for_completion = False if callback else True,
+                    callback = callback)
                 ]
 
 
