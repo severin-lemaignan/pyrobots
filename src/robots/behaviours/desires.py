@@ -150,24 +150,35 @@ class Desire(object):
             logger.info("Now performing " + self.name)
             self._robot.knowledge.add(["myself currentlyPerforms " + self._sit], "EPISODIC")
 
+        self._process()
+
+    def _process(self):
+        """ subclass responsability!
+        """
+        pass
+
 class Move(Desire):
-    def __init__(self, situation, robot):
+    def __init__(self, situation, robot, goal = None, track = True, distance = 1):
         super(Move, self).__init__(situation, robot)
         
-        self.to = robot.knowledge[self._sit + " hasGoal *"][0]
-        if not self.to:
-            self.to = robot.knowledge[self._sit + " actsOnObject *"][0]
+        if goal:
+            self.to = goal
+        else:
+            self.to = robot.knowledge[self._sit + " hasGoal *"][0]
+            if not self.to:
+                self.to = robot.knowledge[self._sit + " actsOnObject *"][0]
 
         # Check if our target is an object or not. If it's an object, we
         # move close to it, but not *on* it.
-        if (self.to not in ["CTL_TABLE"]) and \
-           (self.to + " rdf:type cyc:PartiallyTangible" in robot.knowledge):
+        if self.to + " rdf:type cyc:PartiallyTangible" in robot.knowledge:
             self.target_is_object = True
         else:
             self.target_is_object = False # We assume then it's a general location. We move *on* it.
 
-    def perform(self):
-        super(Move, self).perform()
+        self.track = track
+        self.distance = distance
+
+    def _process(self):
         logger.info("Moving to: " + self.to)
 
         robot = self._robot
@@ -222,8 +233,7 @@ class Get(Desire):
         except IndexError:
             self.to = robot.knowledge["* desires " + self._sit][0] # if no destinary, use the desire issuer.
     
-    def perform(self):
-        super(Get, self).perform()
+    def _process(self):
 
         robot = self._robot
 
@@ -283,8 +293,7 @@ class Show(Desire):
         else:
             self.to = robot.knowledge[self._sit + " receivedBy *"]
     
-    def perform(self):
-        super(Show, self).perform()
+    def _process(self):
         robot = self._robot
 
         logger.info(str(self.performer) + " wants to show " + str(self.objects) + " to " + str(self.to))
@@ -319,8 +328,7 @@ class Give(Desire):
         except IndexError:
             self.to = robot.knowledge["* desires " + self._sit][0] # if no destinary, use the desire issuer.
  
-    def perform(self):
-        super(Give, self).perform()
+    def _process(self):
         logger.info(str(self.doer) + " wants to give " + str(self.objects) + " to " + str(self.to))
         self._robot.say("Let's give " + self.objects[0] + " to " + self.to)
         
@@ -464,7 +472,7 @@ class Pick(Desire):
 
         return True
 
-    def perform(self):
+    def _process(self):
         self.pick()
 
 class Bring(Desire):
@@ -489,8 +497,7 @@ class Bring(Desire):
             self._robot.manipose()
             self.in_safe_nav_pose = True
 
-    def perform(self):
-        super(Bring, self).perform()
+    def _process(self):
 
         robot = self._robot
         obj = self.objects[0]
@@ -549,8 +556,7 @@ class Put(Desire):
         self.to = robot.knowledge[self._sit + " receivedBy *"][0]
 
 
-    def perform(self):
-        super(Put, self).perform()
+    def _process(self):
 
         robot = self._robot
 
@@ -610,8 +616,7 @@ class Test(Desire):
         super(Test, self).__init__(situation, robot)
         
         self.doer = robot.knowledge[self._sit + " performedBy *"]
-    def perform(self):
-        super(Test, self).perform()
+    def _process(self):
         logger.info("hello robot 22222")
         obj = "LOW_TABLE_LARGE"
         poseDist = 0.1
@@ -624,8 +629,7 @@ class Stop(Desire):
         self.doer = robot.knowledge[self._sit + " performedBy *"]
         self._priority = 1
     
-    def perform(self):
-        super(Stop, self).perform()
+    def _process(self):
         self._robot.say("Alright, I stop")
         # stop has a high priority: it will cancel all currently running actions
         self._robot.manipose()
@@ -641,8 +645,7 @@ class Hide(Desire):
         self.doer = robot.knowledge[self._sit + " performedBy *"]
         self.to = robot.knowledge[self._sit + " receivedBy *"]
     
-    def perform(self):
-        super(Hide, self).perform()
+    def _process(self):
         logger.info(str(self.doer) + " wants to hide " + str(self.objects) + " to " + str(self.to))
         
         planid = robot.planning.actionplanning(robot.planning.HIDE, self.objects[0], self.to[0], self.doer[0])
@@ -785,32 +788,6 @@ class Look(Desire):
 
 
 
-
-class Display(Desire):
-    def __init__(self, situation, robot):
-        super(Display, self).__init__(situation, robot)
-
-        self.window = robot.knowledge[self._sit + " involves *"][0]
-
-    def perform(self):
-        super(Display, self).perform()
-
-        logger.info("Let's try to display " + str(self.window))
-
-        self._robot.display(self.window)
-
-class Display(Desire):
-    def __init__(self, situation, robot):
-        super(Display, self).__init__(situation, robot)
-
-        self.window = robot.knowledge[self._sit + " involves *"][0]
-
-    def perform(self):
-        super(Display, self).perform()
-
-        logger.info("Let's try to display " + str(self.window))
-
-        self._robot.display(self.window)
 
 class NotExistingDesireTypeError(Exception):
     def __init__(self, value):
