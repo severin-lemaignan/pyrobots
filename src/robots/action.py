@@ -60,7 +60,13 @@ def ros_request(client, goal, wait_for_completion = True, callback = None, feedb
     :param callback: an (optional) callback that is called when the action is completed.
     :param feedback: an (optional) callback that is called everytime the feedback topic is updated.
     """
-    return {"name": client.action_client.ns,
+    try:
+        name = client.action_client.ns
+    except AttributeError:
+        #probably in dummy mode!
+        name = client
+
+    return {"name": name,
             "middleware": "ros",
             "client": client,
             "goal": goal,
