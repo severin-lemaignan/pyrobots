@@ -53,6 +53,13 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
                 logger.warning(str(e))
                 logger.warning("Skipping this desire.")
 
+    def onverbalization(e):
+        for t in e:
+            text = pr2.knowledge["%s verbalisesTo *" % t][0]
+            logger.warning("New verbalization from Dialogs: <%s>" % text)
+            pr2.say(t)
+
+
     if "--init" in sys.argv:
         logger.info("Initializing the robot...")
         pr2.init(p3d = "/u/magharbi/openrobots/share/move3d/assets/ADREAM/ADREAM-assets.p3d")
@@ -65,6 +72,8 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
 
     # subscribe to changes of emotional state
     pr2.knowledge.subscribe([human + " experiences ?s"], on_human_experience)
+
+    pr2.knowledge.subscribe(["?sit verbalisesTo ?s"], onverbalization, var = "?sit")
 
     try:
         logger.info("Waiting for events...")
