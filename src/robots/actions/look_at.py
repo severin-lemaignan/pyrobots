@@ -30,6 +30,9 @@ def look_at(robot, place, callback = None):
     :param place: any valid pyrobots place (spark id, ROS frame, [x,y,z],...)
     """
 
+    if not place:
+        return []
+
     place = robot.poses[place]
 
     if robot.hasmodule("pr2SoftMotion"):
@@ -277,8 +280,8 @@ def sweep(robot, amplitude = 90, speed = 0.2):
 
     return actions
 
-###############################################################################
 
+###############################################################################
 @tested("21/11/2012")
 @action
 def switch_active_stereo_pair(robot, pair = "wide_stereo"):
