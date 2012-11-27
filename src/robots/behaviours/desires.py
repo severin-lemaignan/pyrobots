@@ -13,28 +13,54 @@ from robots.action import genom_request
 def nop(void, void2=None):
     pass
 
-def isseen(robot, obj):
-    """ Hackish!! Bypass SPARK and directly check visibility from 
-    viman poster
+def lookforobject(robot, obj, max_attempts = 4, mode = "wide_stereo"):
+    """ Moves left and right the head to try to see an object.
+
+    :returns: True is the object is seen, False if it failed.
     """
-    spark = robot.poco_modules["spark"]
-    state = spark.poster("PositionsInfopositionsStatus")
 
-    lastseen = -1
-    for i in range(len(state)):
-        if state[i] == obj:
-            lastseen = int(state[i+5])
+    robot.switch_active_stereo_pair(mode)
 
-    if lastseen == -1:
-        raise Exception("Object " + obj + " is not a special SPARK object (cf hri_knowledge.cpp:117. Argh!)")
+    robot.look_at([1.0,0.0,0.5,"base_link"])
 
-    if lastseen == 0:
-        return False
-    else:
-        seenago = int(time.time()) - lastseen
-        logger.debug("Last seen " + str(seenago) + " sec ago")
-        if seenago < 2:
-            return True
+    robot.wait(2)
+
+    attempts = 1
+    #while not (["myself sees " + obj] in self._robot.knowledge) \
+    while not robot.state.isseen(obj) \
+            and attempts <= max_attempts:
+
+        # Looks once left, once right
+        robot.look_at([1.0, 0.3 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
+        robot.wait(2)
+        if robot.state.isseen(obj):
+            break
+
+        robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
+        robot.wait(2)
+        if robot.state.isseen(obj):
+            break
+
+        robot.look_at([1.0, 0 , 0.5,"base_link"])
+        robot.wait(1)
+        attempts += 1
+
+
+    if (attempts <= max_attempts): #ok, found
+        robot.look_at(obj)
+        if mode == "wide_stereo":
+            # focus on object to get an accurate position
+            robot.switch_active_stereo_pair("narrow_stereo")
+            robot.wait(2)
+        robot.switch_active_stereo_pair("wide_stereo")
+        return True
+    elif mode == "wide_stereo":
+        # try by looking more closely
+        return lookforobject(robot, obj, max_attempts, mode = "narrow_stereo")
+    else: # not found
+        #
+        robot.look_at([1.0,0.0,1.0,"base_link"])
+        robot.switch_active_stereo_pair("wide_stereo")
         return False
 
 class DesiresPerformer():
@@ -310,56 +336,6 @@ class Pick(Desire):
         self.doer = robot.knowledge[self._sit + " performedBy *"]
 
 
-    def findobject(self, obj, max_attempts = 4, mode = "wide_stereo"):
-        """ Moves left and right the head to try to see an object.
-        Uses the knowledge base to check the object visibily.
-
-        :returns: True is the object is seen, False if it failed.
-        """
-
-        self._robot.switch_active_stereo_pair(mode)
-
-        self._robot.look_at([1.0,0.0,0.5,"base_link"])
-
-        self._robot.wait(2)
-
-        attempts = 1
-        #while not (["myself sees " + obj] in self._robot.knowledge) \
-        while not isseen(self._robot, obj) \
-              and attempts <= max_attempts:
-
-            # Looks once left, once right
-            self._robot.look_at([1.0, 0.3 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
-            self._robot.wait(2)
-            if isseen(self._robot, obj):
-                break
-
-            self._robot.look_at([1.0, 0.6 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
-            self._robot.wait(2)
-            if isseen(self._robot, obj):
-                break
-
-            self._robot.look_at([1.0, 0 , 0.5,"base_link"])
-            self._robot.wait(1)
-            attempts += 1
-
-
-        if (attempts <= max_attempts): #ok, found
-            self._robot.look_at(obj)
-            if mode == "wide_stereo":
-                # focus on object to get an accurate position
-                self._robot.switch_active_stereo_pair("narrow_stereo")
-                self._robot.wait(2)
-            self._robot.switch_active_stereo_pair("wide_stereo")
-            return True
-        elif mode == "wide_stereo":
-            # try by looking more closely
-            return self.findobject(obj, max_attempts, mode = "narrow_stereo")
-        else: # not found
-            #
-            self._robot.look_at([1.0,0.0,1.0,"base_link"])
-            self._robot.switch_active_stereo_pair("wide_stereo")
-            return False
 
     def giveup(self):
         robot = self._robot

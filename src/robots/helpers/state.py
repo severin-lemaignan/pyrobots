@@ -1,3 +1,8 @@
+import time
+
+import logging; logger = logging.getLogger("robot." + __name__)
+logger.setLevel(logging.DEBUG)
+
 from robots.action import *
 
 class PR2StateManager:
@@ -13,10 +18,53 @@ class PR2StateManager:
         self.robot = robot
 
     @helper("state")
+    def isseen(self, obj):
+        """ Returns true if an object is currently seen by the
+        robot.
+
+        The semantics of "seen" can vary: in the current implementation,
+        it means that the 2D ARToolkit tag has been seen in the
+        last 2 seconds.
+
+        :param object: the object (SPARK ID) to check
+        :returns: true if the object is visible, false otherwise.
+        """
+        if not obj:
+            return False
+
+        try:
+            spark = self.robot.poco_modules["spark"]
+        except KeyError:
+            logger.warning("'isseen' requires 'spark' Genom module, but it"
+                           " does not seem to be started. Assuming object"
+                           "not visible.")
+            return False
+
+        state = spark.poster("PositionsInfopositionsStatus")
+
+        lastseen = -1
+        for i in range(len(state)):
+            if state[i] == obj:
+                lastseen = int(state[i+5])
+
+        if lastseen == -1:
+            raise Exception("Object " + obj + " is not a special SPARK object (cf hri_knowledge.cpp:117. Argh!)")
+
+        if lastseen == 0:
+            return False
+        else:
+            seenago = int(time.time()) - lastseen
+            logger.debug("%s last seen %dsec ago" % (obj, seenago))
+            if seenago < 2:
+                return True
+            return False
+
+
+
+    @helper("state")
     def getjoint(self, name):
         
         if self.robot.hasROS():
-            import roslib; roslib.load_manifest('pyrobots_actionlib')
             import rospy
             from sensor_msgs.msg import JointState
             
@@ -51,7 +99,6 @@ class PR2StateManager:
     @helper("state")
     def distance2obstacle(self):
         
-        import roslib; roslib.load_manifest('pyrobots_actionlib')
         import rospy
         from sensor_msgs.msg import LaserScan
         
