@@ -1,14 +1,4 @@
 {
-        "CTL_TABLE":{
-                "_comment": "last desk of the control desks",
-                "x": 6.59, 
-                "y": 5.44,
-                "z": 0,
-                "qx": 0.0,
-                "qy": 0.0,
-                "qz": -0.728,
-                "qw": 0.686
-        },
         "LOW_TABLE_LARGE":{
                 "_comment": "The low table in the living room",
                 "x": 4.96,
@@ -18,16 +8,6 @@
                 "qy": 0.0,
                 "qz": 0.99,
                 "qw": -0.132
-        },
-        "CHEST":{
-                "_comment": "The chest in the bedroom",
-                "x": 5.26,
-                "y": 11.78,
-                "z": 0,
-                "qx": 0.0,
-                "qy": 0.0,
-                "qz": 0.0,
-                "qw": 1.0
         },
         "BASE":{
                 "_comment": "Next to the control desks",
@@ -48,24 +28,5 @@
                 "qy": 0.0,
                 "qz": 0.893,
                 "qw": 0.45
-        },
-        "CONSOLE":{
-                "_comment": "The console in the bedroom",
-                "x": 4.5,
-                "y": 12.3,
-                "z": 0,
-                "qx": 0.0,
-                "qy": 0.0,
-                "qz": 0.675,
-                "qw": 0.738
-        },
-        "LOW_TABLE_SMALL_1":{
-                "x": 3.57,
-                "y": 10.04,
-                "z": 0,
-                "qx": 0.0,
-                "qy": 0.0,
-                "qz": 1.0,
-                "qw": 0.0
         }
 }
