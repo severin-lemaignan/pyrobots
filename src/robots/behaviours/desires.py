@@ -393,58 +393,64 @@ class Pick(Desire):
 
             robot.say("Let's take it")
 
-            loc = self._robot.knowledge[obj + " isAt *"]
-            if not loc:
-                logger.warning("No place found for " + obj + "! I can not bring it")
-                robot.say("Humm. I do not know where is the object...")
-                return False
-            #robot.say(obj + " is on " + loc[0] + ". Let go there.")
+            # Object not visible? try to find it
+            if not robot.state.isseen(obj):
 
-            track_target = robot.poses[loc[0]]
-            track_target["z"] += 1.0
-            robot.track(track_target)
-
-            robot.goto(loc[0])
-            robot.cancel_track()
-            self._robot.look_at([1.0,0.0,0.5,"base_link"])
-
-            #ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [loc[0]])])
-            #ok, bb = robot.poco_modules["spark"].GetBBPoints(loc[0])
-
-            #if ok=="OK":
-            #    support_height = float(bb[2])
-            #    logger.info("The object is placed on a support that is at " + str(support_height) + "m.")
-
-            #    if support_height < 0.6:
-            #        robot.settorso(0.0)
-
-            #    if support_height > 0.9:
-            #        robot.settorso(0.3)
-
-
-            robot.extractpose(nop)
-            hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
-            if not hasdocked:
-                robot.translate(0.3)
-
-            robot.say("Ok. Now, where is my object?")
-            
-            ok = self.findobject(obj, max_attempts = 1)
-            
-            if not ok:
-                logger.warning("I can not see the object " + obj + "! Giving up.")
-                robot.say("I did not see your object... Let's try again.")
-                ok = self.findobject(obj, max_attempts = 2)
-                if not ok:
-                    logger.warning("Second Findobject also failed!")
-                    try:
-                        robot.look_at(self.to)
-                    except Exception: # Human not here?
-                        pass
-
-                    robot.say("I give up!")
-                    self.giveup()
+                loc = robot.knowledge[obj + " isAt *"]
+                if not loc:
+                    logger.warning("No place found for " + obj + "! I can not bring it")
+                    robot.say("Humm. I do not know where is the object...")
                     return False
+                #robot.say(obj + " is on " + loc[0] + ". Let go there.")
+
+                track_target = robot.poses[loc[0]]
+                track_target["z"] += 1.0
+                robot.track(track_target)
+
+                move = Move(self._sit, robot, loc[0], track = False, distance = 2)
+                move.perform()
+                robot.extractpose(nop)
+                move = Move(self._sit, robot, loc[0], track = False)
+                move.perform()
+                robot.cancel_track()
+                robot.look_at([1.0,0.0,0.5,"base_link"])
+
+                #ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [loc[0]])])
+                #ok, bb = robot.poco_modules["spark"].GetBBPoints(loc[0])
+
+                #if ok=="OK":
+                #    support_height = float(bb[2])
+                #    logger.info("The object is placed on a support that is at " + str(support_height) + "m.")
+
+                #    if support_height < 0.6:
+                #        robot.settorso(0.0)
+
+                #    if support_height > 0.9:
+                #        robot.settorso(0.3)
+
+
+                hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
+                if not hasdocked:
+                    robot.translate(0.3)
+
+                robot.say("Ok. Now, where is my object?")
+                
+                ok = lookforobject(robot, obj, max_attempts = 1)
+                
+                if not ok:
+                    logger.warning("I can not see the object " + obj + "! Giving up.")
+                    robot.say("I did not see your object... Let's try again.")
+                    ok = lookforobject(robot, obj, max_attempts = 2)
+                    if not ok:
+                        logger.warning("Second Findobject also failed!")
+                        try:
+                            robot.look_at(self.to)
+                        except Exception: # Human not here?
+                            pass
+
+                        robot.say("I give up!")
+                        self.giveup()
+                        return False
 
             robot.say("Ok, I see the object. Let's try to pick it.")
             ok, res = robot.pick(obj)
@@ -453,7 +459,7 @@ class Pick(Desire):
                 logger.warning("Pick failed! Msg:" + str(res) )
                 robot.say("I think I missed the object... Let's try one more time.")
                 robot.extractpose()
-                self.findobject(obj, max_attempts = 3)
+                lookforobject(robot, obj, max_attempts = 3)
                 ok, res = robot.pick(obj)
                 if not ok:
                     logger.warning("Second Pick also failed! Msg:" + str(res) )
