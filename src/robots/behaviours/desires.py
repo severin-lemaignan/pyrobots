@@ -258,27 +258,27 @@ class Get(Desire):
                 robot.goto("BASE")
                 return
 
-        self._robot.take(self.to, self.objects[0])
+        robot.take(self.to, self.objects[0])
 
         # look in the hand where the object is
         #self._robot.switch_active_stereo_pair("narrow_stereo")
-        self._robot.extractpose()
-        self._robot.look_at([0.2,0,0.1,"r_gripper_r_finger_link"])
-        self._robot.wait(2)
-        if not isseen(self._robot, self.objects[0]):
-            self._robot.wait(2)
+        robot.extractpose()
+        robot.look_at([0.2,0,0.1,"r_gripper_r_finger_link"])
+        robot.wait(2)
+        if not robot.state.isseen(self.objects[0]):
+            robot.wait(2)
 
         #self._robot.switch_active_stereo_pair("wide_stereo")
 
-        if not isseen(self._robot, self.objects[0]):
-            self._robot.say("I do not see your object...")
+        if not robot.state.isseen(self.objects[0]):
+            robot.say("I do not see your object...")
         else:
-            self._robot.attachobject(self.objects[0])
+            robot.attachobject(self.objects[0])
 
         if robot.poses.human(self.to):
-            self._robot.look_at(self.to)
+            robot.look_at(self.to)
 
-        self._robot.manipose()
+        robot.manipose()
 
 class Show(Desire):
     def __init__(self, situation, robot, owners = [], performer = None, objects = [], receivers = []):
