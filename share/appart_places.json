@@ -11,7 +11,7 @@
         },
         "TABLE_1_MANIPULATION":{
                 "_comment": "Manipulation location for last desk of the control desks",
-                "x": 6.59, 
+                "x": 7.2,
                 "y": 5.44,
                 "z": 0,
                 "qx": 0.0,
@@ -21,13 +21,13 @@
         },
         "LOW_TABLE_LARGE_MANIPULATION":{
                 "_comment": "Manipulation location for The low table in the living room",
-                "x": 4.96,
-                "y": 7.05,
+                "x": 5.06,
+                "y": 6.99,
                 "z": 0,
                 "qx": 0.0,
                 "qy": 0.0,
                 "qz": 0.99,
-                "qw": -0.132
+                "qw": -0.105
         },
         "CHEST_MANIPULATION":{
                 "_comment": "Manipulation location for The chest in the bedroom",
@@ -51,13 +51,13 @@
         },
         "CONSOLE_MANIPULATION":{
                 "_comment": "Manipulation location next to the console in the bedroom",
-                "x": 4.5,
-                "y": 12.3,
+                "x": 5.15,
+                "y": 11.5,
                 "z": 0,
                 "qx": 0.0,
                 "qy": 0.0,
-                "qz": 0.675,
-                "qw": 0.738
+                "qz": 0.038,
+                "qw": 0.999
         },
         "LOW_TABLE_SMALL_1_MANIPULATION":{
                 "_comment": "Manipulation location next to the small low IKEA table",
