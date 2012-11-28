@@ -4,6 +4,11 @@ from robots.action import *
 from configuration import setpose
 
 def ros_translate(robot, x, y = 0.0, speed = 0.1):
+    """
+    Note in case of shaky movements: 2 options to check:
+     - pr2_teleop can interfere (but only the joystick teleop from 2D nav is fine)
+     - the rate of publishing of the twist message can be in cause (typically, if the call to robot.poses.myself is too long)
+    """
     import math
     import rospy
     from geometry_msgs.msg import Twist
