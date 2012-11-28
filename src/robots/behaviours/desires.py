@@ -5,6 +5,7 @@ logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 from robots.actions.manipulation import haspickedsmthg
+from robots.helpers import places
 
 from robots.exception import RobotError, UnknownFrameError
 
@@ -48,11 +49,6 @@ def lookforobject(robot, obj, max_attempts = 4, mode = "wide_stereo"):
 
     if (attempts <= max_attempts): #ok, found
         robot.look_at(obj)
-        if mode == "wide_stereo":
-            # focus on object to get an accurate position
-            robot.switch_active_stereo_pair("narrow_stereo")
-            robot.wait(2)
-        robot.switch_active_stereo_pair("wide_stereo")
         return True
     elif mode == "wide_stereo":
         # try by looking more closely
@@ -417,11 +413,10 @@ class Pick(Desire):
                 track_target["z"] += 1.0
                 robot.track(track_target)
 
-                move = Move(self._sit, robot, loc[0], track = False, distance = 2)
-                move.perform()
-                robot.extractpose(nop)
                 move = Move(self._sit, robot, loc[0], track = False)
                 move.perform()
+
+                robot.extractpose(nop)
                 robot.cancel_track()
                 robot.look_at([1.0,0.0,0.5,"base_link"])
 
@@ -438,7 +433,7 @@ class Pick(Desire):
                 #    if support_height > 0.9:
                 #        robot.settorso(0.3)
 
-
+                robot.settorso(0.1, nop)
                 hasdocked, res = robot.dock() # docking fails if no obstacle is seen within 1m
                 if not hasdocked:
                     robot.translate(0.3)
