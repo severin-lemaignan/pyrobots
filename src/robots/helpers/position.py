@@ -159,14 +159,14 @@ class PoseManager:
                 return self.get(p[raw]) # normalize it
             
             #Either a SPARK object name or a ROS TF frame
-            #Trying with SPARK
-            if self.spark:
-                pose = self.spark.getabspose(raw)
-        
+            if self.ros:
+                pose = self.ros.getabspose(raw)
+
             if not pose:
                 #Trying with ROS
-                if self.ros:
-                    pose = self.ros.getabspose(raw)
+                #Trying with SPARK
+                if self.spark:
+                    pose = self.spark.getabspose(raw)
                 if not pose:
                     raise UnknownFrameError("Unknown object or frame '%s'" % raw)
                 else:
