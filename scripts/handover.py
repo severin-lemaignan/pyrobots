@@ -57,7 +57,7 @@ with robots.PR2(knowledge = pyoro.Oro(), init = False) as pr2:
         for t in e:
             text = pr2.knowledge["%s verbalisesTo *" % t][0]
             logger.warning("New verbalization from Dialogs: <%s>" % text)
-            pr2.say(t)
+            pr2.say(text)
 
 
     if "--init" in sys.argv:
