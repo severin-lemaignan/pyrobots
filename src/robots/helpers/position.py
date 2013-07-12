@@ -39,6 +39,15 @@ class PoseManager:
             logger.warning("Initializing the PoseManager without SPARK support." +\
                            "Positions of SPARK objects won't be available.")
             self.spark = None
+
+        if robot.supports(NAOQI):
+            from robots.action import naoqi_request
+            self.naoqi = NAOqiPositionKeeper(robot, self)
+        else:
+            logger.warning("Initializing the PoseManager without NAOqi support." +\
+                           "Positions of NAOqi objects/bodies won't be available.")
+            self.naoqi = None
+
         
     def quaternion_from_euler(self, rx, ry, rz):
         return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
@@ -152,21 +161,26 @@ class PoseManager:
                 return self.get(p[raw]) # normalize it
             
             #Either a SPARK object name or a ROS TF frame
+            #Trying with ROS
             if self.ros:
                 pose = self.ros.getabspose(raw)
-
-            if not pose:
-                #Trying with ROS
-                #Trying with SPARK
-                if self.spark:
-                    pose = self.spark.getabspose(raw)
-                if not pose:
-                    raise UnknownFrameError("Unknown object or frame '%s'" % raw)
-                else:
+                if pose:
                     return self.normalize(pose)
-            else:
-                return self.normalize(pose)
+
+            #Trying with SPARK
+            if self.spark:
+                pose = self.spark.getabspose(raw)
+                if pose:
+                    return self.normalize(pose)
+
+             #Trying with NAOqi
+            if self.naoqi:
+                pose = self.naoqi.getabspose(raw)
+                if pose:
+                    return self.normalize(pose)
             
+            raise UnknownFrameError("Unknown object or frame '%s'" % raw)
+        
         else:
             try:
                 # SPARK tuple (object name, part)?
@@ -236,6 +250,50 @@ class PoseManager:
         return math.sqrt(math.pow(p2["x"] - p1["x"], 2) + \
                          math.pow(p2["y"] - p1["y"], 2) + \
                          math.pow(p2["z"] - p1["z"], 2))
+
+    def _xyz_to_mat44(self, pos):
+        return transformations.translation_matrix((pos['x'], pos['y'], pos['z']))
+
+    def _xyzw_to_mat44(self, ori):
+        return transformations.quaternion_matrix((ori['qx'], ori['qy'], ori['qz'], ori['qw']))
+
+    def _to_mat4(self, pose):
+        return numpy.dot(self._xyz_to_mat44(pose), self._xyzw_to_mat44(pose))
+
+    @helper("poses")
+    def inframe(self, pose, frame):
+        """ Transform a pose from one frame to another one.
+
+        Uses transformation matrices. Could be refactored to use directly
+        quaternions.
+        """
+        if pose['frame'] == "map":
+            orig = numpy.identity(4)
+        else:
+            orig = self._to_mat4(self.get(pose["frame"]))
+
+        if frame == "map":
+            dest = numpy.identity(4)
+        else:
+            dest = numpy.linalg.inv(self._to_mat4(self.get(frame)))
+
+        poseMatrix = self._to_mat4(pose)
+
+        transf = numpy.dot(dest, orig)
+        transformedPose = numpy.dot(transf, poseMatrix)
+
+        qx,qy,qz,qw = transformations.quaternion_from_matrix(transformedPose)
+        x,y,z = transformations.translation_from_matrix(transformedPose)
+
+        return {"x":x,
+                "y":y,
+                "z":z,
+                "qx":qx,
+                "qy":qy,
+                "qz":qz,
+                "qw":qw,
+                "frame": frame}
+
 
     
 class ROSPositionKeeper:
@@ -325,8 +383,7 @@ class ROSPositionKeeper:
 
 
     def xyz2pantilt(self, x, y, z, frame = "map"):
-        """ BROKEN! Computation of pan and tilt is wrong.
-
+        """
         Convert a xyz target to pan and tilt angles for the head.
 
         :param x: the x coordinate
@@ -373,6 +430,65 @@ class SPARKPositionKeeper:
             
         return (x, y, z, roll, pitch, yaw)
         
+
+class NAOqiPositionKeeper:
+    def __init__(self, robot, posemanager):
+        from naoqi import motion
+
+        self.FRAME_ROBOT = motion.FRAME_ROBOT
+        self.FRAME_WORLD = motion.FRAME_WORLD
+        self.robot = robot
+
+        self.posemanager = posemanager
+
+        ok, self.bodies = self.robot.execute([naoqi_request("motion", "getBodyNames", ["Body"])])
+        if not ok:
+            logger.error("Can not connect to NAOqi motion proxy! pyRobots is likely not able to work with NAOqi.")
+        ok, sensors = self.robot.execute([naoqi_request("motion", "getSensorNames", ["Body"])])
+        
+        self.bodies += sensors
+        self.bodies += ["Torso", "Head", "LArm", "RArm", "LLeg", "RLeg"]
+
+
+        logger.debug("List of NAOqi bodies: %s" % str(self.bodies))
+
+    def xyz2pantilt(self, pose):
+        """
+        :param x,y,z: in world frame, in meters
+        :returns: (pan, tilt) in radians
+        """
+        import pdb;pdb.set_trace()
+
+        pose = self.posemanager.inframe(pose, 'Head')
+
+        x = pose['x']
+        y = pose['y']
+        z = pose['z']
+
+        pan = numpy.arctan2(y, x)
+        tilt = numpy.arctan2(z, x)
+
+        logger.debug("Computed head pan: %s, tilt: %s" % (pan, tilt))
+        return (pan,tilt)
+
+
+
+    def getabspose(self, obj):
+
+        # On NAO, the 'base_link' is the torso
+        if obj == "base_link":
+            obj = "Torso"
+
+        if obj not in self.bodies:
+            return None
+
+        ok, res = self.robot.execute([naoqi_request("motion", "getPosition", [obj, self.FRAME_WORLD, True])])
+        
+        if not ok:
+            logger.warning("Unable to get the position of %s" % obj)
+            return None
+
+        return res
 
 def isin(point,polygon):
     """
