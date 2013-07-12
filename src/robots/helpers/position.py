@@ -2,6 +2,8 @@ import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 import math
+import numpy
+import transformations
 
 from robots.lowlevel import *
 from robots.action import *
@@ -28,8 +30,7 @@ class PoseManager:
             self.ros = ROSPositionKeeper()
         else:
             logger.warning("Initializing the PoseManager without ROS support." +\
-                           "TF transformations and conversions between" +\
-                           " quaternions and euler angles won't be available.")
+                           "TF transformations won't be available.")
             self.ros = None
             
         if robot.supports(POCOLIBS) and robot.hasmodule('spark'):
@@ -41,17 +42,9 @@ class PoseManager:
             self.spark = None
         
     def quaternion_from_euler(self, rx, ry, rz):
-        if not self.ros:
-            raise RobotError("ROS support required for conversions between quaternions" +\
-            " and euler angles.")
-        from tf import transformations
         return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
     
     def euler_from_quaternion(self, rx, ry, rz):
-        if not self.ros:
-            raise RobotError("ROS support required for conversions between quaternions" +\
-            " and euler angles.")
-        from tf import transformations
         return transformations.euler_from_quaternion(pose['qx'], pose['qy'], pose['qz'], pose['qw'], 'sxyz')
         
     def normalizedict(self, pose):
@@ -124,7 +117,7 @@ class PoseManager:
             x,y,z, qx, qy, qz, qw, frame = pose
             return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame': frame})
        
-        raise RobotError("Don't know what to do with pose as array %s" % pose)
+        raise RobotError("Don't know what to do with pose as array %s" % str(pose))
     
     def normalize(self, pose):
         if isinstance(pose, list) or isinstance(pose, tuple):
@@ -326,44 +319,12 @@ class ROSPositionKeeper:
         :param frame: the frame in which coordinates are interpreted
         :returns: (pan, tilt) in radians
         """
-
-        import numpy
-        import math
-        #from geometry_msgs.msg import PointStamped
-        #import rospy
-        #from tf import transformations
-
-        #goal = PointStamped()
-        #goal.header.frame_id =frame
-        #goal.header.stamp = rospy.Time(0);
-        #goal.point.x = x
-        #goal.point.y = y
-        #goal.point.z = z
-        #frame = 'map'
-
-        #goalInFrame = PointStamped()
-        #self.tf.waitForTransform(frame, 'base_footprint', rospy.Time(0), rospy.Duration(4.0))
-        #goalInFrame = self.tf.transformPoint('base_footprint',goal)
-
-        #x = goalInFrame.point.x
-        #y = goalInFrame.point.y
-        #z = goalInFrame.point.z
-        
-        ##self.tf = TransformListener()
-        ## +0.067 to take into account the translation between base_footprint and head_pan_link
-        #pan= numpy.arctan2(y, x+0.067)
-        #self.tf.waitForTransform(frame, 'head_pan_link', rospy.Time(0), rospy.Duration(4.0))
-        #(transTilt,rotTilt) = self.tf.lookupTransform('head_pan_link', frame, rospy.Time(0))
-        #matBaseTilt= numpy.dot(transformations.translation_matrix(transTilt), transformations.quaternion_matrix(rotTilt))
-        #xyzTilt = tuple(numpy.dot(matBaseTilt, numpy.array([x, y, z, 1.0])))[:3]
-        #tilt= numpy.arctan2(-xyzTilt[2], numpy.sqrt(math.pow(xyzTilt[0],2)+math.pow(xyzTilt[1],2)))
-    
         t = self.tf.getLatestCommonTime("/head_pan_link", frame)
         base, quaternion = self.tf.lookupTransform("/head_pan_link", frame, t)
         
         target = [base[0] + x, base[1] + y, base[2] + z]
-        pan = numpy.arctan2(target[0], target[1])
-        tilt = numpy.arctan2(target[0], target[2])
+        pan = numpy.arctan2(target[1], target[0])
+        tilt = numpy.arctan2(target[2], target[0])
         
         return (pan,tilt)
 
