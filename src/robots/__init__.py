@@ -65,6 +65,9 @@ class Robot(object):
             rxconsole = roslogger.RXConsoleHandler()
             logging.getLogger("robot").addHandler(rxconsole)
 
+        if self.supports(NAOQI):
+            from lowlevel._naoqi import NAOqiActions
+            self.naoqiactions = NAOqiActions(host, port)
 
         # Import all modules under robots/actions/
         import actions
@@ -175,6 +178,15 @@ class Robot(object):
 
         return self.rosactions.execute(action)
 
+    def _execute_naoqi(self, action):
+
+        if not self.supports(NAOQI):
+            raise RobotError("This action '" + action["request"] + "' "
+                     "requires NAOqi, but this ActionPerformer "
+                     "has been started without it.")
+
+        return self.naoqiactions.execute(action)
+
 
     def _execute_python(self, action):
         
@@ -203,6 +215,9 @@ class Robot(object):
 
         if self.supports(ROS):
             self.rosactions.cancelall()
+
+        if self.supports(NAOQI):
+            self.naoqiactions.cancelall()
 
     def _cancel_all_background_actions(self):
         robotlog.warning("Aborting all background tasks...")
@@ -259,6 +274,10 @@ class Robot(object):
                     res = self._execute_ros(action)
                     if res:
                         result = res
+                elif action["middleware"] == "naoqi":
+                    res = self._execute_naoqi(action)
+                    if res:
+                        result = res
                 elif action["middleware"] == "background":
                     res = self._execute_background(action)
                     if res:
@@ -310,6 +329,13 @@ class JidoSimu(Robot):
             robotlog.info("Initializing modules...")
             self.init()
             robotlog.info("Initialization done.")
+
+class Nao(Robot):
+    def __init__(self, host = "nao.local", port = 9559, knowledge = None, dummy = False):
+        super(self.__class__,self).__init__(host, port, supports= NAOQI, knowledge = knowledge, dummy = dummy)
+        robotlog.info("Actions loaded for Nao.")
+
+        self.id = "NAO"
 
 
 import __main__ as main

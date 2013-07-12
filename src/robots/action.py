@@ -116,6 +116,15 @@ def ros_request(client, goal, wait_for_completion = True, callback = None, feedb
             "callback": callback,
             "feedback": feedback}
 
+def naoqi_request(proxy, method, args = None, wait_for_completion = True):
+
+    return {"name": proxy + "." + method,
+            "middleware": "naoqi",
+            "proxy": proxy,
+            "method": method,
+            "args": args,
+            "wait_for_completion": wait_for_completion}
+
 def python_request(functor, args = [], wait_for_completion = True, callback = None):
     """
     :param callback: an (optional) callback that is called when the action is completed.
