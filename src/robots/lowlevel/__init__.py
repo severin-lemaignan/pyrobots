@@ -1,0 +1,2 @@
+ROS=1
+POCOLIBS=2

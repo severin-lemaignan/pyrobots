@@ -93,8 +93,7 @@ class DesiresPerformer():
             return
 
         if desire._priority < self.currentpriority:
-            self.robot.cancel_all_background_actions()
-            self.robot.cancel_all_ros_actions()
+            self.robot.cancelall()
             self.robot.invalid_context = True
             self.done.acquire()
             self.done.wait()

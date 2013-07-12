@@ -3,6 +3,7 @@ import time
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
+from robots.lowlevel import *
 from robots.action import *
 
 class PR2StateManager:
@@ -64,7 +65,7 @@ class PR2StateManager:
     @helper("state")
     def getjoint(self, name):
         
-        if self.robot.hasROS():
+        if self.robot.supports(ROS):
             import rospy
             from sensor_msgs.msg import JointState
             

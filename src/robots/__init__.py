@@ -22,6 +22,8 @@ from helpers import postures
 from helpers.geometric_planning import PlanningManager
 from helpers.state import PR2StateManager
 
+from robots.lowlevel import *
+
 class Robot(object):
     """ This 'low-level' class implements all what is required to actually execute
     actions on the robot.
@@ -31,42 +33,36 @@ class Robot(object):
     
     :param knowledge: (default: None) pass here an instance of a pyoro.Oro 
     object to connect to a knowledge base.
+    :param supports: (default: 0) a mask of middlewares the robot supports. For
+    example 'supports = ROS|POCOLIBS' means that both ROS and Pocolibs are
+    supported. This requires the corresponding Python bindings to be available.
     :param dummy: (default: False) If true, no actual middleware is used. All
     actions exectued are simply reported to the logger.
     """
-    def __init__(self, host = None, port = None, use_pocolibs = True, use_ros = True, knowledge = None, dummy = False):
+
+    def __init__(self, host = None, port = None, supports = 0, knowledge = None, dummy = False):
 
         self.knowledge = knowledge 
-        self.dummy = dummy
-        self.use_pocolibs = use_pocolibs if not dummy else False
-        self.servers = {} # holds the list of tclserv servers when using pocolibs
-        self.use_ros = use_ros if not dummy else False
+        self.dummy = dummy or not supports
+        self.mw = supports
 
         self.invalid_context = False # when true, all tasks are skipped. Used to cancel an action, for instance
-        if not dummy:
 
-            if use_pocolibs:
-                import pypoco
-                from pypoco import PocoRemoteError
-                self.servers, self.poco_modules = pypoco.discover(host, port)
-                self._pending_pocolibs_requests = {}
-                self._pending_python_requests = {}
-    
-            if use_ros:
-                import roslib; roslib.load_manifest('pyrobots_actionlib')
-                import rospy
-                rospy.init_node('pyrobots')
-                import actionlib
-                from actionlib_msgs.msg import GoalStatus
-                self.GoalStatus = GoalStatus
+        self._pending_python_requests = {}
 
-                # Using ROS: automatically configure the logging to use
-                # ROS RX Console
-                import roslogger
-                rxconsole = roslogger.RXConsoleHandler()
-                logging.getLogger("robot").addHandler(rxconsole)
+        if self.supports(POCOLIBS):
+            from lowlevel.pocolibs import PocolibsActions
+            self.pocoactions = PocolibsActions(host, port)
 
-                self._pending_ros_actionservers = []
+        if self.supports(ROS):
+            from lowlevel.ros import ROSActions
+            self.rosactions = ROSActions()
+            # Using ROS: automatically configure the logging to use
+            # ROS RX Console
+            import roslogger
+            rxconsole = roslogger.RXConsoleHandler()
+            logging.getLogger("robot").addHandler(rxconsole)
+
 
         # Import all modules under robots/actions/
         import actions
@@ -79,19 +75,15 @@ class Robot(object):
         for action in self.available_actions():
             self.add_action(action)
 
-   
         self.poses = PoseManager(self)
         self.planning = PlanningManager(self)
 
-    def hasROS(self):
-        return self.use_ros
-        
-    def hasPocolibs(self):
-        return self.use_pocolibs
+    def supports(self, middleware):
+        return bool(self.mw & middleware) and not self.dummy
     
     def hasmodule(self, module):
-        if self.hasPocolibs():
-            return True if module in self.poco_modules else False
+        if self.supports(POCOLIBS):
+            return pocoactions.hasmodule(module)
         else:
             return False
       
@@ -102,13 +94,20 @@ class Robot(object):
         self.close()
 
     def close(self):
+        robotlog.info('Closing pyRobots...')
+
         if self.knowledge:
             robotlog.info('Closing the knowledge base')
             self.knowledge.close()
             self.knowledge = None
-        robotlog.info('Closing the lowlevel!')
-        for s in self.servers:
-            self.servers[s].close()
+
+        if self.supports(POCOLIBS):
+            pocoactions.close()
+
+        if self.supports(ROS):
+            rosactions.close()
+
+        robotlog.info('pyRobots properly closed. Bye bye!')
 
     def available_actions(self):
         """ Iterate over all loaded modules, and retrieve actions (ie functions
@@ -165,115 +164,23 @@ class Robot(object):
         pass
 
     def _execute_pocolibs(self, action):
-        """ Execute a set of request.
 
-        :param reqs: a list of request to execute. Each of them should be a list of
-        - a module name
-        - a request name
-        - an (optinal) set of parameters
-        - an optional flag to decide if the request must be blocking or not.
-        """
-        
-        from pypoco import PocoRemoteError
-	
-        if not self.use_pocolibs:
+        if not self.supports(POCOLIBS):
             raise RobotError("This action '" + action["request"] + "' "
                      "requires Pocolibs, but this ActionPerformer "
                      "has been started without it.")
 
-        if action["abort"]:
-            # We want to abort a previous request.
-            self._pending_pocolibs_requests[action["module"] + "." + action["request"]].abort()
-            robotlog.info("Aborted " + action["module"] + "." + action["request"])
-            return
-
-        args = []
-        for arg in action["args"]:
-            if type(arg) == bool:
-                if arg:
-                    args.append("GEN_TRUE")
-                else:
-                    args.append("GEN_FALSE")
-            else:
-                args.append(arg)
-
-        module = self.poco_modules[action["module"]]
-        method = getattr(module, action["request"])
-
-        if not action['wait_for_completion']:
-            # asynchronous mode! 
-            if action["callback"]:
-                args = [action["callback"]] + args
-            else:
-                # we pass a (dummy) callback
-                args = [self._ack] + args
-
-        try:
-            rqst = method(*args)
-        except PocoRemoteError as e:
-            robotlog.error("Pocolibs action %s (with args: %s) failed. Error message: %s" % (action["request"], str(action["args"]), str(e)))
-            return (False, None)
-        if not action["wait_for_completion"]:
-            # For asynchronous requests, we keep a request (PocoRequest object) if we need to abort the request.
-            self._pending_pocolibs_requests[action["module"] + "." + action["request"]] = rqst
-            return (True, None)
-
-        robotlog.debug("Execution done. Return value: " + str(rqst))
-
-        ok, res = rqst
-        if ok == 'OK':
-            return (True, res)
-        else:
-            return (False, res)
-
-    def cancel_all_ros_actions(self):
-        for client in self._pending_ros_actionservers:
-            client.cancel_all_goals()
-        self._pending_ros_actionservers = []
-        
+        return self.pocoactions.execute(action)
 
     def _execute_ros(self, action):
-        """ Execute a ros action.
 
-        :param reqs: 
-        - an action name
-
-        """
-
-        if not self.use_ros:
+        if not self.supports(ROS):
             raise RobotError("This action '" + action["request"] + "' "
                      "requires ROS, but this ActionPerformer "
                      "has been started without it.")
 
-        client = action['client']
-        self._pending_ros_actionservers.append(client) # store the action servers if we need to cancel the goals
+        return self.rosactions.execute(action)
 
-        goal = action['goal']
-        
-        #state = self.GoalStatus
-        #result = client.get_result()
-
-    
-        robotlog.debug("Sending goal " + str(action["goal"]) + " to " + str(client))
-        # Sends the goal to the action server 
-        client.send_goal(goal, done_cb = action["callback"], feedback_cb = action["feedback"])
-
-        if action['wait_for_completion']:
-            # Waits for the server to finish performing the action
-            client.wait_for_result()
-
-            if client in self._pending_ros_actionservers: # may be absent after a general cancelling
-                self._pending_ros_actionservers.remove(client)
-
-            # Checks if the goal was achieved
-            if client.get_state() == self.GoalStatus.SUCCEEDED:
-                robotlog.debug('ROS Action succeeded')
-                return (True, None)
-            else:
-                robotlog.error("Action failed! " + client.get_goal_status_text())
-                return (False, client.get_goal_status_text())
-        else:
-            return (True, None)
 
     def _execute_python(self, action):
         
@@ -294,7 +201,16 @@ class Robot(object):
         self._pending_python_requests[action["class"]] = instance
         instance.start()
 
-    def cancel_all_background_actions(self):
+    def cancelall(self):
+        self._cancel_all_background_actions()
+
+        if self.supports(POCOLIBS):
+            self.pocoactions.cancelall()
+
+        if self.supports(ROS):
+            self.rosactions.cancelall()
+
+    def _cancel_all_background_actions(self):
         robotlog.warning("Aborting all background tasks...")
         for action in self._pending_python_requests.values():
             action.stop()
@@ -367,7 +283,7 @@ class Robot(object):
         
 class PR2(Robot):
     def __init__(self, knowledge = None, dummy = False, init = False):
-        super(self.__class__,self).__init__(['pr2c2'], 9472, use_ros = True, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
+        super(self.__class__,self).__init__(['pr2c2'], 9472, supports = ROS | POCOLIBS, knowledge = knowledge, dummy = dummy)
         robotlog.info("PR2 actions loaded.")
 
         self.id = "PR2_ROBOT"
@@ -382,7 +298,7 @@ class PR2(Robot):
 
 class JidoSimu(Robot):
     def __init__(self, knowledge = None, dummy = False, init = False, host = "joyce"):
-        super(self.__class__,self).__init__([(host, 9472), (host, 9473)], port = None, use_ros = False, use_pocolibs = True, knowledge = knowledge, dummy = dummy)
+        super(self.__class__,self).__init__([(host, 9472), (host, 9473)], port = None, supports= POCOLIBS, knowledge = knowledge, dummy = dummy)
         robotlog.info("Action loaded for Jido on MORSE simulator.")
 
         self.id = "JIDO_ROBOT"

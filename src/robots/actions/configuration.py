@@ -2,6 +2,7 @@ import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 import random
+from robots.lowlevel import *
 from robots.exception import RobotError
 from robots.action import *
 from robots.helpers import trajectory
@@ -230,7 +231,7 @@ def getpose(robot):
     """Returns to current whole-body pose of the PR2 robot.
     """
 
-    if robot.hasROS():
+    if robot.supports(ROS):
         try:
             import rospy
             from sensor_msgs.msg import JointState
@@ -486,7 +487,7 @@ def movearm(robot, target):
     client = None
     goal = None
     
-    if robot.hasROS():
+    if robot.supports(ROS):
         import rospy
         import actionlib
         import arm_navigation_msgs.msg

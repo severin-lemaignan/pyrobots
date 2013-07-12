@@ -3,6 +3,7 @@ import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
 
+from robots.lowlevel import *
 from robots.action import *
 
 
@@ -19,7 +20,7 @@ def say(robot, msg, callback = None, feedback =None):
     """
     def execute(robot):
         logger.info("Robot says: " + msg)
-        if robot.hasROS():
+        if robot.supports(ROS):
             import roslib; roslib.load_manifest('sound_play')
             import rospy, os, sys
             from sound_play.libsoundplay import SoundClient
@@ -38,7 +39,7 @@ def say(robot, msg, callback = None, feedback =None):
             logger.warning("No ROS, no textos module: can not do speech synthesis.")
             return (True, None)
 
-    if robot.hasROS():
+    if robot.supports(ROS):
         import rosnode
         nodes = rosnode.get_node_names()
         if "/acapela" in nodes:

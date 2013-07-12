@@ -3,6 +3,7 @@ logger.setLevel(logging.DEBUG)
 
 import math
 
+from robots.lowlevel import *
 from robots.action import *
 from robots.exception import UnknownFrameError, RobotError
 import places
@@ -23,7 +24,7 @@ class PoseManager:
     
     def __init__(self, robot):
         
-        if robot.hasROS():
+        if robot.supports(ROS):
             self.ros = ROSPositionKeeper()
         else:
             logger.warning("Initializing the PoseManager without ROS support." +\
@@ -31,7 +32,7 @@ class PoseManager:
                            " quaternions and euler angles won't be available.")
             self.ros = None
             
-        if robot.hasPocolibs() and robot.hasmodule('spark'):
+        if robot.supports(POCOLIBS) and robot.hasmodule('spark'):
             from robots.action import genom_request
             self.spark = SPARKPositionKeeper(robot)
         else:

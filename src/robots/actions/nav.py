@@ -1,6 +1,7 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 logger.setLevel(logging.DEBUG)
 
+from robots.lowlevel import *
 from robots.helpers.cb import *
 
 from robots.action import *
@@ -31,7 +32,7 @@ def goto(robot, target, callback = None, feedback = None):
     client = None
     goal = None
     
-    if robot.hasROS():
+    if robot.supports(ROS):
         import rospy
         import actionlib
         import move_base_msgs.msg
@@ -195,7 +196,7 @@ def waypoints(robot, points, callback = None, feedback = None):
     client = None
     goal = None
     
-    if robot.hasROS():
+    if robot.supports(ROS):
         import rospy
         import actionlib
         import waypoints.msg
