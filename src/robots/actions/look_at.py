@@ -19,6 +19,10 @@ actionPerformerForTracking = None
 ###############################################################################
 ###############################################################################
 
+def clip(v, vmin, vmax):
+    return max(min(v, vmax), vmin)
+
+
 @tested("21/11/2012")
 @workswith({POCOLIBS:"pr2SoftMotion"})
 @workswith({POCOLIBS:"platine"})
@@ -70,6 +74,14 @@ def look_at(robot, place, callback = None):
             ]
         return actions
 
+    elif robot.supports(NAOQI):
+        yaw, pitch = robot.poses.naoqi.xyz2pantilt(place)
+        yaw = clip(yaw, -2.0857, 2.0857)
+        pitch = clip(-pitch, -0.6720, 0.5149) #beware the '-pitch'!
+        actions = [
+            naoqi_request("motion", "changeAngles", ["Head", [yaw, pitch], 0.1])
+        ]
+        return actions
     else:
         logger.warning("No module available to execute a 'look_at'. Skipping this action.")
         return []
