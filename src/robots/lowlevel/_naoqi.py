@@ -5,6 +5,20 @@ import naoqi
 
 from robots.exception import RobotError
 
+MOTION_METHODS = ["angleInterpolation", 
+                  "angleInterpolationWithSpeed",
+                  "angleInterpolationBezier",
+                  "setAngles",
+                  "changeAngles",
+                  "goToPosture",
+                  "applyPosture",
+                  "closeHand",
+                  "openHand",
+                  "positionInterpolation",
+                  "positionInterpolations",
+                  "setPosition",
+                  "changePosition",
+                  ]
 
 class NAOqiActions:
 
@@ -14,9 +28,22 @@ class NAOqiActions:
         try:
             self.proxies['memory'] = naoqi.ALProxy("ALMemory", ip, port)
             self.proxies['motion'] = naoqi.ALProxy("ALMotion", ip, port)
+            self.proxies['posture'] = naoqi.ALProxy("ALRobotPosture", ip, port)
         except Exception as e:
             robotlog.error("Error when creating one of the NAOqi proxy:" + str(e))
             raise e
+
+        res = self.proxies['motion'].setCollisionProtectionEnabled("Arms", True)
+        if res:
+            robotlog.info("Collision avoidance enabled on the arms.")
+        else:
+            robotlog.warning("Unable to enable collision avoidance on the arms!")
+
+    def motorsEnabled(self):
+        return 0.0 not in self.proxies["motion"].getStiffnesses("Body")
+
+    def enableMotors(self):
+        self.proxies["motion"].wakeUp()
 
     def cancelall(self):
         robotlog.warning("NAOqi cancellation of background tasks not supported")
@@ -27,6 +54,10 @@ class NAOqiActions:
         proxy = self.proxies[action['proxy']]
 
         robotlog.debug("Calling method " + action["name"])
+
+        if action["method"] in MOTION_METHODS:
+            if not self.motorsEnabled():
+                self.enableMotors()
 
         method = getattr(proxy, action["method"])
 

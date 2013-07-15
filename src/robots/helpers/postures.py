@@ -13,7 +13,7 @@ def read(filename):
         _places = {}
         sources = [DATA_DIR + filename]
         for source in sources:
-            logger.info("Reading symbolic places from " + source)
+            logger.info("Reading postures from " + source)
             with open(source,'r') as f:
                 json_data=f.read()
             _places.update(json.loads(json_data))

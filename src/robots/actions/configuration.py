@@ -26,7 +26,7 @@ def disabledevileye(robot):
 @workswith({POCOLIBS:["mhp", "pr2SoftMotion"]})
 def setpose(robot, posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
-    Set the PR2 base and internal joints in a given configuration.
+    Set the robot base and internal joints in a given configuration.
     
     Beware: if collision_avoidance is not set to True, not collision detection is done.
     This can result in a dangerous robot behaviour. Note also that collision avoidance
@@ -50,7 +50,8 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
     that allow execution of the pose.
 
     'posture' may also be the name of a pre-recorded posture, as available from
-    the posture library (cf helpers/postures.py).
+    the posture library (cf helpers/postures.py) or other robot-dependent
+    prerecorded postures.
 
     :param part: (optional) force only a certain part of the PR2 to execute to posture.
     Allowed values: 'BASE', 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD'
@@ -65,6 +66,27 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
     :param callback: (optional) If given, the action is non-blocking, and the callback is
     invoked at the activity completion.
     """
+    if robot.supports(POCOLIBS) and robot.hasmodule("pr2SoftMotion"):
+        return setposePocolibsPR2(robot, 
+                           posture, 
+                           callback, 
+                           part, 
+                           collision_avoidance, 
+                           relative, 
+                           obj, 
+                           support)
+
+    if robot.supports(NAOQI):
+        return setposeNAOqi(robot, posture)
+
+    logger.warning("This robot does not support pose setting")
+    return []
+
+
+def setposePocolibsPR2(robot, posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
+    """set pose on the PR2 with the LAAS motion environment.
+    """
+
     if part and part not in ['BASE', 'RARM', 'LARM', 'ARMS', 'PR2', 'PR2SYN', 'TORSO', 'PR2NOHEAD', 'HEAD']:
         print("'setpose' for part " + part + " is not implemented.")
 
@@ -230,8 +252,39 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
 
     return actions
 
+def setposeNAOqi(robot, posture):
+
+    defaultPostures = ["Crouch", "LyingBack", "LyingBelly", "Sit", "SitRelax", "Stand", "StandInit", "StandZero"]
+
+
+    logger.debug("Setting pose " + str(posture))
+
+    if posture in defaultPostures:
+        actions = [
+            naoqi_request("posture", "goToPosture", [posture, 0.8])
+        ]
+        return actions
+
+
+    if not isinstance(posture, dict):
+        try:
+            posture = robot.postures[posture]
+        except KeyError:
+            raise RobotError("Posture %s not found!" % posture)
+
+    names = ['HeadYaw','HeadPitch',
+        'LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll', 'LWristYaw',
+        'RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll', 'RWristYaw']
+    angles = posture['HEAD'] + posture['LARM'] + posture['RARM']
+
+    actions = [
+        naoqi_request("motion", "angleInterpolationWithSpeed", [names, angles, 0.1])
+    ]
+    return actions
+
+
 def getpose(robot):
-    """Returns to current whole-body pose of the PR2 robot.
+    """Returns to current whole-body pose of the robot.
     """
 
     if robot.supports(ROS):
@@ -264,6 +317,16 @@ def getpose(robot):
         pose["LARM"] = [round(raw[32], 3), round(raw[33], 3), round(raw[31], 3), round(raw[35], 3), round(raw[34], 3), round(raw[36], 3), round(raw[37], 3), ]
         return pose
     
+    elif robot.supports(NAOQI):
+        joint = robot.state.getjoint
+        pose = {}
+        pose["HEAD"] = [round(joint('HeadYaw'),3), round(joint('HeadPitch'),3)] # head_pan_joint, head_tilt_joint
+        pose["TORSO"] = [round(joint('RHipPitch'), 3)] # torso pitch is set at hips.
+        pose["LARM"] = [round(joint('LShoulderPitch'), 3), round(joint('LShoulderRoll'), 3), round(joint('LElbowYaw'), 3), round(joint('LElbowRoll'), 3), round(joint('LWristYaw'), 3)]
+        pose["RARM"] = [round(joint('RShoulderPitch'), 3), round(joint('RShoulderRoll'), 3), round(joint('RElbowYaw'), 3), round(joint('RElbowRoll'), 3), round(joint('RWristYaw'), 3)]
+        return pose
+
+
     else:
         pose = {}
         pose["HEAD"] = [0,0] # head_pan_joint, head_tilt_joint
@@ -327,6 +390,9 @@ def rest(robot, nohead = True, callback = None):
     invoked at the activity completion.
 
     """
+
+    if robot.supports(NAOQI):
+        return [naoqi_request("motion", "rest")]
 
 
     if nohead:

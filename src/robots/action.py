@@ -116,7 +116,7 @@ def ros_request(client, goal, wait_for_completion = True, callback = None, feedb
             "callback": callback,
             "feedback": feedback}
 
-def naoqi_request(proxy, method, args = None, wait_for_completion = True):
+def naoqi_request(proxy, method, args = [], wait_for_completion = True):
 
     return {"name": proxy + "." + method,
             "middleware": "naoqi",

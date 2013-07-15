@@ -169,7 +169,7 @@ class NaoStateManager:
         raise NotImplemented
 
     @helper("state")
-    def getjoint(self, name):
+    def getjoint(self, joint):
         """ Returns the value (in radians) of a given joint (1 DoF) angle
         """
         ok, res = self.robot.execute([

@@ -1,0 +1,79 @@
+#! /usr/bin/env python
+
+import sys
+
+import pprint
+import json
+
+import robots
+from robots.helpers import postures
+
+places = {}
+if len(sys.argv) == 2: # assume argument is posture file to load
+    places = postures.read(sys.argv[1])
+else:
+    print("usage: naopose <posture file>")
+    sys.exit(2)
+
+nao = robots.Nao()
+
+
+def getpose():
+
+    joint = nao.state.getjoint
+    pose = {}
+    pose["HEAD"] = [round(joint('HeadYaw'),3), round(joint('HeadPitch'),3)] # head_pan_joint, head_tilt_joint
+    #pose["TORSO"] = [round(joint('RHipPitch'), 3)] # torso pitch is set at hips.
+    pose["LARM"] = [round(joint('LShoulderPitch'), 3), round(joint('LShoulderRoll'), 3), round(joint('LElbowYaw'), 3), round(joint('LElbowRoll'), 3), round(joint('LWristYaw'), 3)]
+    pose["RARM"] = [round(joint('RShoulderPitch'), 3), round(joint('RShoulderRoll'), 3), round(joint('RElbowYaw'), 3), round(joint('RElbowRoll'), 3), round(joint('RWristYaw'), 3)]
+    return pose
+
+def getaction():
+    action = raw_input("What do you want to do? v: view pose, g: go to pose, r:replace pose with current, s: save to file, q: quit\n")
+    if action not in 'grsqv':
+        return getaction()
+    else:
+       return action
+
+
+#pprint.pprint(pose)
+
+print("Welcome in SuperPoseMaster")
+
+raw_input("Press enter to put Nao in rest pose")
+nao.restpose()
+
+rarm_only = True if raw_input("Press 'r' if you only want to store poses for the right arm. Else, press enter.") == 'r' else False
+
+while True:
+    name = raw_input("Enter the name of the pose to edit (or nothing to edit last pose), set the pose and press enter:")
+    if not name or name == "":
+        name = prevname
+    if name not in places:
+        pose = getpose()
+        if rarm_only:
+            pose = {'RARM':pose['RARM']}
+        places[name] = pose
+
+        print("Creating a new pose " + name)
+    else:
+        print("Modifying existing pose " + name)
+    a = getaction()
+    if a == 'g':
+        nao.setpose(places[name])
+    if a == 'r':
+        pose = getpose()
+        if rarm_only:
+            pose = {'RARM':pose['RARM']}
+        places[name] = pose
+    if a == 'v':
+        pprint.pprint(places[name])
+    if a == 'q':
+        nao.close()
+        sys.exit()
+    if a == 's':
+        with open("tmp.json", 'w') as f:
+            json.dump(places, f)
+        print("Saved places as tmp.json")
+
+    prevname = name

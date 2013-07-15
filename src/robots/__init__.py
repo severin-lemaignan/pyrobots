@@ -337,6 +337,7 @@ class Nao(Robot):
 
         self.id = "NAO"
         self.state = NaoStateManager(self)
+        self.postures = postures.read("nao_postures.json")
 
 
 import __main__ as main
