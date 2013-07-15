@@ -19,7 +19,7 @@ from exception import RobotError
 from helpers.position import PoseManager
 from helpers import postures
 from helpers.geometric_planning import PlanningManager
-from helpers.state import PR2StateManager
+from helpers.state import *
 
 from robots.lowlevel import *
 from robots.action import RobotAction
@@ -336,6 +336,7 @@ class Nao(Robot):
         robotlog.info("Actions loaded for Nao.")
 
         self.id = "NAO"
+        self.state = NaoStateManager(self)
 
 
 import __main__ as main

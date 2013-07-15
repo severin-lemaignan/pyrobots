@@ -3,6 +3,7 @@ import logging; logger = logging.getLogger("robot." + __name__)
 import random
 import math
 
+from robots.lowlevel import *
 from robots.action import *
 from robots.exception import UnknownFrameError
 
@@ -14,7 +15,7 @@ from robots.actions import configuration, nav, look_at, speech
 
 @tested("04/10/2012")
 @action
-def release_gripper(robot, gripper = "RIGHT"):
+def release_gripper(robot, gripper = "right"):
     """
     Opens the gripper to release something.
 
@@ -22,37 +23,72 @@ def release_gripper(robot, gripper = "RIGHT"):
 
     :see: open_gripper
 
-    :param gripper: "RIGHT" (default) or "LEFT"
+    :param gripper: "right" (default) or "left"
     """
-    
+
+    gripper = gripper.lower()
+
     if robot.hasmodule("pr2SoftMotion"):
-        if gripper == "RIGHT":
+        if gripper == "right":
             return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RRELEASE"])]
         else:
             return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LRELEASE"])]
-    elif robot.hasmodule("lwr"):
+    if robot.hasmodule("lwr"):
             return [genom_request("fingers", "OpenGrip", [])]
+
+    if robot.supports(NAOQI):
+        joint = "LHand" if gripper == "left" else "RHand"
+        actions = [
+            wait(1),
+            naoqi_request("motion", "openHand", [joint]),
+            wait(1),
+            naoqi_request("motion", "angleInterpolationWithSpeed", [joint, 0.3, 0.5])
+         ]
+        return actions
+
+    logger.warning("No module to open the gripper available. Skipping this action.")
+    return []
+
+
 
 
 @tested("04/10/2012")
 @action
-def grab_gripper(robot, gripper = "RIGHT"):
+def grab_gripper(robot, gripper = "right"):
     """
     Closes the gripper to grab something.
 
-    Like gripper_close, except it waits until it senses some effort on the gripper force sensors.
+    Like gripper_close, except it waits until it senses some effort on the
+    gripper force sensors, and tries to appliy a force suitable to hold something.
 
     :see: close_gripper
-    :param gripper: "RIGHT" (default) or "LEFT"
+    :param gripper: "right" (default) or "left"
     """
-    if gripper == "RIGHT":
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RGRAB"])]
-    else:
-        return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LGRAB"])]
+    gripper = gripper.lower()
+
+    if robot.hasmodule("pr2SoftMotion"):
+        if gripper == "right":
+            return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["RGRAB"])]
+        else:
+            return [genom_request("pr2SoftMotion", "GripperGrabRelease", ["LGRAB"])]
+
+    if robot.supports(NAOQI):
+        joint = "LHand" if gripper == "left" else "RHand"
+        actions = [
+            naoqi_request("motion", "openHand", [joint]),
+            wait(1),
+            naoqi_request("motion", "stiffnessInterpolation", [joint, 1.0, 1.0]),
+            naoqi_request("motion", "angleInterpolationWithSpeed", [joint, 0.0, 0.5])
+        ]
+        return actions
+
+    logger.warning("No module to close the gripper available. Skipping this action.")
+    return []
+
 
 @tested("04/10/2012")
 @action
-def open_gripper(robot, gripper = "RIGHT", callback = None):
+def open_gripper(robot, gripper = "right", callback = None):
     """
     Opens a gripper.
 
@@ -60,12 +96,14 @@ def open_gripper(robot, gripper = "RIGHT", callback = None):
     Parameter 'gripper' is ignored when using fingers-genom.
 
     :see: release_gripper
-    :param gripper: "RIGHT" (default) or "LEFT"
+    :param gripper: "right" (default) or "left"
     :param callback: if set, the action is non-blocking and the callback is invoked upon completion
     """
 
+    gripper = gripper.lower()
+
     if robot.hasmodule("pr2SoftMotion"):
-        if gripper == "RIGHT":
+        if gripper == "right":
             return [genom_request("pr2SoftMotion", 
                     "GripperGrabRelease", 
                     ["ROPEN"],
@@ -86,24 +124,33 @@ def open_gripper(robot, gripper = "RIGHT", callback = None):
                     wait_for_completion = False if callback else True,
                     callback = callback)]
 
+    if robot.supports(NAOQI):
+        joint = "LHand" if gripper == "left" else "RHand"
+        actions = [
+            naoqi_request("motion", "openHand", [joint])
+        ]
+        return actions
+
     logger.warning("No module to open the gripper available. Skipping this action.")
     return []
 
 
 @tested("04/10/2012")
 @action
-def close_gripper(robot, gripper = "RIGHT", callback = None):
+def close_gripper(robot, gripper = "right", callback = None):
     """ Closes the right gripper.
  
     If pr2SoftMotion-genom is available, it tries with it. Else it tries with fingers-genom.
     Parameter 'gripper' is ignored when using fingers-genom.
 
     :see: grab_gripper
-    :param gripper: "RIGHT" (default) or "LEFT"
+    :param gripper: "right" (default) or "left"
     :param callback: if set, the action is non-blocking and the callback is invoked upon completion
     """
+    gripper = gripper.lower()
+
     if robot.hasmodule("pr2SoftMotion"):
-        if gripper == "RIGHT":
+        if gripper == "right":
             return [genom_request("pr2SoftMotion", 
                     "GripperGrabRelease", 
                     ["RCLOSE"],
@@ -123,6 +170,13 @@ def close_gripper(robot, gripper = "RIGHT", callback = None):
                     wait_for_completion = False if callback else True,
                     callback = callback)]
 
+    if robot.supports(NAOQI):
+        joint = "LHand" if gripper == "left" else "RHand"
+        actions = [
+            naoqi_request("motion", "closeHand", [joint])
+        ]
+        return actions
+
     logger.warning("No module to close the gripper available. Skipping this action.")
     return []
 
@@ -138,15 +192,16 @@ def configure_grippers(robot, grab_acc = 8.0, grab_slip = 0.2, release_acc = 4.0
     :param release_slip: threshold for release detection
     :param force: hold force
     """
-    return [genom_request("pr2SoftMotion", 
-            "SetGripperTresholds", 
-            [grab_acc, grab_slip, release_acc, release_slip, force])]
-
+    if robot.supports(POCOLIBS):
+        return [genom_request("pr2SoftMotion", 
+                "SetGripperTresholds", 
+                [grab_acc, grab_slip, release_acc, release_slip, force])]
+    return []
 
 def haspickedsmthg(robot, gripper = "right"):
     """
     Returns a tuple (True, None) if something is detected in the
-    gripper (based on the joint angle, not the force sensing!),
+    gripper.
     else return a tuple (False, [error msg]).
 
     Meant to by used as a pyRobots' "python_request".
