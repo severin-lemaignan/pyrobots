@@ -267,6 +267,8 @@ class PoseManager:
         Uses transformation matrices. Could be refactored to use directly
         quaternions.
         """
+        pose = self.get(pose)
+
         if pose['frame'] == "map":
             orig = numpy.identity(4)
         else:
@@ -452,6 +454,14 @@ class NAOqiPositionKeeper:
 
         logger.debug("List of NAOqi bodies: %s" % str(self.bodies))
 
+    @helper("poses.naoqi")
+    def as6Dpose(self, pose):
+        wx, wy, wz = euler_from_quaternion([pose['qx'], pose['qy'], pose['qz'], pose['qw']], axes= 'sxyz')
+
+        return [pose['x'], pose['y'], pose['z'], wx, wy, wz]
+
+ 
+    @helper("poses.naoqi")
     def xyz2pantilt(self, pose):
         """
         :param x,y,z: in world frame, in meters
