@@ -573,48 +573,79 @@ def movearm(robot, target):
         ok = client.wait_for_server()
         if not ok:
             logger.error("Could not connect to the ROS client for arm navigation!"
-			 " Aborting action")
-            return
+            " Aborting action")
+            return []
 
         # Creates a goal to send to the action server.  
         goal = arm_navigation_msgs.msg.MoveArmGoal()
 
-        # Definition of the goal
-	goal.motion_plan_request.group_name = "right_arm"
-	goal.motion_plan_request.num_planning_attempts = 1
-	goal.motion_plan_request.planner_id = ""
-	goal.planner_service_name = "ompl_planning/plan_kinematic_path"
-	goal.motion_plan_request.allowed_planning_time = rospy.Duration(5.0)
+            # Definition of the goal
+        goal.motion_plan_request.group_name = "right_arm"
+        goal.motion_plan_request.num_planning_attempts = 1
+        goal.motion_plan_request.planner_id = ""
+        goal.planner_service_name = "ompl_planning/plan_kinematic_path"
+        goal.motion_plan_request.allowed_planning_time = rospy.Duration(5.0)
 
-	pc = arm_navigation_msgs.msg.PositionConstraint()
-	pc.header.stamp = rospy.Time.now()
-	pc.header.frame_id = pose['frame'] 
-	pc.link_name = 'r_wrist_roll_link'
-	pc.position.x = pose['x']
-	pc.position.y = pose['y']
-	pc.position.z = pose['z']
+        pc = arm_navigation_msgs.msg.PositionConstraint()
+        pc.header.stamp = rospy.Time.now()
+        pc.header.frame_id = pose['frame'] 
+        pc.link_name = 'r_wrist_roll_link'
+        pc.position.x = pose['x']
+        pc.position.y = pose['y']
+        pc.position.z = pose['z']
 
-	pc.constraint_region_shape.type = arm_navigation_msgs.msg.Shape.BOX
-	pc.constraint_region_shape.dimensions = [0.02, 0.02, 0.02]
-	pc.constraint_region_orientation.w = 1.0
+        pc.constraint_region_shape.type = arm_navigation_msgs.msg.Shape.BOX
+        pc.constraint_region_shape.dimensions = [0.02, 0.02, 0.02]
+        pc.constraint_region_orientation.w = 1.0
 
-	goal.motion_plan_request.goal_constraints.position_constraints.append(pc)
+        goal.motion_plan_request.goal_constraints.position_constraints.append(pc)
 
-	oc = arm_navigation_msgs.msg.OrientationConstraint()
-	oc.header.stamp = rospy.Time.now()
-	oc.header.frame_id = pose['frame']
-	oc.link_name = 'r_wrist_roll_link'
-	oc.orientation.x = 0.
-	oc.orientation.y = 0.
-	oc.orientation.z = 0.
-	oc.orientation.w = 1.
+        oc = arm_navigation_msgs.msg.OrientationConstraint()
+        oc.header.stamp = rospy.Time.now()
+        oc.header.frame_id = pose['frame']
+        oc.link_name = 'r_wrist_roll_link'
+        oc.orientation.x = 0.
+        oc.orientation.y = 0.
+        oc.orientation.z = 0.
+        oc.orientation.w = 1.
 
-	oc.absolute_roll_tolerance = 0.04
-	oc.absolute_pitch_tolerance = 0.04
-	oc.absolute_yaw_tolerance = 0.04
-	oc.weight = 1.
+        oc.absolute_roll_tolerance = 0.04
+        oc.absolute_pitch_tolerance = 0.04
+        oc.absolute_yaw_tolerance = 0.04
+        oc.weight = 1.
 
-	goal.motion_plan_request.goal_constraints.orientation_constraints.append(oc)
+        goal.motion_plan_request.goal_constraints.orientation_constraints.append(oc)
+
+        return [ros_request(client, 
+                goal, 
+                wait_for_completion = False,
+                callback = None
+            )]
+
+    elif robot.supports(NAOQI):
+        import motion
+        import almath
+
+        effector = "LArm" if arm == "left" else "RArm"
+        hand = "LHand" if arm == "left" else "RHand"
+
+        space      = motion.FRAME_ROBOT
+        axisMask   = almath.AXIS_MASK_ALL if with_orientation else almath.AXIS_MASK_VEL
+        isAbsolute = False
+
+        #Relative motion
+        dtarget = robot.poses.inframe(target, hand)
+        # Since we are in relative, the current position is zero
+        currentPos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        targetPos = robot.poses.naoqi.as6Dpose(dtarget)
+        path = [currentPos, targetPos]
+        times = [1.0, 3.0]
+
+        actions = [
+            naoqi_request("motion", "positionInterpolation", [effector, space, path, axisMask, times, isAbsolute])
+        ]
+        return actions
+
     else:
         # Useful for debugging purpose, without the actual robot
         client = "ROS arm_navigation"
