@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import sys
+import datetime
 from robots.actions import nav, primitive_nav, look_at, manipulation, configuration, games, administration
 
 import robots.helpers.geometric_planning
@@ -65,97 +66,134 @@ for helper_class in [getattr(robot_m, cls) for cls in dir(robot_m)]:
             anchors[fn.__name__] =  helper_class.__module__ + "." + helper_class.__name__ + "." + fn.__name__
 
 
-print("= Documentation of pyRobots actions and helpers =")
-print("\n<<TableOfContents(4)>>")
+def moinmoin():
+    print("= Documentation of pyRobots actions and helpers =")
+    print("''Automatically generated from pyRobots source on " + datetime.date.today().strftime("%B %d, %Y") + "''")
 
-print("\n\n== Actions ==\n\n")
 
-for m in actions.keys():
-    print("<<Anchor(" + m + ")>>") # anchor
-    print("=== Category " + m.split('.')[2] + " ===")
-    for name, doc, broken, tested in actions[m]:
-        params = []
-        print("<<Anchor(" + m + "." + name + ")>>") # anchor
-        print("==== Action " + name + " ====")
-        if broken:
-            print("\n{{{#!wiki caution\n"
-                "'''/!\ Action currently broken!'''\n"
-                "}}}")
-        if not tested:
-            print("\n{{{#!wiki caution\n"
-                "'''{i} Action not tested!'''\n"
-                "}}}")
-        else:
-            print("\n{{{#!wiki note\n"
-                "(./) Action tested on the " + tested + "\n"
-                "}}}")
-        if doc: 
-            doc, params, returndoc = parse_docstring(doc)
-            print(doc)
+    print("\n<<TableOfContents(4)>>")
+
+    print("\n\n== Actions ==\n\n")
+
+    for m in actions.keys():
+        print("<<Anchor(" + m + ")>>") # anchor
+        print("=== Category " + m.split('.')[2] + " ===")
+        for name, doc, broken, tested in actions[m]:
+            params = []
+            print("<<Anchor(" + m + "." + name + ")>>") # anchor
+            print("==== Action " + name + " ====")
+            if broken:
+                print("\n{{{#!wiki caution\n"
+                    "'''/!\ Action currently broken!'''\n"
+                    "}}}")
+            if not tested:
+                print("\n{{{#!wiki caution\n"
+                    "'''{i} Action not tested!'''\n"
+                    "}}}")
+            else:
+                print("\n{{{#!wiki note\n"
+                    "(./) Action tested on the " + tested + "\n"
+                    "}}}")
+            if doc: 
+                doc, params, returndoc = parse_docstring(doc)
+                print(doc)
+                if params:
+                    print("===== Parameters =====")
+                    for p, d in params:
+                        print(" * '''" + p + "''': " + d)
+                if returndoc:
+                    print("===== Return value =====")
+                    print(returndoc)
+    
+            print("\n")
+            print("Example:\n{{{#!highlight python")
+            print("import robots")
+            print("nao = robots.Nao() # Pass 'dummy=True' to test without the real robot\n")
             if params:
-                print("===== Parameters =====")
-                for p, d in params:
-                    print(" * '''" + p + "''': " + d)
-            if returndoc:
-                print("===== Return value =====")
-                print(returndoc)
- 
-        print("\n")
-        print("Example:\n{{{#!highlight python")
-        print("import robots")
-        print("pr2 = robots.PR2() # Pass 'dummy=True' to test without the real robot\n")
-        if params:
-            for p,d in params:
-                if p in special_doc:
-                    print(p + " = " + p.upper() + " # " + special_doc[p] )
-                else:
-                    print(p + " = " + p.upper() + " # define here a " + p )
-            print("pr2." + name + "(" + ", ".join([p for p,d in params]) + ")")
-        else:
-            print("pr2." + name + "()")
-        print("}}}")
-        print("\n")
+                for p,d in params:
+                    if p in special_doc:
+                        print(p + " = " + p.upper() + " # " + special_doc[p] )
+                    else:
+                        print(p + " = " + p.upper() + " # define here a " + p )
+                print("nao." + name + "(" + ", ".join([p for p,d in params]) + ")")
+            else:
+                print("nao." + name + "()")
+            print("}}}")
+            print("\n")
 
-print("\n\n== Helpers ==\n\n")
+    print("\n\n== Helpers ==\n\n")
 
-for m in helpers.keys():
-    print("<<Anchor(" + m + ")>>") # anchor
-    print("=== Category " + m.split('.')[2]  + " ===")
-    for name, doc, access, tested in helpers[m]:
-        params = []
-        print("<<Anchor(" + m + "." + name + ")>>") # anchor
-        print("==== Helper " + name + " ====")
-        if not tested:
-            print("\n{{{#!wiki caution\n"
-                "'''Helper not tested!'''\n"
-                "}}}")
-        else:
-            print("\n{{{#!wiki note\n"
-                "Helper tested on the " + tested + "\n"
-                "}}}")
-        if doc: 
-            doc, params, returndoc = parse_docstring(doc)
-            print(doc)
+    for m in helpers.keys():
+        print("<<Anchor(" + m + ")>>") # anchor
+        print("=== Category " + m.split('.')[2]  + " ===")
+        for name, doc, access, tested in helpers[m]:
+            params = []
+            print("<<Anchor(" + m + "." + name + ")>>") # anchor
+            print("==== Helper " + name + " ====")
+            if not tested:
+                print("\n{{{#!wiki caution\n"
+                    "'''Helper not tested!'''\n"
+                    "}}}")
+            else:
+                print("\n{{{#!wiki note\n"
+                    "Helper tested on the " + tested + "\n"
+                    "}}}")
+            if doc: 
+                doc, params, returndoc = parse_docstring(doc)
+                print(doc)
+                if params:
+                    print("===== Parameters =====")
+                    for p, d in params:
+                        print(" * '''" + p + "''': " + d)
+                if returndoc:
+                    print("===== Return value =====")
+                    print(returndoc)
+    
+            print("\n")
+            print("Example:\n{{{#!highlight python")
+            print("import robots")
+            print("nao = robots.Nao() # Pass 'dummy=True' to test without the real robot\n")
             if params:
-                print("===== Parameters =====")
-                for p, d in params:
-                    print(" * '''" + p + "''': " + d)
-            if returndoc:
-                print("===== Return value =====")
-                print(returndoc)
- 
-        print("\n")
-        print("Example:\n{{{#!highlight python")
-        print("import robots")
-        print("pr2 = robots.PR2() # Pass 'dummy=True' to test without the real robot\n")
-        if params:
-            for p,d in params:
-                if p in special_doc:
-                    print(p + " = " + p.upper() + " # " + special_doc[p] )
-                else:
-                    print(p + " = " + p.upper() + " # define here a " + p )
-            print("pr2." + name + "(" + ", ".join([p for p,d in params]) + ")")
-        else:
-            print("pr2." + access + "." + name + "()")
-        print("}}}")
-        print("\n")
+                for p,d in params:
+                    if p in special_doc:
+                        print(p + " = " + p.upper() + " # " + special_doc[p] )
+                    else:
+                        print(p + " = " + p.upper() + " # define here a " + p )
+                print("nao." + name + "(" + ", ".join([p for p,d in params]) + ")")
+            else:
+                print("nao." + access + "." + name + "()")
+            print("}}}")
+            print("\n")
+
+def latex():
+
+    print("\\begin{table}")
+    print("\\begin{center}")
+    print("\\begin{tabular}{l}")
+
+    print("\\hline")
+    for m in actions.keys():
+        print("\t{\\bf " + m.split('.')[2].replace("_", "\\_") + "} \\\\")
+        names = [i[0].replace("_", "\\_") for i in actions[m]]
+        print("\t {\\tt " + "}, {\\tt ".join(names) + "} \\\\")
+        print("\\hline")
+    print("\\end{tabular}")
+
+    print("\\end{center}")
+    print("\\caption{List of {\\sc pyRobots} atomic actions, sorted by categories}")
+    print("\\label{table|pyrobots_actions}")
+    print("\\end{table}")
+
+def usage():
+    print("Usage: generate_doc [-h] {moinmoin|latex}")
+    print("Defaults to moinmoin syntax.")
+
+if len(sys.argv) > 1:
+    if sys.argv[1] in ["-h", "--help"]:
+        usage()
+        sys.exit()
+    if sys.argv[1] == "latex":
+        latex()
+        sys.exit()
+else:
+    moinmoin()
