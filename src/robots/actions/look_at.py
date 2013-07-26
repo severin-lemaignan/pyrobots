@@ -3,6 +3,7 @@ logger.setLevel(logging.DEBUG)
 
 import os
 
+from robots.lowlevel import *
 from robots.exception import RobotError
 
 from robots.action import *
@@ -20,6 +21,8 @@ actionPerformerForTracking = None
 ###############################################################################
 
 @tested("21/11/2012")
+@workswith({POCOLIBS:"pr2SoftMotion"})
+@workswith({POCOLIBS:"platine"})
 @action
 def look_at(robot, place, callback = None):
     """ Orders the robot to look at a given place of object.
@@ -174,6 +177,7 @@ def cancel_track(robot):
 @broken
 @tested("22/02/2012")
 @action
+@workswith({ROS:["/head_traj_controller/point_head_action"]})
 def look_at_ros(robot, place):
     """ Create the client and the goal.
 

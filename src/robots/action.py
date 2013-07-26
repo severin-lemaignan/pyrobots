@@ -1,3 +1,8 @@
+
+import logging; logger = logging.getLogger("robot." + __name__)
+
+from robots.lowlevel import mw_names
+
 def action(fn):
 	"""The @action decorator.
 	"""
@@ -31,6 +36,33 @@ def broken(fn):
     fn._action = True
     fn._broken = True
     return fn
+
+def workswith(requirements):
+    """ Explicit the middleware/platform requirements for the action.
+
+        If several configurations are possible, use this decorator as many time
+        as required. In other terms, for a given action, each occurence of this
+        decorator is a logical OR with previous occurences.
+
+        :param requirements: may be either a middleware as listed in
+        lowlevel.__init__.py (ROS, POCOLIBS...), a list of such middleware (in
+        that case, it is considered as a logical AND: the presence of each of
+        the middleware is required), or a dictionary that list specfic
+        modules/nodes for specific middlewares. For instance:
+            {lowlevel.ROS:["/head_traj_controller/point_head_action"],
+             lowlevel.POCOLIBS:["platine", "spark"]}
+        For ROS, it takes a list of actionlib servers names, for POCOLIBS, a
+        list of modules.
+
+    """
+    def decorator(fn):
+        if hasattr(fn, "_requirements"):
+            fn._requirements.append(requirements)
+        else:
+            fn._requirements = [requirements]
+        return fn
+    return decorator
+
 
 def genom_request(module, request, args = None, wait_for_completion = True, abort = False, callback=None):
     if callback:
@@ -107,3 +139,88 @@ def wait(seconds):
             "action": "wait",
             "args": seconds}
 
+
+class RobotAction:
+    def __init__(self, fn, module=None):
+
+        self.fn = fn
+        self.name = self.fn.__name__
+        self.module = module
+        self.fqn = module.__name__ + "." + self.name
+
+        self.requirements = None
+        if hasattr(self.fn, "_requirements"):
+            self.requirements = [self._normalize_requirements(req) for req in self.fn._requirements]
+            self.print_requirements()
+
+        logger.debug("Added " + self.fqn + \
+                    " as available action.")
+        if self.broken():
+            logger.warning("Action " + self.fqn + " is marked as broken! " \
+                                "Use it carefully.")
+
+    def __str__(self):
+        return self.fqn
+
+    def _normalize_requirements(self, req):
+
+        # case req= lowlevel.ROS
+        if isinstance(req, int):
+            return {req:[]}
+
+        res = {}
+
+        # case req = [ROS, POCOLIBS]
+        if isinstance(req, list):
+            for e in req:
+                res[e] = []
+            return res
+
+        # case req = {ROS:"/toto", POCOLIBS:["titi", "tata"]}
+        if isinstance(req, dict):
+            for mw, modules in req.items():
+                if not isinstance(modules, list):
+                    modules = [modules]
+                res[mw] = modules
+            return res
+
+    def broken(self):
+        return hasattr(self.fn, "_broken")
+
+    def print_requirements(self):
+
+        def printmw(req):
+            res = []
+            for mw, modules in req.items():
+                desc = mw_names[mw]
+                if modules:
+                    desc += " (with " + ", ".join(modules) + ")"
+                res.append(desc)
+            return " and ".join(res)
+
+        req = self.requirements
+        
+        if not req:
+            print("Action <%s> does not specify platform requirements" % self.fqn)
+        else:
+            res = "Action <%s> requires " % self.fqn
+            if len(req) == 1:
+                res += printmw(req[0])
+            else:
+                res += "either " + " or ".join([printmw(option) for option in req])
+
+            res += "."
+            print(res)
+
+if __name__ == "__main__":
+
+    import sys
+    from robots.lowlevel import *
+
+    def toto():
+        pass
+
+    toto._requirements = [ROS, [POCOLIBS, ROS], {ROS:[], POCOLIBS:"pr2SoftMotion"}, {ROS:["toto", "tata"]}]
+
+    action = RobotAction(toto, sys.modules["__main__"])
+    action.print_requirements()

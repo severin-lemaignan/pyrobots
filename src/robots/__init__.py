@@ -23,6 +23,7 @@ from helpers.geometric_planning import PlanningManager
 from helpers.state import PR2StateManager
 
 from robots.lowlevel import *
+from robots.action import RobotAction
 
 class Robot(object):
     """ This 'low-level' class implements all what is required to actually execute
@@ -119,41 +120,33 @@ class Robot(object):
             m = sys.modules["robots.actions." + module_name]
             for member in [getattr(m, fn) for fn in dir(m)]:
                 if hasattr(member, "_action"):
-                    robotlog.debug("Added " + m.__name__ + "." + member.__name__ + \
-                                " as available action.")
-                    if hasattr(member, "_broken"):
-                        robotlog.warning("Action " + m.__name__ + "." + \
-                                         member.__name__ + " is marked as broken! " \
-                                         "Use it carefully.")
-                    actions.append(member)
+                    actions.append(RobotAction(member, m))
         return actions
     
-    def add_action(self, fn):
+    def add_action(self, action):
         def innermethod(*args, **kwargs):
-            action = "%s" % fn.__name__
-            if hasattr(action, "_broken"):
-                ok = raw_input("Attention! " + action + " is marked as broken."
+            if action.broken():
+                ok = raw_input("Attention! " + str(action) + " is marked as broken."
                                "Are you sure you want to proceed? (y/N)")
                 if ok != 'y':
                     return
-            robotlog.debug("Calling action " + action)
-            actions = fn(self, *args, **kwargs)
+            robotlog.debug("Calling action " + str(action))
+            actions = action.fn(self, *args, **kwargs)
             return self.execute(actions)
                 
-        innermethod.__doc__ = fn.__doc__ if fn.__doc__ else fn.__name__ + \
+        innermethod.__doc__ = action.fn.__doc__ if action.fn.__doc__ else action.name + \
             "\nThis method has been dynamically added to your robot."
-        innermethod.__name__ = fn.__name__
+        innermethod.__name__ = action.name
         setattr(self,innermethod.__name__,innermethod)
 
         def get_actions_innermethod(*args, **kwargs):
-            action = "%s" % fn.__name__
-            robotlog.debug("Returning action for " + action)
-            actions = fn(self, *args, **kwargs)
+            robotlog.debug("Returning action for " + str(action))
+            actions = action.fn(self, *args, **kwargs)
             return actions
                 
-        get_actions_innermethod.__doc__ = fn.__doc__ if fn.__doc__ else fn.__name__ + \
+        get_actions_innermethod.__doc__ = action.fn.__doc__ if action.fn.__doc__ else action.name + \
             "\nThis method has been dynamically added to your robot."
-        get_actions_innermethod.__name__ = "getactions" + fn.__name__
+        get_actions_innermethod.__name__ = "getactions" + action.name
         setattr(self,get_actions_innermethod.__name__,get_actions_innermethod)
 
     def _ack(self, evt):
