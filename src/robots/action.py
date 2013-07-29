@@ -207,9 +207,9 @@ class RobotAction:
             if len(req) == 1:
                 res += printmw(req[0])
             else:
-                res += "either " + " or ".join([printmw(option) for option in req])
+                res += "either [" + "] or [".join([printmw(option) for option in req])
 
-            res += "."
+            res += "]."
             print(res)
 
 if __name__ == "__main__":
