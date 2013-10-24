@@ -33,18 +33,22 @@ def start_interaction(dummy = False):
         try:
             logger.info("Waiting for desires...")
             while True:
-                sit = incoming_desires.get()
+                try:
+                    sit = incoming_desires.get_nowait()
 
-                if sit:
                     try:
                         desire = desires.desire_factory(sit, robot)
                         desire.perform()
                     except desires.NotExistingDesireTypeError as e:
                         logger.error(e)
                         logger.info("Skipping this desire.")
-                time.sleep(0.1)
+
+                except queue.Empty:
+                    time.sleep(0.1)
+
         except KeyboardInterrupt:
-            pass
+            logger.info("Quitting now")
+            return
 
 
 if __name__ == '__main__':
