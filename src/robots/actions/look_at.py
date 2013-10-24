@@ -26,6 +26,7 @@ def clip(v, vmin, vmax):
 @tested("21/11/2012")
 @workswith({POCOLIBS:"pr2SoftMotion"})
 @workswith({POCOLIBS:"platine"})
+@workswith(NAOQI)
 @action
 def look_at(robot, place, callback = None):
     """ Orders the robot to look at a given place of object.

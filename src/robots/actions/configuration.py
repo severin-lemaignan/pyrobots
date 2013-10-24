@@ -24,6 +24,7 @@ def disabledevileye(robot):
 @action
 @workswith({POCOLIBS:["mhp", "lwr"]})
 @workswith({POCOLIBS:["mhp", "pr2SoftMotion"]})
+@workswith(NAOQI)
 def setpose(robot, posture, callback = None, part = None, collision_avoidance = False, relative = False, obj = 'PR2_ROBOT', support = 'NO_NAME'):
     """
     Set the robot base and internal joints in a given configuration.

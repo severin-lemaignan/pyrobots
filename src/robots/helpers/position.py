@@ -467,8 +467,6 @@ class NAOqiPositionKeeper:
         :param x,y,z: in world frame, in meters
         :returns: (pan, tilt) in radians
         """
-        import pdb;pdb.set_trace()
-
         pose = self.posemanager.inframe(pose, 'Head')
 
         x = pose['x']
