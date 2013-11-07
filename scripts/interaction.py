@@ -13,14 +13,23 @@ from robots.behaviours import desires, interrogation
 human = "HUMAN1"
 
 incoming_desires = queue.Queue()
+salient_events = queue.Queue()
+emotional_states = queue.Queue()
 
-def ondesires(e):
-    logger.info("Incoming desires:" + str(e))
-    for d in e:
+def onsaliency(evt):
+    logger.info("Salient event:" + str(evt))
+    for d in evt:
+        salient_events.put(d)
+
+def ondesires(evt):
+    logger.info("Incoming desires:" + str(evt))
+    for d in evt:
         incoming_desires.put(d)
 
-def onemotion(e):
-    logger.info("New emotional state:" + str(e))
+def onemotion(evt):
+    logger.info("New emotional state:" + str(evt))
+    for d in evt:
+        emotional_states.put(d)
 
 def start_interaction(dummy = False):
     with robots.Robot(knowledge = kb.KB(), dummy = dummy) as robot:
@@ -28,10 +37,14 @@ def start_interaction(dummy = False):
         # Subscribe to new human orders
         robot.knowledge.subscribe([human + " desires ?d"], ondesires)
 
+        # Subscribe to new salient events
+        robot.knowledge.subscribe(["?evt rdf:type SalientEvent"], onsaliency)
+
         # Subscribe to changes of emotional state
         robot.knowledge.subscribe(["myself experiences ?s"], onemotion)
+
         try:
-            logger.info("Waiting for desires...")
+            logger.info("Waiting for desires/salient event...")
             while True:
                 try:
                     sit = incoming_desires.get_nowait()
@@ -44,7 +57,20 @@ def start_interaction(dummy = False):
                         logger.info("Skipping this desire.")
 
                 except queue.Empty:
-                    time.sleep(0.1)
+                    pass
+
+                try:
+                    salientevt = salient_events.get_nowait()
+                except queue.Empty:
+                    pass
+
+                try:
+                    emotion = emotional_states.get_nowait()
+                except queue.Empty:
+                    pass
+
+
+                time.sleep(0.05)
 
         except KeyboardInterrupt:
             logger.info("Quitting now")
