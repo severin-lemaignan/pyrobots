@@ -49,12 +49,11 @@ class PoseManager:
             self.naoqi = None
 
         
-    def quaternion_from_euler(self, rx, ry, rz):
+   
+    @staticmethod
+    def quaternion_from_euler(rx, ry, rz):
         return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
-    
-    def euler_from_quaternion(self, rx, ry, rz):
-        return transformations.euler_from_quaternion(pose['qx'], pose['qy'], pose['qz'], pose['qw'], 'sxyz')
-        
+   
     def normalizedict(self, pose):
         if not 'x' in pose:
             pose['x'] = 0.0
@@ -336,7 +335,7 @@ class ROSPositionKeeper:
         poseStamped = PoseStamped()
 
         poseStamped.header.frame_id = pose["frame"]
-        poseStamped.header.stamp = self.tf.getLatestCommonTime("/map", pose["frame"])
+        poseStamped.header.stamp = rospy.Time()
         poseStamped.pose.position.x = pose["x"]
         poseStamped.pose.position.y = pose["y"]
         poseStamped.pose.position.z = pose["z"]
@@ -353,22 +352,20 @@ class ROSPositionKeeper:
         if not self.isrosconfigured:
             return None
 
-        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
 
-            poseStamped = self.asROSpose(pose)
-            newPoseStamped = self.tf.transformPose(frame, poseStamped)
+        poseStamped = self.asROSpose(pose)
+        poseStamped.header.stamp = self.tf.getLatestCommonTime(pose["frame"], frame)
+        newPoseStamped = self.tf.transformPose(frame, poseStamped)
 
-            return {"x":newPoseStamped.pose.position.x,
-                    "y":newPoseStamped.pose.position.y,
-                    "z":newPoseStamped.pose.position.z,
-                    "qx":newPoseStamped.pose.orientation.x,
-                    "qy":newPoseStamped.pose.orientation.y,
-                    "qz":newPoseStamped.pose.orientation.z,
-                    "qw":newPoseStamped.pose.orientation.w,
-                    "frame": frame}
+        return {"x":newPoseStamped.pose.position.x,
+                "y":newPoseStamped.pose.position.y,
+                "z":newPoseStamped.pose.position.z,
+                "qx":newPoseStamped.pose.orientation.x,
+                "qy":newPoseStamped.pose.orientation.y,
+                "qz":newPoseStamped.pose.orientation.z,
+                "qw":newPoseStamped.pose.orientation.w,
+                "frame": frame}
 
-        logger.error("Could not transform the pose from /map to the frame " + frame)
-        return None
 
 
     def getabspose(self, frame):
@@ -391,11 +388,9 @@ class ROSPositionKeeper:
         :param headframe: the frame of the head
         :returns: (pan, tilt) in radians
         """
-        t = self.tf.getLatestCommonTime(headframe, pose["frame"])
-        position, quaternion = self.tf.lookupTransform(headframe, pose["frame"], t)
-        dx,dy,dz = position
-        pan = numpy.arctan2(pose['y'] + dy, pose['x'] + dx)
-        tilt = numpy.arctan2(pose['z'] + dz, pose['x'] + dx)
+        pose = self.inframe(pose, headframe)
+        pan = numpy.arctan2(pose['y'], pose['x'])
+        tilt = numpy.arctan2(pose['z'], pose['x'])
         
         logger.debug("Computed head pan: %s, tilt: %s" % (pan, tilt))
         return (pan,tilt)
@@ -453,7 +448,7 @@ class NAOqiPositionKeeper:
 
     @helper("poses.naoqi")
     def as6Dpose(self, pose):
-        wx, wy, wz = euler_from_quaternion([pose['qx'], pose['qy'], pose['qz'], pose['qw']], axes= 'sxyz')
+        wx, wy, wz = transformations.euler_from_quaternion([pose['qx'], pose['qy'], pose['qz'], pose['qw']], axes= 'sxyz')
 
         return [pose['x'], pose['y'], pose['z'], wx, wy, wz]
 
