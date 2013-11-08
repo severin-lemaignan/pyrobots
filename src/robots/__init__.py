@@ -91,7 +91,7 @@ class Robot(object):
         if mw == POCOLIBS and self.supports(mw):
             return pocoactions.hasmodule(module)
         elif mw == ROS and self.supports(ROS):
-            robotlog("Presence of ROS action servers not yet implemented! Assuming %s is available." % module)
+            robotlog.warn("Presence of ROS action servers not yet implemented! Assuming %s is available." % module)
             return True
         else:
             return False
