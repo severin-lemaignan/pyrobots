@@ -76,36 +76,16 @@ def look_at(robot, place, callback = None):
         return actions
 
     elif robot.supports(NAOQI):
-        yaw, pitch = robot.poses.naoqi.xyz2pantilt(place)
+        yaw, pitch = robot.poses.ros.xyz2pantilt(robot.poses[place], 
+                                                 headframe="gaze")
         yaw = clip(yaw, -2.0857, 2.0857)
         pitch = clip(-pitch, -0.6720, 0.5149) #beware the '-pitch'!
-        actions = [
-            naoqi_request("motion", "changeAngles", ["Head", [yaw, pitch], 0.1])
-        ]
-        return actions
+        return setpose(robot, {"HEAD": (yaw, pitch)})
     else:
         logger.warning("No module available to execute a 'look_at'. Skipping this action.")
         return []
 
 ###############################################################################
-
-@tested("13/03/2012")
-@action
-def look_at_xyz(robot, x,y,z, frame = "map", callback = None):
-    """ Look at via pr2SoftMotion.
-    
-    :param x: the x coordinate
-    :param y: the y coordinate
-    :param z: the z coordinate
-    :param frame: the frame in which coordinates are interpreted. By default, '/map'
-    """
-    logger.debug("Looking at " + str([x,y,z]) + " in " + frame)
-    pantilt = robot.poses.ros.xyz2pantilt(x,y,z, frame)
-
-    return setpose(robot, {'HEAD':pantilt}, callback)
-
-###############################################################################
-
 
 
 @tested("22/02/2012")

@@ -314,8 +314,8 @@ class ROSPositionKeeper:
         try:
             self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
         except tf.Exception: # likely a timeout
-            logger.error("Timeout while waiting for TF transformations!"
-                         " Did you initialize the PR2?\n ROS positions won't be available.")
+            logger.error("Timeout while waiting for a TF transformation between /map"
+                         "and /base_link. ROS positions won't be available.")
             self.isrosconfigured = False
             return
 
@@ -367,7 +367,7 @@ class ROSPositionKeeper:
                     "qw":newPoseStamped.pose.orientation.w,
                     "frame": frame}
 
-        logger.error("Could not transform the pose from /map to the frame " + frame) #TODO: For some reason, the logger do not work
+        logger.error("Could not transform the pose from /map to the frame " + frame)
         return None
 
 
@@ -380,27 +380,24 @@ class ROSPositionKeeper:
             position, quaternion = self.tf.lookupTransform("/map", frame, t)
             return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ("map",)))
 
-        logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
+        logger.debug("No such frame " + frame + " in TF")
         return None
 
 
-    def xyz2pantilt(self, x, y, z, frame = "map"):
+    def xyz2pantilt(self, pose, headframe="/head_pan_link"):
         """
         Convert a xyz target to pan and tilt angles for the head.
 
-        :param x: the x coordinate
-        :param y: the y coordinate
-        :param z: the z coordinate
-        :param frame: the frame in which coordinates are interpreted
+        :param headframe: the frame of the head
         :returns: (pan, tilt) in radians
         """
-        t = self.tf.getLatestCommonTime("/head_pan_link", frame)
-        base, quaternion = self.tf.lookupTransform("/head_pan_link", frame, t)
+        t = self.tf.getLatestCommonTime(headframe, pose["frame"])
+        position, quaternion = self.tf.lookupTransform(headframe, pose["frame"], t)
+        dx,dy,dz = position
+        pan = numpy.arctan2(pose['y'] + dy, pose['x'] + dx)
+        tilt = numpy.arctan2(pose['z'] + dz, pose['x'] + dx)
         
-        target = [base[0] + x, base[1] + y, base[2] + z]
-        pan = numpy.arctan2(target[1], target[0])
-        tilt = numpy.arctan2(target[2], target[0])
-        
+        logger.debug("Computed head pan: %s, tilt: %s" % (pan, tilt))
         return (pan,tilt)
 
 class SPARKPositionKeeper:
@@ -464,7 +461,7 @@ class NAOqiPositionKeeper:
     @helper("poses.naoqi")
     def xyz2pantilt(self, pose):
         """
-        :param x,y,z: in world frame, in meters
+        :param x,y,z: in meters
         :returns: (pan, tilt) in radians
         """
         pose = self.posemanager.inframe(pose, 'Head')
