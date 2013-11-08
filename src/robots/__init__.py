@@ -349,12 +349,20 @@ class Nao(Robot):
         self.postures = postures.read("nao_postures.json")
 
 
+def debug():
+    robotlog.setLevel(logging.DEBUG)
+
+def info():
+    robotlog.setLevel(logging.INFO)
+
+
+
 import __main__ as main
 if not hasattr(main, '__file__'):
     # Running in interactive mode:
     # Add a console logger
     from robots.helpers.ansistrm import ColorizingStreamHandler
-    robotlog.setLevel(logging.DEBUG)
+    robotlog.setLevel(logging.INFO)
     console = ColorizingStreamHandler()
     formatter = logging.Formatter('%(name)s: %(message)s')
     console.setFormatter(formatter)
