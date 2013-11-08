@@ -1,5 +1,4 @@
 import logging; robotlog = logging.getLogger("robot." + __name__)
-robotlog.setLevel(logging.DEBUG)
 
 import pypoco
 from pypoco import PocoRemoteError

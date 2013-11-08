@@ -1,5 +1,4 @@
 import logging; logger = logging.getLogger("robot." + __name__)
-logger.setLevel(logging.DEBUG)
 
 import random
 from robots.action import *

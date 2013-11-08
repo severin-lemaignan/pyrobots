@@ -201,7 +201,7 @@ class RobotAction:
         req = self.requirements
         
         if not req:
-            print("Action <%s> does not specify platform requirements" % self.fqn)
+            logger.debug("Action <%s> does not specify platform requirements" % self.fqn)
         else:
             res = "Action <%s> requires " % self.fqn
             if len(req) == 1:
@@ -210,7 +210,7 @@ class RobotAction:
                 res += "either [" + "] or [".join([printmw(option) for option in req])
 
             res += "]."
-            print(res)
+            logger.debug(res)
 
 if __name__ == "__main__":
 

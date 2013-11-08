@@ -1,7 +1,5 @@
 # coding=utf-8
 import logging; logger = logging.getLogger("robot." + __name__)
-logger.setLevel(logging.DEBUG)
-
 
 from robots.lowlevel import *
 from robots.action import *

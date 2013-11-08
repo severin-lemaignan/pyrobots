@@ -1,6 +1,4 @@
 import logging; logger = logging.getLogger("robot." + __name__)
-logger.setLevel(logging.DEBUG)
-    
 from robots.action import action, ros_request
 
 ###############################################################################

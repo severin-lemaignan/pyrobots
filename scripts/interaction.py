@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import logging
+logger = logging.getLogger("robot")
+kblogger = logging.getLogger("kb")
+
 import sys
 import time
 import Queue as queue
@@ -9,6 +12,7 @@ import Queue as queue
 import kb
 import robots
 from robots.behaviours import desires, interrogation
+from robots.helpers.ansistrm import ColorizingStreamHandler
 
 human = "HUMAN1"
 
@@ -91,9 +95,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-
-    logger = logging.getLogger("robot")
-    kblogger = logging.getLogger("kb")
+    console = ColorizingStreamHandler()
 
     if args.debug:
         logger.setLevel(logging.DEBUG)
@@ -105,9 +107,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.INFO)
         kblogger.setLevel(logging.INFO)
 
-    console = logging.StreamHandler()
-    console.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)-15s %(name)s: %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)-15s %(name)s: %(message)s')
     console.setFormatter(formatter)
 
     logger.addHandler(console)

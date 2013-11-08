@@ -3,7 +3,6 @@ import pkgutil
 import time
 
 import logging; robotlog = logging.getLogger("robot." + __name__)
-robotlog.setLevel(logging.DEBUG)
 
 class NullHandler(logging.Handler):
     """Defines a NullHandler for logging, in case pyrobots is used in an 
@@ -45,6 +44,8 @@ class Robot(object):
 
         self.knowledge = knowledge 
         self.dummy = dummy or not supports
+        if self.dummy:
+            robotlog.warn("Running in 'dummy' mode. No actual action may be carried.")
         self.mw = supports
 
         self.invalid_context = False # when true, all tasks are skipped. Used to cancel an action, for instance
@@ -307,8 +308,9 @@ import __main__ as main
 if not hasattr(main, '__file__'):
     # Running in interactive mode:
     # Add a console logger
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('[%(levelname)s] %(name)s -> %(message)s')
-    handler.setFormatter(formatter)
-    robotlog.addHandler(handler)
+    from robots.helpers.ansistrm import ColorizingStreamHandler
+    robotlog.setLevel(logging.DEBUG)
+    console = ColorizingStreamHandler()
+    formatter = logging.Formatter('%(name)s: %(message)s')
+    console.setFormatter(formatter)
+    robotlog.addHandler(console)

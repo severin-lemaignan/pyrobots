@@ -2,7 +2,6 @@ import time
 import logging
 import threading
 logger = logging.getLogger("robot." + __name__)
-logger.setLevel(logging.DEBUG)
 
 from robots.actions.manipulation import haspickedsmthg
 from robots.helpers import places
