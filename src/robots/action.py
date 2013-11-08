@@ -2,6 +2,7 @@
 import logging; logger = logging.getLogger("robot." + __name__)
 
 from robots.lowlevel import mw_names
+from robots.exception import RobotError
 
 def action(fn):
 	"""The @action decorator.
@@ -60,6 +61,15 @@ def workswith(requirements):
             fn._requirements.append(requirements)
         else:
             fn._requirements = [requirements]
+        return fn
+    return decorator
+
+def same_requirements_as(action):
+    """ Indicates that the action has the same middleware/modules
+    requirements as another action.
+    """
+    def decorator(fn):
+        fn._same_requirements_as = action
         return fn
     return decorator
 
@@ -152,6 +162,11 @@ class RobotAction:
         if hasattr(self.fn, "_requirements"):
             self.requirements = [self._normalize_requirements(req) for req in self.fn._requirements]
             self.print_requirements()
+        elif hasattr(self.fn, "_same_requirements_as"):
+            if hasattr(self.fn._same_requirements_as, "_requirements"):
+                self.requirements = [self._normalize_requirements(req) for req in self.fn._same_requirements_as._requirements]
+            else:
+                raise RobotError("Action <%s> should have the same requirements as <%s>, but <%s> has no requirements." % (self.fqn, self.fn._same_requirements_as.__name__, self.fn._same_requirements_as.__name__))
 
         logger.debug("Added " + self.fqn + \
                     " as available action.")

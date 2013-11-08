@@ -10,11 +10,13 @@ import os
 
 @tested("04/10/2012")
 @action
+@workswith(ROS)
 def enabledevileye(robot):
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 3")
 
 @tested("04/10/2012")
 @action
+@workswith(ROS)
 def disabledevileye(robot):
     os.system("rosrun dynamic_reconfigure dynparam set camera_synchronizer_node projector_mode 1")
  
@@ -272,6 +274,7 @@ def getpose(robot):
 
 @tested("04/10/2012")
 @action
+@same_requirements_as(setpose)
 def manipose(robot, nohead = True, callback = None):
     """
     Quick method to set the PR2 joints in "manip" configuration.
@@ -312,9 +315,10 @@ def extractpose(robot, callback = None):
 
 @tested("04/10/2012")
 @action
-def restpose(robot, nohead = True, callback = None):
+@same_requirements_as(setpose)
+def rest(robot, nohead = True, callback = None):
     """
-    Quick method to set the PR2 joints in rest configuration. 
+    Quick method to set the robot joints in rest configuration. 
     You have the choice with three rest configuration. This choice is random.
     
     :param no_head: (optional) If true, only arms and torso will set a new configuration.
@@ -334,6 +338,12 @@ def restpose(robot, nohead = True, callback = None):
     posture = robot.postures['REST' + str(n)]
 
     return setpose(robot, posture, callback, part)
+
+@tested("04/10/2012")
+@action
+@same_requirements_as(setpose)
+def restpose(robot, nohead = True, callback = None):
+    return rest(robot, nohead, callback)
 
 @tested("04/10/2012")
 @action
