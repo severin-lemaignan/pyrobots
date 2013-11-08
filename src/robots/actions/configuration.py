@@ -78,7 +78,7 @@ def setpose(robot, posture, callback = None, part = None, collision_avoidance = 
                            support)
 
     if robot.supports(NAOQI):
-        return setposeNAOqi(robot, posture)
+        return setposeNAOqi(robot, posture, relative)
 
     logger.warning("This robot does not support pose setting")
     return []
@@ -253,7 +253,7 @@ def setposePocolibsPR2(robot, posture, callback = None, part = None, collision_a
 
     return actions
 
-def setposeNAOqi(robot, posture):
+def setposeNAOqi(robot, posture, relative):
 
     defaultPostures = ["Crouch", "LyingBack", "LyingBelly", "Sit", "SitRelax", "Stand", "StandInit", "StandZero"]
 
@@ -275,6 +275,8 @@ def setposeNAOqi(robot, posture):
 
     names = []
     angles = []
+
+
     if "HEAD" in posture:
         names += ['HeadYaw','HeadPitch']
         angles += posture["HEAD"]
@@ -286,6 +288,12 @@ def setposeNAOqi(robot, posture):
         angles += posture["LARM"]
     if "TORSO" in posture:
         logger.warn("Torso bending is not yet supported for Nao")
+
+    if relative:
+        ok, res = robot.execute([
+            naoqi_request("motion", "getAngles", [names, True])
+            ])
+        angles = [ a + da for a, da in zip(angles, res)]
 
     actions = [
         naoqi_request("motion", "angleInterpolationWithSpeed", [names, angles, 0.1], parts = names)
