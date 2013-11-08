@@ -116,6 +116,7 @@ def look_at_xyz_with_moveHead(robot, x,y,z, frame = "map", callback = None):
 
 @tested("15/06/2012")
 @action
+@same_requirements_as(look_at)
 def track(robot, target):
     """ Tracks an object with the head.
 
@@ -166,6 +167,7 @@ class TrackAction(Thread):
 
 @tested("15/06/2012")
 @action
+@same_requirements_as(look_at)
 def cancel_track(robot):
     """ If running, interrupt a current track action.
     """
@@ -234,13 +236,13 @@ def look_at_ros(robot, place):
 
 @tested("22/02/2012")
 @action
+@same_requirements_as(look_at)
 def glance_to(robot, place): 
-    """ Glance to via pr2SoftMotion
+    """ Briefly look at a given location, and come back to the
+    currently pose.
     """
 
-    head_tilt = robot.state.getjoint('head_tilt_joint')
-    head_pan = robot.state.getjoint('head_pan_joint')
-    pose_head_base = {"HEAD": (head_pan,  head_tilt)}
+    pose_head_base = {"HEAD": robot.state.getpose()["HEAD"]}
 
     actions = look_at(robot, place)
     actions += [wait(2)]
@@ -251,6 +253,7 @@ def glance_to(robot, place):
 
 @tested("22/02/2012")
 @action
+@workswith({POCOLIBS:['pr2SoftMotion']})
 def sweep(robot, amplitude = 90, speed = 0.2):
     """ Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
     
@@ -287,6 +290,7 @@ def sweep(robot, amplitude = 90, speed = 0.2):
 ###############################################################################
 @tested("21/11/2012")
 @action
+@workswith(ROS)
 def switch_active_stereo_pair(robot, pair = "wide_stereo"):
     os.system("rosservice call /viman_bridge/switch_cameras %s" % pair)
 
