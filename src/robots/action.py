@@ -116,12 +116,19 @@ def ros_request(client, goal, wait_for_completion = True, callback = None, feedb
             "callback": callback,
             "feedback": feedback}
 
-def naoqi_request(proxy, method, args = [], wait_for_completion = True):
+def naoqi_request(proxy, method, args = [], parts = "Body", wait_for_completion = True):
+    """ If 'parts' is set and the method is a motion, stiffness while be enabled
+    only on the corresponding parts. 'parts' may be 'Body', a chain ("Torso",
+    "Head", "LArm", "RArm", "LLeg", "RLeg"), or a list of individual NAOqi
+    joints.
+
+    """
 
     return {"name": proxy + "." + method,
             "middleware": "naoqi",
             "proxy": proxy,
             "method": method,
+            "parts": parts,
             "args": args,
             "wait_for_completion": wait_for_completion}
 

@@ -38,11 +38,13 @@ class NAOqiActions:
         else:
             robotlog.warning("Unable to enable collision avoidance on the arms!")
 
-    def motorsEnabled(self):
-        return 0.0 not in self.proxies["motion"].getStiffnesses("Body")
+    def motorsEnabled(self, joints = "Body"):
+        return 0.0 not in self.proxies["motion"].getStiffnesses(joints)
 
-    def enableMotors(self):
-        self.proxies["motion"].wakeUp()
+    def enableMotors(self, joints = "Body"):
+        
+        self.proxies["motion"].setStiffnesses(joints, 1.0)
+
 
     def cancelall(self):
         robotlog.warning("NAOqi cancellation of background tasks not supported")
@@ -55,8 +57,8 @@ class NAOqiActions:
         robotlog.debug("Calling method " + action["name"])
 
         if action["method"] in MOTION_METHODS:
-            if not self.motorsEnabled():
-                self.enableMotors()
+            if not self.motorsEnabled(action["parts"]):
+                self.enableMotors(action["parts"])
 
         method = getattr(proxy, action["method"])
 
