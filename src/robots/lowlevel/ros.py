@@ -2,7 +2,6 @@ import logging; robotlog = logging.getLogger("robot." + __name__)
 
 from robots.exception import RobotError
 
-import roslib; roslib.load_manifest('pyrobots_actionlib')
 import rospy
 import actionlib
 from actionlib_msgs.msg import GoalStatus

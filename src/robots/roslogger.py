@@ -1,5 +1,4 @@
 import logging
-import roslib; roslib.load_manifest('pyrobots_actionlib')
 import rospy
 from rosgraph_msgs.msg import Log
 
