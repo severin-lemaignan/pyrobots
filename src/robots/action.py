@@ -188,14 +188,35 @@ class RobotAction:
             else:
                 raise RobotError("Action <%s> should have the same requirements as <%s>, but I could not determine <%s> requirements." % (self.fqn, self.fn._same_requirements_as.__name__, self.fn._same_requirements_as.__name__))
 
-        logger.debug("Added " + self.fqn + \
-                    " as available action.")
         if self.broken():
             logger.warning("Action " + self.fqn + " is marked as broken! " \
                                 "Use it carefully.")
 
     def __str__(self):
         return self.fqn
+
+    def issupported(self, robot):
+        if robot.dummy:
+            return True
+
+        if not self.requirements:
+            return False
+
+        def supportoption(option, robot):
+            for mw, modules in option.items():
+                if not robot.supports(mw):
+                    return False
+                if modules:
+                    for m in modules:
+                        if not robot.hasmodule(m, mw):
+                            return False
+
+            return True
+
+        for option in self.requirements:
+            if supportoption(option, robot):
+                return True
+        return False
 
     def _normalize_requirements(self, req):
 

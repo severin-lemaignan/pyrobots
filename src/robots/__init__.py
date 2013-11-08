@@ -79,6 +79,7 @@ class Robot(object):
         # actions/* submodules.
         for action in self.available_actions():
             self.add_action(action)
+            logger.info("Added " + action.fqn + " as available action.")
 
         self.poses = PoseManager(self)
         self.planning = PlanningManager(self)
@@ -86,9 +87,12 @@ class Robot(object):
     def supports(self, middleware):
         return bool(self.mw & middleware) and not self.dummy
     
-    def hasmodule(self, module):
-        if self.supports(POCOLIBS):
+    def hasmodule(self, module, mw = POCOLIBS):
+        if mw == POCOLIBS and self.supports(mw):
             return pocoactions.hasmodule(module)
+        elif mw == ROS and self.supports(ROS):
+            robotlog("Presence of ROS action servers not yet implemented! Assuming %s is available." % module)
+            return True
         else:
             return False
       
@@ -124,7 +128,12 @@ class Robot(object):
             m = sys.modules["robots.actions." + module_name]
             for member in [getattr(m, fn) for fn in dir(m)]:
                 if hasattr(member, "_action"):
-                    actions.append(RobotAction(member, m))
+                    action = RobotAction(member, m)
+                    if action.issupported(self):
+                        actions.append(RobotAction(member, m))
+                    else:
+                        robotlog.debug("Action %s not supported on this robot." % action.fqn)
+
         return actions
     
     def add_action(self, action):
@@ -255,7 +264,7 @@ class Robot(object):
             return (False, "Context is invalid")
 
         if self.dummy:
-            robotlog.info("#Dummy mode# Executing actions " + str(actions))
+            robotlog.info("Dummy mode: I would execute actions " + str(actions))
             return None
             
         result = (True, None) # by default, assume everything went fine with no return value
