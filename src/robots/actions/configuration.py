@@ -93,7 +93,7 @@ def setposePocolibsPR2(robot, posture, callback = None, part = None, collision_a
 
     logger.debug("Setting pose " + str(posture))
 
-    current_pose = getpose(robot)
+    current_pose = robot.state.getpose(robot)
 
     forced_part = part
 
@@ -283,58 +283,6 @@ def setposeNAOqi(robot, posture):
     ]
     return actions
 
-
-def getpose(robot):
-    """Returns to current whole-body pose of the robot.
-    """
-
-    if robot.supports(ROS):
-        try:
-            import rospy
-            from sensor_msgs.msg import JointState
-            logger.debug("Reading PR2 pose... (10 sec timeout)")
-            msg = rospy.client.wait_for_message('/joint_states', JointState, timeout = 10)
-        except rospy.exceptions.ROSException:
-            logger.error("Could not read topic /joint_states. Right ROS_MASTER_URI? "
-            "PR2 started?")
-            return None
-
-        raw = msg.position
-
-        pose = {}
-        pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
-        pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
-
-        # Arm joints order:
-        # shoulder_pan_joint
-        # shoulder_lift_joint
-        # upper_arm_roll_joint 
-        # elbow_flex_joint
-        # forearm_roll_joint
-        # wrist_flex_joint
-        # wrist_roll_joint
-
-        pose["RARM"] = [round(raw[18], 3), round(raw[19], 3), round(raw[17], 3), round(raw[21], 3), round(raw[20], 3), round(raw[22], 3), round(raw[23], 3), ]
-        pose["LARM"] = [round(raw[32], 3), round(raw[33], 3), round(raw[31], 3), round(raw[35], 3), round(raw[34], 3), round(raw[36], 3), round(raw[37], 3), ]
-        return pose
-    
-    elif robot.supports(NAOQI):
-        joint = robot.state.getjoint
-        pose = {}
-        pose["HEAD"] = [round(joint('HeadYaw'),3), round(joint('HeadPitch'),3)] # head_pan_joint, head_tilt_joint
-        pose["TORSO"] = [round(joint('RHipPitch'), 3)] # torso pitch is set at hips.
-        pose["LARM"] = [round(joint('LShoulderPitch'), 3), round(joint('LShoulderRoll'), 3), round(joint('LElbowYaw'), 3), round(joint('LElbowRoll'), 3), round(joint('LWristYaw'), 3)]
-        pose["RARM"] = [round(joint('RShoulderPitch'), 3), round(joint('RShoulderRoll'), 3), round(joint('RElbowYaw'), 3), round(joint('RElbowRoll'), 3), round(joint('RWristYaw'), 3)]
-        return pose
-
-
-    else:
-        pose = {}
-        pose["HEAD"] = [0,0] # head_pan_joint, head_tilt_joint
-        pose["TORSO"] = [0] # torso_lift_joint
-        pose["RARM"] = [0,0,0,0,0,0,0]
-        pose["LARM"] = [0,0,0,0,0,0,0]
-        return pose
 
 @tested("04/10/2012")
 @action

@@ -27,6 +27,21 @@ class StateManager:
         raise NotImplemented
 
     @helper("state")
+    def getpose(self):
+        """ Get the full pose of the robot, as a dict.
+
+        The list of possible parts is:
+        {"HEAD":[pan, tilt],
+         "TORSO":[height or bend],
+         "RARM":[n dofs starting at shoulder],
+         "LARM":[n dofs starting at shoulder]
+         }
+
+         Depending on the robot, some part may ne be available.
+        """
+        raise NotImplemented
+
+    @helper("state")
     def fingerpressed(self, gripper = "right"):
         """ Returns true if the (by default, right) gripper is 'holding' something.
 
@@ -115,6 +130,37 @@ class PR2StateManager(StateManager):
             return 0.0
 
     @helper("state")
+    def getpose(self):
+        try:
+            import rospy
+            from sensor_msgs.msg import JointState
+            logger.debug("Reading PR2 pose... (10 sec timeout)")
+            msg = rospy.client.wait_for_message('/joint_states', JointState, timeout = 10)
+        except rospy.exceptions.ROSException:
+            logger.error("Could not read topic /joint_states. Right ROS_MASTER_URI? "
+            "PR2 started?")
+            return None
+
+        raw = msg.position
+
+        pose = {}
+        pose["HEAD"] = [round(raw[14],3), round(raw[15],3)] # head_pan_joint, head_tilt_joint
+        pose["TORSO"] = [round(raw[12], 3)] # torso_lift_joint
+
+        # Arm joints order:
+        # shoulder_pan_joint
+        # shoulder_lift_joint
+        # upper_arm_roll_joint 
+        # elbow_flex_joint
+        # forearm_roll_joint
+        # wrist_flex_joint
+        # wrist_roll_joint
+
+        pose["RARM"] = [round(raw[18], 3), round(raw[19], 3), round(raw[17], 3), round(raw[21], 3), round(raw[20], 3), round(raw[22], 3), round(raw[23], 3), ]
+        pose["LARM"] = [round(raw[32], 3), round(raw[33], 3), round(raw[31], 3), round(raw[35], 3), round(raw[34], 3), round(raw[36], 3), round(raw[37], 3), ]
+        return pose
+
+    @helper("state")
     def fingerpressed(self, gripper = "right"):
         """ Returns true if the pression sensors of the gripper (right by
         default) detect something.
@@ -176,6 +222,20 @@ class NaoStateManager:
             naoqi_request("motion", "getAngles", [joint, True])
         ])
         return res[0]
+
+    @helper("state")
+    def getpose(self):
+        """Returns to current whole-body pose of the robot.
+        """
+
+        joint = self.getjoint
+        pose = {}
+        pose["HEAD"] = [round(joint('HeadYaw'),3), -round(joint('HeadPitch'),3)] # head_pan_joint, head_tilt_joint
+        pose["TORSO"] = [round(joint('RHipPitch'), 3)] # torso pitch is set at hips.
+        pose["LARM"] = [round(joint('LShoulderPitch'), 3), round(joint('LShoulderRoll'), 3), round(joint('LElbowYaw'), 3), round(joint('LElbowRoll'), 3), round(joint('LWristYaw'), 3)]
+        pose["RARM"] = [round(joint('RShoulderPitch'), 3), round(joint('RShoulderRoll'), 3), round(joint('RElbowYaw'), 3), round(joint('RElbowRoll'), 3), round(joint('RWristYaw'), 3)]
+        return pose
+
 
     @helper("state")
     def fingerpressed(self, gripper = "right"):
