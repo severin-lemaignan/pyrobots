@@ -193,22 +193,39 @@ class PoseManager:
     @helper("poses")
     def myself(self):
         """
-        Returns the current PR2 base pose.
+        Returns the current robot's pose, ie the pose of the ROS TF 'base_link'
+        frame.
         """
-        try:
-            return self.get("base_link")
-        except RobotError as e:
-            if "base_link" in e.value:
-                logger.error("The robot is not localized!")
-                return None
+        if self.ros:
+            try:
+                return self.ros.getabspose("base_link")
+            except RobotError as e:
+                if "base_link" in e.value:
+                    logger.error("The robot is not localized!")
+                    return None
+        return None
 
     @helper("poses")
     def human(self, human, part = 'Pelvis'):
         """
-        Head -> part="HeadX"
+        Returns the pose of a human, either using Pocolibs' SPARK or ROS TF.
+
+        If using SPARK, a body part may be specified (default to 'Pelvis'). For
+        the head, the part is "HeadX".
+
+        If using ROS, we return the pose of a TF frame called 'face_<human>' or
+        'human_<human>'.
+
         """
         # Where is the human?
-        return self.spark.getabspose(human, part)
+        if self.spark:
+            return self.spark.getabspose(human, part)
+        elif self.ros:
+            pose = self.ros.getabspose("face_%s" % human)
+            return pose if pose else self.ros.getabspose("human_%s" % human)
+        else:
+            logger.error("Human localization currently requires SPARK or ROS")
+            return None
 
     @helper("poses")
     def distance(self, pose1, pose2):

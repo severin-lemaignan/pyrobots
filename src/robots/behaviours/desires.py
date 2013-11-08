@@ -11,6 +11,8 @@ from robots.exception import RobotError, UnknownFrameError
 
 from robots.action import genom_request
 
+import kb #for memory profiles
+
 def nop(void, void2=None):
     pass
 
@@ -143,7 +145,7 @@ class Desire(object):
     def perform(self):
         if "myself" in self.performer:
             logger.info("Now performing " + self.name)
-            self._robot.knowledge.add(["myself currentlyPerforms " + self._sit], "EPISODIC")
+            self._robot.knowledge.add(["myself currentlyPerforms " + self._sit], lifespan=kb.MIDTERM)
 
         self._process()
 
@@ -780,7 +782,9 @@ class Look(Desire):
             elif self.zone in [self.ON, self.ABOVE]:
                 pose = robot.poses[self.object]
 
-                ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [self.object])])
+                ok = False
+                if robot.hasmodule("spark"):
+                    ok, bb = robot.execute([genom_request("spark", "GetBBPoints", [self.object])])
 
                 if ok == 'OK': # we got the bounding box. Cool.
                     support_height = float(bb[2])
@@ -810,6 +814,9 @@ class Look(Desire):
         else:
             if robot.poses.human(self.to):
                 robot.look_at(self.to)
+            else:
+                robot.say("I really don't know where to look!")
+
 
 
 
