@@ -273,13 +273,22 @@ def setposeNAOqi(robot, posture):
         except KeyError:
             raise RobotError("Posture %s not found!" % posture)
 
-    names = ['HeadYaw','HeadPitch',
-        'LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll', 'LWristYaw',
-        'RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll', 'RWristYaw']
-    angles = posture['HEAD'] + posture['LARM'] + posture['RARM']
+    names = []
+    angles = []
+    if "HEAD" in posture:
+        names += ['HeadYaw','HeadPitch']
+        angles += posture["HEAD"]
+    if "RARM" in posture:
+        names += ['RShoulderPitch', 'RShoulderRoll', 'RElbowYaw', 'RElbowRoll', 'RWristYaw']
+        angles += posture["RARM"]
+    if "LARM" in posture:
+        names += ['LShoulderPitch', 'LShoulderRoll', 'LElbowYaw', 'LElbowRoll', 'LWristYaw']
+        angles += posture["LARM"]
+    if "TORSO" in posture:
+        logger.warn("Torso bending is not yet supported for Nao")
 
     actions = [
-        naoqi_request("motion", "angleInterpolationWithSpeed", [names, angles, 0.1])
+        naoqi_request("motion", "angleInterpolationWithSpeed", [names, angles, 0.1], parts = names)
     ]
     return actions
 
