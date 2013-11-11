@@ -316,11 +316,22 @@ def manipose(robot, nohead = True, callback = None):
     invoked at the activity completion.
 
     """
+        
+    if robot.supports(NAOQI):
+        actions = setpose(robot, 'StandInit', callback)
+        actions.append(naoqi_request("motion", 
+                                     "wbEnableEffectorControl", 
+                                     ['LArm', True]))
+        actions.append(naoqi_request("motion", 
+                                     "wbEnableEffectorControl", 
+                                     ['RArm', True]))
+        return actions
+
+
     if nohead:
         part = 'PR2NOHEAD'
     else:
         part = 'PR2'
-    
     posture = robot.postures['MANIP']
     
     return setpose(robot, posture, callback, part)
@@ -358,7 +369,14 @@ def rest(robot, nohead = True, callback = None):
     """
 
     if robot.supports(NAOQI):
-        return [naoqi_request("motion", "rest")]
+        actions = [naoqi_request("motion", 
+                                 "wbEnableEffectorControl", 
+                                 ['LArm', False])]
+        actions.append(naoqi_request("motion", 
+                                     "wbEnableEffectorControl", 
+                                     ['RArm', False]))
+        actions.append(naoqi_request("motion", "rest"))
+        return actions
 
 
     if nohead:
