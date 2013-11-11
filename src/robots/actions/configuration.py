@@ -537,8 +537,10 @@ def idle(robot, choice = None,callback = None):
 
 
 @action
-def movearm(robot, target):
-    """ Moves the robot right arm to a pose.
+@workswith(ROS)
+@workswith(NAOQI)
+def movearm(robot, target, arm = "right"):
+    """ Moves one of the robot arms to a pose.
     
         :param target: the destination for the arm wrist
     """
@@ -548,7 +550,12 @@ def movearm(robot, target):
     client = None
     goal = None
     
-    if robot.supports(ROS):
+    if robot.supports(ROS) and not robot.supports(NAOQI):
+        if arm != "right":
+            logger.error("Currently, only the right arm can be controlled"
+                         " from ROS.")
+            return []
+
         import rospy
         import actionlib
         import arm_navigation_msgs.msg
@@ -607,26 +614,19 @@ def movearm(robot, target):
             )]
 
     elif robot.supports(NAOQI):
-        import motion
-        import almath
 
+        # Requires whole body cartesian control! ie, you must call nao.manipose()
+        # first!
         effector = "LArm" if arm == "left" else "RArm"
-        hand = "LHand" if arm == "left" else "RHand"
+        hand = "l_wrist" if arm == "left" else "r_wrist"
 
-        space      = motion.FRAME_ROBOT
-        axisMask   = almath.AXIS_MASK_ALL if with_orientation else almath.AXIS_MASK_VEL
-        isAbsolute = False
-
-        #Relative motion
-        dtarget = robot.poses.inframe(target, hand)
-        # Since we are in relative, the current position is zero
-        currentPos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        targetPos = robot.poses.naoqi.as6Dpose(dtarget)
-        path = [currentPos, targetPos]
-        times = [1.0, 3.0]
+        dtarget = robot.poses.ros.inframe(pose, "base_footprint")
 
         actions = [
-            naoqi_request("motion", "positionInterpolation", [effector, space, path, axisMask, times, isAbsolute])
+            naoqi_request("motion", "wbSetEffectorControl", [effector, 
+                                                        [dtarget['x'],
+                                                         dtarget['y'],
+                                                         dtarget['z']]]),
         ]
         return actions
 

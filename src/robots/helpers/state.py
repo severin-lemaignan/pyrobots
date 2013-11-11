@@ -225,7 +225,7 @@ class NaoStateManager:
 
     @helper("state")
     def getpose(self):
-        """Returns to current whole-body pose of the robot.
+        """Returns to current whole-body joint state of the robot.
         """
 
         joint = self.getjoint
