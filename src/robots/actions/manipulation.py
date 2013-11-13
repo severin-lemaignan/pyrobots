@@ -15,6 +15,8 @@ from robots.actions import configuration, nav, look_at, speech
 
 @tested("04/10/2012")
 @action
+@workswith({POCOLIBS:['pr2SoftMotion']})
+@workswith(NAOQI)
 def release_gripper(robot, gripper = "right"):
     """
     Opens the gripper to release something.
@@ -54,6 +56,8 @@ def release_gripper(robot, gripper = "right"):
 
 @tested("04/10/2012")
 @action
+@workswith({POCOLIBS:['pr2SoftMotion']})
+@workswith(NAOQI)
 def grab_gripper(robot, gripper = "right"):
     """
     Closes the gripper to grab something.
@@ -88,6 +92,8 @@ def grab_gripper(robot, gripper = "right"):
 
 @tested("04/10/2012")
 @action
+@workswith({POCOLIBS:['pr2SoftMotion']})
+@workswith(NAOQI)
 def open_gripper(robot, gripper = "right", callback = None):
     """
     Opens a gripper.
@@ -137,6 +143,8 @@ def open_gripper(robot, gripper = "right", callback = None):
 
 @tested("04/10/2012")
 @action
+@workswith({POCOLIBS:['pr2SoftMotion']})
+@workswith(NAOQI)
 def close_gripper(robot, gripper = "right", callback = None):
     """ Closes the right gripper.
  
@@ -556,11 +564,19 @@ def attachobject(robot, obj, attach = True, hand = "right", holder = None):
 
 @tested("04/10/2012")
 @action
-def basictake(robot):
+@workswith({POCOLIBS:['pr2SoftMotion']})
+@workswith(NAOQI)
+def basictake(robot, target = None):
     """ The ultra stupid basic TAKE: simply hand the object in front of the
     robot.
     """
-    actions = configuration.setpose(robot, robot.postures["GIVE"])
+    actions = []
+    if robot.supports(NAOQI):
+        if not target:
+            target = [1,0,0.1,'base_link']
+        actions += configuration.movearm(robot, target)
+    else:
+        actions += configuration.setpose(robot, robot.postures["GIVE"])
     actions += open_gripper(robot)
     actions += [wait(2)]
     actions += grab_gripper(robot)
