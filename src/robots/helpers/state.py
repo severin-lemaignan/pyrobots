@@ -18,13 +18,13 @@ class StateManager:
         :param object: the ID of the object to check
         :returns: true if the object is visible, false otherwise.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     @helper("state")
     def getjoint(self, name):
         """ Returns the value (in radians) of a given joint (1 DoF) angle
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     @helper("state")
     def getpose(self):
@@ -39,7 +39,7 @@ class StateManager:
 
          Depending on the robot, some part may ne be available.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     @helper("state")
     def fingerpressed(self, gripper = "right"):
@@ -48,17 +48,17 @@ class StateManager:
         'holding' semantics may be as simple as 'gripper closed' or more elaborate
         like 'the pressure sensors detect something'.
 
-        Raises NotImplemented if this is not supported by the robot.
+        Raises NotImplementedError if this is not supported by the robot.
 
         :param gripper: the gripper, either 'left' or 'right'. By default, right.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     @helper("state")
     def distance2obstacle(self):
         """ Returns the distance, in meters, to the closest obstacle facing the robot.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
 class PR2StateManager(StateManager):
     """ This class helps with the state of the PR2 robot.
@@ -212,7 +212,35 @@ class NaoStateManager:
         :param object: the ID of the object to check
         :returns: true if the object is visible, false otherwise.
         """
-        raise NotImplemented
+        raise NotImplementedError
+
+    @helper("state")
+    def hasinhand(self, hand="right"):
+
+        if not self.robot.knowledge:
+            raise Exception("nao.state.hasinhand requires a running knowledge base")
+
+        max_distance_from_hand = 0.2 #m
+
+        frame = "r_gripper" if hand == "right" else "l_gripper"
+
+        # 1- look at the hand
+        self.robot.look_at([0,0,0.1,frame])
+        # 2- get all the visible objets from the knowledge base
+        self.robot.wait(2)
+        visibles = self.robot.knowledge["* isVisible true"]
+        logger.debug("Visible objects: %s" % str(visibles))
+
+        # 3- keep only objects that are actually close to the hand
+        inhand = []
+        for obj in visibles:
+            pose = self.robot.poses.ros.inframe(obj, frame)
+            dist = pose['x']**2 + pose['y']**2 + pose['z']**2
+            if dist < max_distance_from_hand**2:
+                inhand += obj
+
+        logger.debug("Objects in hand: %s" % str(inhand))
+        return inhand
 
     @helper("state")
     def getjoint(self, joint):
@@ -259,6 +287,6 @@ class NaoStateManager:
     def distance2obstacle(self):
         """ Returns the distance, in meters, to the closest obstacle facing the robot.
         """
-        raise NotImplemented
+        raise NotImplementedError
 
 
