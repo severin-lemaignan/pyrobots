@@ -26,34 +26,41 @@ class ROSActions:
         - an action name
 
         """
-        client = action['client']
-        self._pending_ros_actionservers.append(client) # store the action servers if we need to cancel the goals
+        if action['client']:
+            client = action['client']
+            self._pending_ros_actionservers.append(client) # store the action servers if we need to cancel the goals
 
-        goal = action['goal']
+            goal = action['goal']
+            
+            #state = self.GoalStatus
+            #result = client.get_result()
+
         
-        #state = self.GoalStatus
-        #result = client.get_result()
+            robotlog.debug("Sending goal " + str(action["goal"]) + " to " + str(client))
+            # Sends the goal to the action server 
+            client.send_goal(goal, done_cb = action["callback"], feedback_cb = action["feedback"])
 
-    
-        robotlog.debug("Sending goal " + str(action["goal"]) + " to " + str(client))
-        # Sends the goal to the action server 
-        client.send_goal(goal, done_cb = action["callback"], feedback_cb = action["feedback"])
+            if action['wait_for_completion']:
+                # Waits for the server to finish performing the action
+                client.wait_for_result()
 
-        if action['wait_for_completion']:
-            # Waits for the server to finish performing the action
-            client.wait_for_result()
+                if client in self._pending_ros_actionservers: # may be absent after a general cancelling
+                    self._pending_ros_actionservers.remove(client)
 
-            if client in self._pending_ros_actionservers: # may be absent after a general cancelling
-                self._pending_ros_actionservers.remove(client)
-
-            # Checks if the goal was achieved
-            if client.get_state() == self.GoalStatus.SUCCEEDED:
-                robotlog.debug('ROS Action succeeded')
-                return (True, None)
+                # Checks if the goal was achieved
+                if client.get_state() == self.GoalStatus.SUCCEEDED:
+                    robotlog.debug('ROS Action succeeded')
+                    return (True, None)
+                else:
+                    robotlog.error("Action failed! " + client.get_goal_status_text())
+                    return (False, client.get_goal_status_text())
             else:
-                robotlog.error("Action failed! " + client.get_goal_status_text())
-                return (False, client.get_goal_status_text())
-        else:
+                return (True, None)
+
+        elif action['publisher']:
+            publisher = action['publisher']
+            robotlog.debug("Publishing " + str(action["goal"]) + " to " + str(publisher))
+            publisher.publish(action['goal'])
             return (True, None)
 
 

@@ -96,22 +96,26 @@ def background_task(taskclass, args = None, wait_for_completion = True, abort = 
             "wait_for_completion": wait_for_completion,
             "callback": callback}
 
-def ros_request(client, goal, wait_for_completion = True, callback = None, feedback = None):
+def ros_request(handler, message, wait_for_completion = True, callback = None, feedback = None):
     """
-    :param name: an arbitrary name that describe what is this action (for logging purposes)
+    :param handler: either an actionlib client or a ROS publisher
+    :param message: either an actionlib goal or a message to be published
     :param callback: an (optional) callback that is called when the action is completed.
     :param feedback: an (optional) callback that is called everytime the feedback topic is updated.
     """
+    is_actionlib_client = False
     try:
-        name = client.action_client.ns
+        name = handler.action_client.ns
+        is_actionlib_client = True
     except AttributeError:
-        #probably in dummy mode!
-        name = client
+        #dummy mode or publisher
+        name = str(handler)
 
     return {"name": name,
             "middleware": "ros",
-            "client": client,
-            "goal": goal,
+            "client": handler if is_actionlib_client else None,
+            "publisher": handler if not is_actionlib_client else None,
+            "goal": message,
             "wait_for_completion": wait_for_completion,
             "callback": callback,
             "feedback": feedback}
