@@ -6,6 +6,8 @@ from robots.action import *
 
 
 @action
+@workswith(ROS)
+@workswith({POCOLIBS:["textos"]})
 def say(robot, msg, callback = None, feedback =None):
     """ Says loudly the message.
 
@@ -63,6 +65,14 @@ def say(robot, msg, callback = None, feedback =None):
                     callback = callback,
                     feedback=feedback
                 )] # Return a non-blocking action. Useful to be able to cancel it later!
+
+        elif "/nao_speech" in nodes:
+            if callback:
+                logger.error("Speech synthesis with Nao does not yet support callbacks.")
+            import rospy
+            from std_msgs.msg import String
+            publisher = rospy.Publisher('speech', String)
+            return [ros_request(publisher, String(msg))]
 
 
     return [python_request(execute)]
