@@ -212,14 +212,22 @@ class Robot(object):
         robotlog.warning("Done aborting all background tasks.")
 
     def _execute_knowledge(self, action):
+
+        lifespan = action["lifespan"]
         if action["action"] == "add":
             robotlog.debug("Adding facts to the knowledge base: " + str(action["args"]))
-            self.knowledge.add(action["args"], action["memory_profile"])
+            method = "add"
 
         if action["action"] == "retract":
             robotlog.debug("Removing facts to the knowledge base: " + str(action["args"]))
-            self.knowledge -= action["args"]
-       
+            method = "retract"
+
+        models = ["default"]
+        policy = {"method":method, 
+                  "models":models,
+                  "lifespan": lifespan}
+        self.knowledge.revise(action["args"], policy)
+
     def _execute_special(self, action):
         if action["action"] == "wait":
             robotlog.info("Waiting for " + str(action["args"]))

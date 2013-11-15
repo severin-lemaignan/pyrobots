@@ -127,12 +127,12 @@ def python_request(functor, args = [], wait_for_completion = True, callback = No
             "wait_for_completion": wait_for_completion,
             "callback": callback}
 
-def add_knowledge(stmts, memory_profile = "LONGTERM"):
+def add_knowledge(stmts, lifespan = None):
     return [{"name": "knowledge.add",
             "middleware": "knowledge",
             "action": "add",
             "args": stmts,
-            "memory_profile": memory_profile}]
+            "lifespan": lifespan}]
 
 def retract_knowledge(stmts):
     return [{"name": "knowledge.retract",
