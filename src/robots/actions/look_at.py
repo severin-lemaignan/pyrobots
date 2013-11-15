@@ -3,7 +3,7 @@ import logging; logger = logging.getLogger("robot." + __name__)
 import os
 
 from robots.lowlevel import *
-from robots.exception import RobotError
+from robots.exception import RobotError, UnknownFrameError
 
 from robots.action import *
 from robots.helpers import position
@@ -35,7 +35,11 @@ def look_at(robot, place, callback = None):
     if not place:
         return []
 
-    place = robot.poses[place]
+    try:
+        place = robot.poses[place]
+    except UnknownFrameError:
+        logger.warning("Could not resolve the pose %s. Skipping look_at." %place)
+        return []
 
     if robot.hasmodule("pr2SoftMotion"):
         return look_at_xyz_with_moveHead(robot, place['x'], place['y'], place['z'], place['frame'], callback)
