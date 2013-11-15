@@ -250,7 +250,7 @@ def glance_to(robot, place):
 
 @tested("22/02/2012")
 @action
-@workswith({POCOLIBS:['pr2SoftMotion']})
+@same_requirements_as(look_at)
 def sweep(robot, amplitude = 90, speed = 0.2):
     """ Makes a sweep movement with the robot head via pr2SoftMotion compared with its current position 
     
@@ -259,26 +259,26 @@ def sweep(robot, amplitude = 90, speed = 0.2):
     :param speed: Speed of the movement (default: 0.2)
     """
     import math
-    actions =[]
+    actions=[]
     
     amplitude_rd = math.radians(float(amplitude))
-    
-    head_tilt = robot.state.getjoint('head_tilt_joint')
-    head_pan = robot.state.getjoint('head_pan_joint')
+
+    head_pan, head_tilt = robot.state.getpose()["HEAD"]
 
     pose_head_base = {"HEAD": (head_pan,  head_tilt)}
     pose_head1 = {"HEAD": (head_pan + amplitude_rd/2,  head_tilt)}
     pose_head2 = {"HEAD": (head_pan - amplitude_rd/2,  head_tilt)}
 
-    actions =[
-        genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, speed, 1.0, 1.0, 1.0])
-    ]
+    actions = []
+    if robot.hasmodule("pr2SoftMotion"):
+        actions += [genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, speed, 1.0, 1.0, 1.0])]
 
     actions += setpose(robot, pose_head1) 
     actions += setpose(robot, pose_head2) 
-    actions +=[
-        genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
-    ]
+
+    if robot.hasmodule("pr2SoftMotion"):
+        actions +=[genom_request("pr2SoftMotion", "SetTimeScale",[1.0, 1.0, 1.0, 1.0, 1.0, 1.0])]
+
     actions += setpose(robot, pose_head_base) 
 
     return actions
