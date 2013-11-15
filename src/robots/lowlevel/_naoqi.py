@@ -65,7 +65,7 @@ class NAOqiActions:
         if action['wait_for_completion']:
             try:
                 res = method(*action["args"])
-                robotlog.debug('NAOqi action successfully completed with result: %s', str(res))
+                robotlog.debug('NAOqi action successfully completed with result: ' + str(res))
                 return (True, res)
             except RuntimeError as e:
                 robotlog.error("Action failed! " + str(e))
