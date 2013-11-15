@@ -163,10 +163,21 @@ class RobotAction:
             self.requirements = [self._normalize_requirements(req) for req in self.fn._requirements]
             self.print_requirements()
         elif hasattr(self.fn, "_same_requirements_as"):
-            if hasattr(self.fn._same_requirements_as, "_requirements"):
-                self.requirements = [self._normalize_requirements(req) for req in self.fn._same_requirements_as._requirements]
+
+            # recursively look for an action that defines requirements
+            def find_requirements_holder(fn):
+                if hasattr(fn, "_requirements"):
+                    return fn._requirements
+                elif hasattr(fn, "_same_requirements_as"):
+                    return find_requirements_holder(fn._same_requirements_as)
+                return None
+
+            reqs = find_requirements_holder(self.fn._same_requirements_as)
+
+            if reqs:
+                self.requirements = [self._normalize_requirements(req) for req in reqs]
             else:
-                raise RobotError("Action <%s> should have the same requirements as <%s>, but <%s> has no requirements." % (self.fqn, self.fn._same_requirements_as.__name__, self.fn._same_requirements_as.__name__))
+                raise RobotError("Action <%s> should have the same requirements as <%s>, but I could not determine <%s> requirements." % (self.fqn, self.fn._same_requirements_as.__name__, self.fn._same_requirements_as.__name__))
 
         logger.debug("Added " + self.fqn + \
                     " as available action.")
