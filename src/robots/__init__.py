@@ -342,7 +342,7 @@ class JidoSimu(Robot):
 class Nao(Robot):
     def __init__(self, host = "nao.local", port = 9559, knowledge = None, ros = False, dummy = False):
         super(self.__class__,self).__init__(host, port, 
-                                            supports = NAOQI | ROS if ros else NAOQI, 
+                                            supports = (NAOQI | ROS) if ros else NAOQI, 
                                             knowledge = knowledge, 
                                             dummy = dummy)
         robotlog.info("Actions loaded for Nao.")
