@@ -104,10 +104,10 @@ class Robot(object):
             self.knowledge = None
 
         if self.supports(POCOLIBS):
-            pocoactions.close()
+            self.pocoactions.close()
 
         if self.supports(ROS):
-            rosactions.close()
+            self.rosactions.close()
 
         robotlog.info('pyRobots properly closed. Bye bye!')
 
