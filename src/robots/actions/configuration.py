@@ -643,3 +643,7 @@ def movearm(robot, target, arm = "right"):
         )]
 
 
+@action
+@same_requirements_as(movearm)
+def pointsat(robot, target):
+    return movearm(robot, target)
