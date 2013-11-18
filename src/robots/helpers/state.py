@@ -7,6 +7,9 @@ from robots.action import *
 
 class StateManager:
 
+    def __init__(self, robot):
+        self.robot = robot
+ 
     @helper("state")
     def isseen(self, obj):
         """ Returns true if an object is currently seen by the
@@ -15,10 +18,16 @@ class StateManager:
         The exact semantics of "seen" depend on the robot and the
         type of object (human, artifact...)
 
+        The general method relies on the knowledge base, but robot-specific
+        state managers may override this behaviour.
+
         :param object: the ID of the object to check
         :returns: true if the object is visible, false otherwise.
         """
-        raise NotImplementedError
+        if self.robot.knowledge:
+            return "%s isVisible true" % obj in self.robot.knowledge
+
+        raise NotImplementedError("isseen requires a knowledge base to be available")
 
     @helper("state")
     def getjoint(self, name):
@@ -70,7 +79,7 @@ class PR2StateManager(StateManager):
      """
 
     def __init__(self, robot):
-        self.robot = robot
+        super(PR2StateManager, self).__init__(robot)
 
     @helper("state")
     def isseen(self, obj):
@@ -195,24 +204,11 @@ class PR2StateManager(StateManager):
         return data.ranges[nb_scans / 2]
 
 
-class NaoStateManager:
+class NaoStateManager(StateManager):
 
     def __init__(self, robot):
-        self.robot = robot
+        super(NaoStateManager, self).__init__(robot)
 
-
-    @helper("state")
-    def isseen(self, obj):
-        """ Returns true if an object is currently seen by the
-        robot.
-
-        The exact semantics of "seen" depend on the robot and the
-        type of object (human, artifact...)
-
-        :param object: the ID of the object to check
-        :returns: true if the object is visible, false otherwise.
-        """
-        raise NotImplementedError
 
     @helper("state")
     def hasinhand(self, hand="right"):
