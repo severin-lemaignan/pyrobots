@@ -28,7 +28,7 @@ def clip(v, vmin, vmax):
 @workswith({POCOLIBS:"platine"})
 @workswith(NAOQI)
 @action
-def look_at(robot, place, callback = None):
+def lookat(robot, place, callback = None):
     """ Orders the robot to look at a given place of object.
 
     If available, uses pr2SoftMotion::moveHead. Else tries with the platine-genom
@@ -85,6 +85,11 @@ def look_at(robot, place, callback = None):
         logger.warning("No module available to execute a 'look_at'. Skipping this action.")
         return []
 
+@action
+@same_requirements_as(lookat)
+def look_at(robot, place, callback = None):
+    return lookat(robot, place, callback)
+ 
 ###############################################################################
 
 
