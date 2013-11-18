@@ -3,6 +3,7 @@ import logging
 import threading
 logger = logging.getLogger("robot." + __name__)
 
+from robots.lowlevel import *
 from robots.actions.manipulation import haspickedsmthg
 from robots.helpers import places
 
@@ -21,19 +22,25 @@ def lookforobject(robot, obj, max_attempts = 4, mode = "wide_stereo"):
     :returns: True is the object is seen, False if it failed.
     """
 
-    robot.switch_active_stereo_pair(mode)
+    if robot.supports(ROS): #TODO: should be 'supports PR2'!
+        robot.switch_active_stereo_pair(mode)
 
-    robot.look_at([1.0,0.0,0.5,"base_link"])
+    try:
+        lastseenpose = robot.poses[obj]
+    except UnknownFrameError:
+        lastseenpose = [1.0,0.0,0.5,"base_link"]
+
+    robot.lookat(lastseenpose)
 
     robot.wait(2)
 
     attempts = 1
-    #while not (["myself sees " + obj] in self._robot.knowledge) \
+
     while not robot.state.isseen(obj) \
             and attempts <= max_attempts:
 
         # Looks once left, once right
-        robot.look_at([1.0, 0.3 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
+        robot.lookat([1.0, 0.3 * ((attempts % 2) * 2 - 1) , 0.5,"base_link"])
         robot.wait(2)
         if robot.state.isseen(obj):
             break
@@ -51,13 +58,13 @@ def lookforobject(robot, obj, max_attempts = 4, mode = "wide_stereo"):
     if (attempts <= max_attempts): #ok, found
         robot.look_at(obj)
         return True
-    elif mode == "wide_stereo":
+    elif robot.supports(ROS) and mode == "wide_stereo":
         # try by looking more closely
         return lookforobject(robot, obj, max_attempts, mode = "narrow_stereo")
     else: # not found
-        #
         robot.look_at([1.0,0.0,1.0,"base_link"])
-        robot.switch_active_stereo_pair("wide_stereo")
+        if robot.supports(ROS):
+            robot.switch_active_stereo_pair("wide_stereo")
         return False
 
 class DesiresPerformer():
@@ -809,7 +816,11 @@ class Look(Desire):
             try:
                 robot.look_at(self.object)
             except UnknownFrameError:
-                robot.say("I do not know this object!")
+                logger.info("Object %s unknown. Trying to find it..." % self.object)
+                robot.say("Where it is?")
+                found = lookforobject(robot, self.object)
+                if not found:
+                    robot.say("I can not find this object!")
         else:
             if robot.poses.human(self.to):
                 robot.look_at(self.to)
