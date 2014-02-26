@@ -1,4 +1,30 @@
 pyRobots is a collection of Python scripts to easily interface with the robot
 ROS or GenoM functional modules.
 
-It currently only support the PR2 robot.
+See http://www.openrobots.org/wiki/wiki/pyrobots/
+
+It has some functionality for Nao but has mostly been tested with PR2.
+
+-------
+With the provided pyrobots code, when instantiating a ROS-enabled Nao object 
+with nao=robots.Nao(ros=True), the following warning may appear.
+
+robot.robots.action: Timeout while waiting for a TF transformation between /map
+and /base_link. ROS positions won't be available.
+
+The solution to this is to create a static transform publisher which broadcasts 
+the TF between map and the robot. Adding the following to a launch file run by 
+ROS will prevent the error from appearing as it will make the tree have the 
+required connections map->odom->base_link (see 
+http://www.ros.org/reps/rep-0105.html).
+
+<node pkg="tf" type="static_transform_publisher" name="maplink_broadcaster" args="0 0 0 0 0 0 map odom 100" />
+
+Note: There is suspicion that a locally stored version of the TF tree exists,
+as sometimes restructuring the tree after instantiating a Nao object does not 
+take affect until the object is reinitialised.
+
+Note: If the static publisher (or any other TF publishers) are being run on a 
+machine other than the rosmaster, differences in system clocks can lead to 
+errors such as "TF Error: Lookup would require extrapolation into the past." 
+Using a program such as chrony to synchronise the clocks can help overcome this.
