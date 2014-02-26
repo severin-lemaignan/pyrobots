@@ -308,12 +308,12 @@ class ROSPositionKeeper:
             self.isrosconfigured = False
             return
 
-        self.tf = tf.TransformListener()
+        self.tf = tf.TransformListener(True, rospy.Duration(10)) # interpolation, cache duration
 
         try:
             self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
         except tf.Exception: # likely a timeout
-            logger.error("Timeout while waiting for a TF transformation between /map"
+            logger.error("Timeout while waiting for a TF transformation between /map "
                          "and /base_link. ROS positions won't be available.")
             self.isrosconfigured = False
             return
@@ -372,9 +372,12 @@ class ROSPositionKeeper:
         if not self.isrosconfigured:
             return None
 
-        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
-            t = self.tf.getLatestCommonTime("/map", frame)
-            position, quaternion = self.tf.lookupTransform("/map", frame, t)
+        if not self.tf.frameExists("map"):
+            logger.fatal("Lost our map!!")	
+            return None
+        if self.tf.frameExists(frame):
+            t = self.tf.getLatestCommonTime("map", frame)
+            position, quaternion = self.tf.lookupTransform("map", frame, t)
             return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ("map",)))
 
         logger.debug("No such frame " + frame + " in TF")
