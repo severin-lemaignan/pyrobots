@@ -176,7 +176,7 @@ class RobotAction:
         self.fn = fn
         self.name = self.fn.__name__
         self.module = module
-        self.fqn = module.__name__ + "." + self.name
+        self.fqn = (module.__name__ + "." + self.name) if module else self.name
 
         self.requirements = None
         if hasattr(self.fn, "_requirements"):
@@ -255,7 +255,9 @@ class RobotAction:
         return hasattr(self.fn, "_broken")
 
     def print_requirements(self):
+        logger.debug(self.str_requirements())
 
+    def str_requirements(self):
         def printmw(req):
             res = []
             for mw, modules in req.items():
@@ -268,7 +270,7 @@ class RobotAction:
         req = self.requirements
         
         if not req:
-            logger.debug("Action <%s> does not specify platform requirements" % self.fqn)
+            return ("Action <%s> does not specify platform requirements" % self.fqn)
         else:
             res = "Action <%s> requires " % self.fqn
             if len(req) == 1:
@@ -277,7 +279,7 @@ class RobotAction:
                 res += "either [" + "] or [".join([printmw(option) for option in req])
 
             res += "]."
-            logger.debug(res)
+            return(res)
 
 if __name__ == "__main__":
 
@@ -290,4 +292,4 @@ if __name__ == "__main__":
     toto._requirements = [ROS, [POCOLIBS, ROS], {ROS:[], POCOLIBS:"pr2SoftMotion"}, {ROS:["toto", "tata"]}]
 
     action = RobotAction(toto, sys.modules["__main__"])
-    action.print_requirements()
+    print(action.str_requirements())

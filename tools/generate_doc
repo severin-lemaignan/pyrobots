@@ -2,6 +2,9 @@
 
 import sys
 import datetime
+from robots.action import RobotAction
+from robots.lowlevel import *
+
 from robots.actions import nav, primitive_nav, look_at, manipulation, configuration, games, administration
 
 import robots.helpers.geometric_planning
@@ -50,7 +53,8 @@ for act_m in [getattr(m, fn) for fn in dir(m)]:
                 (fn.__name__, 
                 fn.__doc__, 
                 fn._broken if hasattr(fn, "_broken") else False,
-                fn._tested if hasattr(fn, "_tested") else None))
+                fn._tested if hasattr(fn, "_tested") else None,
+                RobotAction(fn)))
             anchors[fn.__name__] = act_m.__name__ + "." + fn.__name__
 
 # Helpers (methods of helping classes)
@@ -78,7 +82,7 @@ def moinmoin():
     for m in actions.keys():
         print("<<Anchor(" + m + ")>>") # anchor
         print("=== Category " + m.split('.')[2] + " ===")
-        for name, doc, broken, tested in actions[m]:
+        for name, doc, broken, tested, requirements in actions[m]:
             params = []
             print("<<Anchor(" + m + "." + name + ")>>") # anchor
             print("==== Action " + name + " ====")
@@ -86,13 +90,17 @@ def moinmoin():
                 print("\n{{{#!wiki caution\n"
                     "'''/!\ Action currently broken!'''\n"
                     "}}}")
-            if not tested:
-                print("\n{{{#!wiki caution\n"
-                    "'''{i} Action not tested!'''\n"
-                    "}}}")
-            else:
+            #if not tested:
+            #    print("\n{{{#!wiki caution\n"
+            #        "'''{i} Action not tested!'''\n"
+            #        "}}}")
+            #else:
+            #    print("\n{{{#!wiki note\n"
+            #        "(./) Action tested on the " + tested + "\n"
+            #        "}}}")
+            if requirements:
                 print("\n{{{#!wiki note\n"
-                    "(./) Action tested on the " + tested + "\n"
+                    "{i} " + requirements.str_requirements() + "\n"
                     "}}}")
             if doc: 
                 doc, params, returndoc = parse_docstring(doc)
@@ -107,17 +115,18 @@ def moinmoin():
     
             print("\n")
             print("Example:\n{{{#!highlight python")
+            robot_name = "Nao" if (requirements.requirements and NAOQI in [options.keys()[0] for options in requirements.requirements]) else "PR2"
             print("import robots")
-            print("nao = robots.Nao() # Pass 'dummy=True' to test without the real robot\n")
+            print("%s = robots.%s() # Pass 'dummy=True' to test without the real robot\n" % (robot_name.lower(), robot_name))
             if params:
                 for p,d in params:
                     if p in special_doc:
                         print(p + " = " + p.upper() + " # " + special_doc[p] )
                     else:
                         print(p + " = " + p.upper() + " # define here a " + p )
-                print("nao." + name + "(" + ", ".join([p for p,d in params]) + ")")
+                print("%s." % robot_name.lower() + name + "(" + ", ".join([p for p,d in params]) + ")")
             else:
-                print("nao." + name + "()")
+                print("%s." % robot_name.lower() + name + "()")
             print("}}}")
             print("\n")
 
