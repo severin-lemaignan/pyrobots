@@ -1,4 +1,2 @@
-ROS=1
-POCOLIBS=2
+from .lowlevel import get_robot, RobotLowLevel
 
-mw_names = {1:"ROS", 2: "Pocolibs"}

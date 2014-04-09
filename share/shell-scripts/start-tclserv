@@ -1,9 +1,0 @@
-#1/bin/csh
-
-h2 init -p 10000000
-
-tclserv &
-
-echo "pocolibs initialized and tclserv started"
-
-

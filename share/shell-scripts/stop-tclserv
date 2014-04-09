@@ -1,6 +1,0 @@
-#!/bin/csh
-
-pkill tclserv
-
-h2 end
-

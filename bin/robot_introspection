@@ -1,0 +1,240 @@
+#! /usr/bin/env python
+
+import logging
+logging.basicConfig(filename='example.log',level=logging.DEBUG)
+
+import Pyro4
+import time
+import sys
+
+from threading import Thread
+
+class ActionState:
+    RUNNING = 1
+    COMPLETED = 2
+    WAITING = 3
+
+    def __init__(self, name, 
+                       owner, 
+                       parent, 
+                       args, 
+                       kwargs, 
+                       state = RUNNING, 
+                       arg_str = None, 
+                       children = None, 
+                       started_time = None, 
+                       completed_time = None, 
+                       waiting_on = None,
+                       events = None):
+        self.name = name
+        self.args = args
+        self.kwargs = kwargs
+        self.arg_str = "()"
+
+        if args and not kwargs:
+            self.arg_str = "(%s)" % ", ".join([str(a) for a in args])
+        elif kwargs and not args:
+            self.arg_str = "(%s)" % ", ".join(["%s=%s" % (str(k), str(v)) for k, v in kwargs.items()])
+        elif args and kwargs:
+            self.arg_str = "(%s, " % ", ".join([str(a) for a in args])
+            self.arg_str += "%s)" % ", ".join(["%s=%s" % (str(k), str(v)) for k, v in kwargs.items()])
+
+
+        self.owner = owner
+        self.state = state
+        self.started_time = started_time if started_time else time.time()
+        self.completed_time = completed_time
+
+        self.parent = parent
+        self.children = children if children else []
+        self.events = events if events else []
+
+        self.waiting_on = waiting_on
+        logging.info("%.3f\t%s\t%s%s started." %(self.started_time, self.owner, self.name, self.arg_str))
+
+    def completed(self):
+        self.state = self.COMPLETED
+        self.completed_time = time.time()
+        logging.info("%.3f\t%s\t%s%s completed." %(self.completed_time, self.owner, self.name, self.arg_str))
+
+    def duration(self):
+        if self.state == self.RUNNING:
+            return time.time() - self.started_time
+        else:
+            return self.completed_time - self.started_time
+
+    def __getstate__(self):
+        state = self.__dict__
+        return state
+
+class IntrospectionServer(object):
+
+    def __init__(self):
+        self._state = {}
+
+
+        self.last_ping = time.time()
+
+    def state(self):
+        return self._state, self.last_ping
+
+    def initiate(self, owner):
+        self._state[owner] = ActionState("main", owner, ActionState.RUNNING, None, None)
+
+    def action_started(self, name, owner, parent, args, kwargs):
+        self.last_ping = time.time()
+        action = ActionState(name, owner, parent, args, kwargs)
+
+        self._state[owner] = action
+        self._state[parent].children.append(owner)
+
+    def action_completed(self, name, owner):
+        self.last_ping = time.time()
+
+        action = self._state[owner]
+        action.completed()
+
+    def action_waiting(self, owner, condition):
+        self.last_ping = time.time()
+
+        action = self._state[owner]
+        action.waiting_on = condition
+        action.state = ActionState.WAITING
+        logging.info("%.3f\t%s waiting on <%s>." %(time.time(), owner, condition))
+
+    def action_waiting_over(self, owner):
+        self.last_ping = time.time()
+
+        action = self._state[owner]
+        action.state = ActionState.RUNNING
+        logging.info("%.3f\t%s stopped waiting." %(time.time(), owner))
+
+    def action_subscribe_event(self, owner, condition):
+        self.last_ping = time.time()
+
+        action = self._state[owner]
+        action.events += condition
+        logging.info("%.3f\t%s now monitors %s." %(time.time(), owner, condition))
+
+    def action_event_fired(self, owner, condition):
+        pass
+
+    def ping(self):
+
+        self.last_ping = time.time()
+
+class IntrospectionPrinter(object):
+
+    def __init__(self):
+        self.state = {}
+        
+        self.root = None
+
+        self.initdisplay()
+        self.running = True
+        self.display_thr = Thread(target = self.printer)
+        self.display_thr.start()
+
+        self.last_ping = None
+
+    def initdisplay(self):
+
+        self.out = ConsoleTK(height = 20)
+
+    def close(self):
+        self.running = False
+        self.display_thr.join()
+        self.out.moveto(0, 0)
+        self.out.close()
+
+    def printer(self):
+
+        def show(action, level, row):
+            self.out.moveto(level * 2, row)
+            fg = "green" if action.state == ActionState.RUNNING else "base0"
+            
+            if action.state == ActionState.WAITING:
+                fg = "yellow"
+                msg = " waiting on <%s>" % action.waiting_on
+            else:
+                msg = ""
+
+            duration = " [%.1fs]" % ((action.completed_time if action.completed_time else time.time()) - action.started_time)
+
+            self.out.savepos()
+            self.out.out.write(self.out.colorize(action.name, fg))
+            self.out.out.write(self.out.colorize(action.arg_str + " "))
+            self.out.out.write(self.out.colorize(msg))
+            self.out.out.write(self.out.colorize(duration))
+            self.out.restorepos()
+
+            row += 1
+
+            #if action.state != ActionState.COMPLETED:
+            if True:
+                for c in action.children:
+                    row = show(self.state[c], level + 1, row)
+
+            return row
+
+
+        while self.running:
+            time.sleep(0.05)
+
+            if not self.root:
+                continue
+
+            self.out.moveto(0, 0)
+            self.out.clear(80, 20)
+
+            time_since_last_ping = (time.time() - self.last_ping) * 1000
+            if time_since_last_ping > 1000:
+                self.out.savepos()
+                self.out.out.write("No ping since %.1fs! Controller dead?" % (time_since_last_ping / 1000))
+                self.out.restorepos()
+            else:
+                self.out.savepos()
+                self.out.out.write("Last ping: %.1fms ago" % ((time.time() - self.last_ping) * 1000))
+                self.out.restorepos()
+            row = 1
+            level = 0
+
+            show(self.root, level, row)
+
+
+
+if __name__ == "__main__":
+
+    if "--server" in sys.argv:
+        try:
+            daemon=Pyro4.Daemon()                 # make a Pyro daemon
+            ns=Pyro4.locateNS()
+        except Pyro4.errors.NamingError:
+            print("No Pyro nameserver running. You can start one with 'python -m Pyro4.naming'")
+            sys.exit(1)
+
+        introspection = IntrospectionServer()
+        uri=daemon.register(introspection)   # register the greeting object as a Pyro object
+        ns.register("ranger.introspection", uri)
+
+        print("Introspection server for pyranger ready.")
+        daemon.requestLoop()                  # start the event loop of the server to wait for calls
+
+
+    else:
+        from consoletk import ConsoleTK
+        uri = "PYRONAME:ranger.introspection" # uses name server
+        introspection = Pyro4.Proxy(uri)
+   
+        printer = IntrospectionPrinter()
+
+        try:
+            while True:
+                state, printer.last_ping = introspection.state()
+                printer.state = {k:ActionState(**v) for k,v in state.items()}
+                if printer.state:
+                    printer.root = printer.state[str(0)]
+
+                time.sleep(0.05)
+        finally:
+            printer.close()

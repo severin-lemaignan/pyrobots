@@ -1,13 +1,14 @@
-import logging; logger = logging.getLogger("robot." + __name__)
+import logging; logger = logging.getLogger("ranger.position")
 
 import math
 import numpy
 import transformations
 
-from robots.lowlevel import *
-from robots.action import *
-from robots.exception import UnknownFrameError, RobotError
-import places
+class UnknownFrameError(RuntimeError):
+    pass
+
+
+FRAMES = ["map", "base_link", "eyes_link", "station", "beacon"]
 
 POS_EPSILON = 0.1 # Min distance in meters from origin to be considered as 'in game'
 
@@ -17,35 +18,18 @@ class PoseManager:
     frame, and a quaternion describing the orientation of the object in radians.
     
     This class helps with:
-     * retrieving pose using ROS TF, SPARK or a static library of positions,
      * converting from other convention to our convention,
      * converting back to other conventions.
      
      """
     
     def __init__(self, robot):
-        
-        if robot.supports(ROS):
-            self.ros = ROSPositionKeeper()
-        else:
-            logger.warning("Initializing the PoseManager without ROS support." +\
-                           "TF transformations won't be available.")
-            self.ros = None
-            
-        if robot.supports(POCOLIBS) and robot.hasmodule('spark'):
-            from robots.action import genom_request
-            self.spark = SPARKPositionKeeper(robot)
-        else:
-            logger.warning("Initializing the PoseManager without SPARK support." +\
-                           "Positions of SPARK objects won't be available.")
-            self.spark = None
-        
-    def quaternion_from_euler(self, rx, ry, rz):
+        self.robot = robot
+   
+    @staticmethod
+    def quaternion_from_euler(rx, ry, rz):
         return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
-    
-    def euler_from_quaternion(self, rx, ry, rz):
-        return transformations.euler_from_quaternion(pose['qx'], pose['qy'], pose['qz'], pose['qw'], 'sxyz')
-        
+   
     def normalizedict(self, pose):
         if not 'x' in pose:
             pose['x'] = 0.0
@@ -116,7 +100,7 @@ class PoseManager:
             x,y,z, qx, qy, qz, qw, frame = pose
             return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame': frame})
        
-        raise RobotError("Don't know what to do with pose as array %s" % str(pose))
+        raise RuntimeError("Don't know what to do with pose as array %s" % str(pose))
     
     def normalize(self, pose):
         if isinstance(pose, list) or isinstance(pose, tuple):
@@ -124,7 +108,7 @@ class PoseManager:
         if isinstance(pose, dict):
             return self.normalizedict(pose)
         
-        raise RobotError("normalize() takes either lists or dict as input.")
+        raise RuntimeError("normalize() takes either lists or dict as input.")
     
     def __getitem__(self, raw):
         """ Implements the PoseManager[] operator as an alias for PoseManager.get()
@@ -136,8 +120,7 @@ class PoseManager:
         and normalized pose.
         
         Input may be:
-         * a SPARK entity (either an object name of a pair (object name, part name))
-         * a ROS TF frame
+         * a frame
          * an incomplete pose dictionary
          * a list or tuple (x,y,z), (x,y,z,frame) or (z,y,z,rx,ry,rz) or (x,y,z,qx,qy,qz,qw)
         """
@@ -145,90 +128,27 @@ class PoseManager:
         pose = None
         
         if isinstance(raw, basestring):
-            
-            p = places.places()
-            # Is it a known symbolic place?
-            if raw in p.keys():
-                return self.get(p[raw]) # normalize it
-            
-            #Either a SPARK object name or a ROS TF frame
-            if self.ros:
-                pose = self.ros.getabspose(raw)
-
-            if not pose:
-                #Trying with ROS
-                #Trying with SPARK
-                if self.spark:
-                    pose = self.spark.getabspose(raw)
-                if not pose:
-                    raise UnknownFrameError("Unknown object or frame '%s'" % raw)
-                else:
-                    return self.normalize(pose)
-            else:
+            pose = self.getabspose(raw)
+            if pose:
                 return self.normalize(pose)
-            
+        
+            raise UnknownFrameError("Unknown object or frame '%s'" % raw)
+        
         else:
-            try:
-                # SPARK tuple (object name, part)?
-                obj, part = raw
-                if isinstance(obj, basestring) and isinstance(part, basestring):
-                    if self.spark:
-                        pose = self.spark.getabspose(raw)
-                    if not pose:
-                        raise UnknownFrameError("Unknown object or part '%s'" % raw)
-                    else:
-                        return self.normalizelist(pose)
-                else:
-                    raise UnknownFrameError("Unable to recognize the pose %s" % raw)
-            except TypeError:
-                raise RobotError("Unable to process the pose '%s'" % raw)
-            except ValueError:
-                # List or dict (x,y,z,...)?
-                try:
-                    return self.normalize(raw)
-                except RobotError as re:
-                    raise RobotError("Unable to process the pose '%s' (original error was:%s)" % (raw, str(re)))
+            return self.normalize(raw)
 
-    @helper("poses")
     def myself(self):
         """
         Returns the current robot's pose, ie the pose of the ROS TF 'base_link'
         frame.
         """
-        if self.ros:
-            try:
-                return self.ros.getabspose("base_link")
-            except RobotError as e:
-                if "base_link" in e.value:
-                    logger.error("The robot is not localized!")
-                    return None
-        return None
+        return self.getabspose("/base_link")
 
-    @helper("poses")
-    def human(self, human, part = 'Pelvis'):
-        """
-        Returns the pose of a human, either using Pocolibs' SPARK or ROS TF.
-
-        If using SPARK, a body part may be specified (default to 'Pelvis'). For
-        the head, the part is "HeadX".
-
-        If using ROS, we return the pose of a TF frame called 'face_<human>' or
-        'human_<human>'.
-
-        """
-        # Where is the human?
-        if self.spark:
-            return self.spark.getabspose(human, part)
-        elif self.ros:
-            pose = self.ros.getabspose("face_%s" % human)
-            return pose if pose else self.ros.getabspose("human_%s" % human)
-        else:
-            logger.error("Human localization currently requires SPARK or ROS")
-            return None
-
-    @helper("poses")
-    def distance(self, pose1, pose2):
+    def distance(self, pose1, pose2 = "base_link"):
         """ Returns the euclidian distance between two pyRobots poses.
+
+        If the second pose is omitted, "base_link" is assumed (ie, distance
+        between a pose and the robot itself).
         """
         p1 = self.get(pose1)
         p2 = self.get(pose2)
@@ -237,194 +157,133 @@ class PoseManager:
                          math.pow(p2["y"] - p1["y"], 2) + \
                          math.pow(p2["z"] - p1["z"], 2))
 
-    
-class ROSPositionKeeper:
-    def __init__(self):
-        self.isrosconfigured = True
+    def _xyz_to_mat44(self, pos):
+        return transformations.translation_matrix((pos['x'], pos['y'], pos['z']))
 
-        try:
-            import rospy
-            import tf
-        except ImportError: # Incorrect ROS setup!
-            self.isrosconfigured = False
-            return
+    def _xyzw_to_mat44(self, ori):
+        return transformations.quaternion_matrix((ori['qx'], ori['qy'], ori['qz'], ori['qw']))
 
-        self.tf = tf.TransformListener()
-
-        try:
-            self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
-        except tf.Exception: # likely a timeout
-            logger.error("Timeout while waiting for TF transformations!"
-                         " Did you initialize the PR2?\n ROS positions won't be available.")
-            self.isrosconfigured = False
-            return
-
-    @tested("14/06/2012")
-    @helper("poses.ros")
-    def asROSpose(self, pose):
-        """ Returns a ROS PoseStamped from a pyRobots pose.
-
-        :param pose: a standard pyRobots pose (SPARK id, TF frame, [x,y,z],
-        [x,y,z,rx,ry,rz], [x,y,z,qx,qy,qw,qz], {'x':..., 'y':...,...})
-
-        :return: the corresponding ROS PoseStamped
-        """
-
-        from geometry_msgs.msg import PoseStamped
-        import rospy
-
-        poseStamped = PoseStamped()
-
-        poseStamped.header.frame_id = pose["frame"]
-        poseStamped.header.stamp = self.tf.getLatestCommonTime("/map", pose["frame"])
-        poseStamped.pose.position.x = pose["x"]
-        poseStamped.pose.position.y = pose["y"]
-        poseStamped.pose.position.z = pose["z"]
-        poseStamped.pose.orientation.x = pose["qx"]
-        poseStamped.pose.orientation.y = pose["qy"]
-        poseStamped.pose.orientation.z = pose["qz"]
-        poseStamped.pose.orientation.w = pose["qw"]
-
-        return poseStamped
-
-    def inframe(self, pose, frame):
-        """ Transforms a given pose in the given frame.
-        """
-        if not self.isrosconfigured:
-            return None
-
-        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
-
-            poseStamped = self.asROSpose(pose)
-            newPoseStamped = self.tf.transformPose(frame, poseStamped)
-
-            return {"x":newPoseStamped.pose.position.x,
-                    "y":newPoseStamped.pose.position.y,
-                    "z":newPoseStamped.pose.position.z,
-                    "qx":newPoseStamped.pose.orientation.x,
-                    "qy":newPoseStamped.pose.orientation.y,
-                    "qz":newPoseStamped.pose.orientation.z,
-                    "qw":newPoseStamped.pose.orientation.w,
-                    "frame": frame}
-
-        logger.error("Could not transform the pose from /map to the frame " + frame) #TODO: For some reason, the logger do not work
-        return None
-
+    def _to_mat4(self, pose):
+        return numpy.dot(self._xyz_to_mat44(pose), self._xyzw_to_mat44(pose))
 
     def getabspose(self, frame):
-        if not self.isrosconfigured:
-            return None
-
-        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
-            t = self.tf.getLatestCommonTime("/map", frame)
-            position, quaternion = self.tf.lookupTransform("/map", frame, t)
-            return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ("map",)))
-
-        logger.error("Could not read the pose of " + frame + " in /map") #TODO: For some reason, the logger do not work
-        return None
-
-
-    def xyz2pantilt(self, x, y, z, frame = "map"):
-        """ BROKEN! Computation of pan and tilt is wrong.
-
-        Convert a xyz target to pan and tilt angles for the head.
-
-        :param x: the x coordinate
-        :param y: the y coordinate
-        :param z: the z coordinate
-        :param frame: the frame in which coordinates are interpreted
-        :returns: (pan, tilt) in radians
         """
-        t = self.tf.getLatestCommonTime("/head_pan_link", frame)
-        base, quaternion = self.tf.lookupTransform("/head_pan_link", frame, t)
-        
-        target = [base[0] + x, base[1] + y, base[2] + z]
-        pan = numpy.arctan2(target[1], target[0])
-        tilt = numpy.arctan2(target[2], target[0])
-        
+        Returns the a frame pose in the /map frame.
+        """
+        frame = frame.lstrip("/")
+
+        if frame == "base_link":
+            return [self.robot.x, self.robot.y, 0.0, 0.0, 0.0, self.robot.theta]
+
+        if frame == "map" or frame == "station":
+            # the charging station is the origin of the map
+            return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+        if frame == "eyes_link":
+            # position of the (middle of) the eyes
+            return self.inframe(
+                    [0.2, 0.0, 0.2, 0.0, 0.0, 0.0, "base_link"],
+                    "map")
+
+        if frame.startswith("beacon"):
+            beacon_id = int(frame.split("_")[1])
+            try:
+                beacon = self.robot.beacons[beacon_id]
+            except KeyError:
+                raise UnknownFrameError("Beacon %s never seen" % beacon_id)
+
+            if beacon.obsolete():
+                raise UnknownFrameError("Beacon %s has obsolete position (not seen since long time)" % beacon_id)
+
+            return self.inframe(
+                    [beacon.x, beacon.y, 0.0, 0.0, 0.0, beacon.theta, "base_link"],
+                    "map")
+
+        raise UnknownFrameError("Frame %s does not exist." % frame)
+
+    def inframe(self, pose, frame):
+        """ Transform a pose from one frame to another one.
+
+        Uses transformation matrices. Could be refactored to use directly
+        quaternions.
+        """
+        pose = self.get(pose)
+
+        if pose['frame'] == "map":
+            orig = numpy.identity(4)
+        else:
+            orig = self._to_mat4(self.get(pose["frame"]))
+
+        if frame == "map":
+            dest = numpy.identity(4)
+        else:
+            dest = numpy.linalg.inv(self._to_mat4(self.get(frame)))
+
+        poseMatrix = self._to_mat4(pose)
+
+        transf = numpy.dot(dest, orig)
+        transformedPose = numpy.dot(transf, poseMatrix)
+
+        qx,qy,qz,qw = transformations.quaternion_from_matrix(transformedPose)
+        x,y,z = transformations.translation_from_matrix(transformedPose)
+
+        return {"x":float(x),
+                "y":float(y),
+                "z":float(z),
+                "qx":float(qx),
+                "qy":float(qy),
+                "qz":float(qz),
+                "qw":float(qw),
+                "frame": frame}
+
+
+    def pantilt(self, pose, ref="/base_link"):
+        """
+        Convert a xyz target to pan and tilt angles from a given 
+        viewpoint.
+
+        :param pose: the target pose
+        :param ref: the reference frame (default to base_link)
+        :returns: (pan, tilt) in radians, in ]-pi, pi]
+        """
+        pose = self.inframe(pose, ref)
+        pan = self.normalize_angle(numpy.arctan2(pose['y'], pose['x']))
+        tilt = self.normalize_angle(numpy.arctan2(pose['z'], pose['x']))
         return (pan,tilt)
 
-class SPARKPositionKeeper:
-    def __init__(self, robot):
-        self.robot = robot
+    @staticmethod
+    def normalize_angle(angle):
+        """ Returns equivalent angle such as  -pi < angle <= pi
+        """
+        angle = angle % (2 * math.pi) # => angle > 0
+        return float(angle if angle <= math.pi else (-math.pi + angle % math.pi))
+
+
+    def isin(self, point,polygon):
+        """
+        Determines if a 2D point is inside a given 2D polygon or not.
         
-    def getrelativepose(self, robot1, robot2):
-
-        raw = robot.execute([genom_request("spark", "GetRobotPoseRelativeToAnotherRobot", [robot1, robot2])])
-        return _process_result(raw)
-
-    def getabspose(self, obj, part = "HeadX"): #HeadX is useful to find the human head. Ignored by SPARK for other objects.
-
-        raw = self.robot.execute([genom_request("spark", "GetJointAbsPose", [obj, part])])
-        return self._process_result(raw)
+        :param point: a (x,y) pair
+        :param polygon: a list of (x,y) pairs.
         
-    def _process_result(self, raw):
-        
-        ok, res = raw
-        if not ok:
-            # Object probably does not exist
-            return None
-        yaw, pitch, roll, x, y, z = [float(x) for x in res]
-        
-        if abs(x) < POS_EPSILON and abs(y) < POS_EPSILON:
-            # Still at origin
-            logger.info("Object still at origin. Considered as 'not in game'")
-            return None
-            
-        return (x, y, z, roll, pitch, yaw)
-        
+        Copied from: http://www.ariel.com.au/a/python-point-int-poly.html
+        """
 
-def isin(point,polygon):
-    """
-    Determines if a 2D point is inside a given 2D polygon or not.
-    
-    :param point: a (x,y) pair
-    :param polygon: a list of (x,y) pairs.
-    
-    Copied from: http://www.ariel.com.au/a/python-point-int-poly.html
-    """
+        x,y = point
+        n = len(polygon)
+        inside =False
 
-    x,y = point
-    n = len(polygon)
-    inside =False
+        p1x,p1y = polygon[0]
+        for i in range(n+1):
+            p2x,p2y = polygon[i % n]
+            if y > min(p1y,p2y):
+                if y <= max(p1y,p2y):
+                    if x <= max(p1x,p2x):
+                        if p1y != p2y:
+                            xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x,p1y = p2x,p2y
 
-    p1x,p1y = polygon[0]
-    for i in range(n+1):
-        p2x,p2y = polygon[i % n]
-        if y > min(p1y,p2y):
-            if y <= max(p1y,p2y):
-                if x <= max(p1x,p2x):
-                    if p1y != p2y:
-                        xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
-                    if p1x == p2x or x <= xinters:
-                        inside = not inside
-        p1x,p1y = p2x,p2y
-
-    return inside
-
-def isonstage(target):
-    """
-    Returns true if target is currently on stage.
-
-    The stage coordinates are read from the symbolic positions library
-    (STAGE_{A|B|C|D])
-
-    :param target: an object that responses to target["x"] and target["y"]
-    """
-    
-    if not target:
-        return False
-        
-    from helpers import places
-    
-    a = places.read()["STAGE_A"]
-    b = places.read()["STAGE_B"]
-    c = places.read()["STAGE_C"]
-    d = places.read()["STAGE_D"]
-    
-    poly = [(a["x"], a["y"]), (b["x"], b["y"]), (c["x"], c["y"]), (d["x"], d["y"])]
-
-    point = (target["x"], target["y"])
-
-    return isin(point, poly)
+        return inside
 
