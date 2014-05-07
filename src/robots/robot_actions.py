@@ -95,6 +95,7 @@ class RobotActionThread(PausableThread):
         except BaseException:
             e = sys.exc_info()[1]
             logger.error("Exception in action <%s>: %s"%(self.fn.__name__, e))
+            logger.error(traceback.format_exc())
             self.future.set_exception(e)
         else:
             self.future.set_result(result)

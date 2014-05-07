@@ -91,15 +91,3 @@ class ResourceLockedError(RuntimeError):
     def __str__(self):
         return repr(self.value)
 
-
-LPUPIL = Resource("left pupil")
-RPUPIL = Resource("right pupil")
-LLID = Resource("left lid")
-RLID = Resource("right lid")
-LEYE = CompoundResource(LPUPIL, LLID, name = "left eye")
-REYE = CompoundResource(RPUPIL, RLID, name = "right eye")
-LIDS = CompoundResource(LLID, RLID, name = "eyelids")
-EYES = CompoundResource(LEYE, REYE, name = "eyes")
-WHEELS = Resource("wheels")
-AUDIO = Resource("audio")
-LEDS = Resource("LEDs")

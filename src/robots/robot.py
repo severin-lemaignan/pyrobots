@@ -115,15 +115,19 @@ class GenericRobot(object):
 
         for pkg in pkgs:
             if isinstance(pkg, str):
-                if pkg in sys.modules:
-                    path = sys.modules[pkg].__path__
-                    for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
-                        m = sys.modules[pkg + "." + module_name]
-                        for member in [getattr(m, fn) for fn in dir(m)]:
-                            if hasattr(member, "_action"):
-                                actions.append(member)
-                else:
-                    raise RuntimeError("While collecting robot actions, I encountered an unknown module <%s>!" % pkg)
+                if pkg not in sys.modules:
+                    try:
+                        __import__(pkg)
+                    except ImportError:
+                        raise RuntimeError("While collecting robot actions, I encountered an unknown module <%s>!" % pkg)
+
+                path = sys.modules[pkg].__path__
+                for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
+                    __import__(pkg + "." + module_name)
+                    m = sys.modules[pkg + "." + module_name]
+                    for member in [getattr(m, fn) for fn in dir(m)]:
+                        if hasattr(member, "_action"):
+                            actions.append(member)
             else:
                 # we assume a list of methods has been passed 
                 if hasattr(pkg, "_action"):
