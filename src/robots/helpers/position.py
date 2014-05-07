@@ -1,4 +1,4 @@
-import logging; logger = logging.getLogger("ranger.position")
+import logging; logger = logging.getLogger("robots.position")
 
 import math
 import numpy

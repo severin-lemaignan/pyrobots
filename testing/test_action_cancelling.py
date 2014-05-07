@@ -1,11 +1,12 @@
 #! /usr/bin/env python
+import logging; logging.basicConfig()
 
 import time
 
-from ranger import get_robot
-from ranger.signals import ActionCancelled
+from robots import GenericRobot
+from robots.signals import ActionCancelled
 
-with get_robot(dummy = True) as robot:
+with GenericRobot() as robot:
 
     def on_evt1():
         print("Started evt1")

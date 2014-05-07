@@ -5,7 +5,7 @@ The main changes are:
  - the use of 'PausableThreads', ie threads in which cancellation and
    pause can be signaled (using custom exceptions as signals).
 """
-import logging; logger = logging.getLogger("ranger.actions")
+import logging; logger = logging.getLogger("robots.actions")
 
 logger.setLevel(logging.DEBUG)
 
@@ -26,7 +26,7 @@ import thread # for get_ident
 
 import traceback
 
-from ranger.signals import ActionCancelled, ActionPaused
+from robots.signals import ActionCancelled, ActionPaused
 
 
 class PausableThread(threading.Thread):

@@ -3,9 +3,10 @@ import time
 
 import threading
 
+import robots
 from resources import *
-from ranger.introspection import introspection
-from ranger.signals import ActionCancelled
+from robots.introspection import introspection
+from robots.signals import ActionCancelled
 
 def action(fn):
     """
@@ -24,17 +25,17 @@ def action(fn):
             if hasattr(fn, "_locked_res"):
                 for res, wait in fn._locked_res:
                     if wait:
-                        threading.current_thread().name = "Ranger Action %s (waiting on resource %s)" % (fn.__name__, res)
+                        threading.current_thread().name = "Robot Action %s (waiting on resource %s)" % (fn.__name__, res)
                         res.acquire(wait)
         except ActionCancelled:
             # action cancelled while it was waiting for a resource to become
             # available
-            threading.current_thread().name = "Idle Ranger action thread"
+            threading.current_thread().name = "Idle Robot action thread"
             logger.debug("Action %s cancelled while it was waiting for a lock on a resource." % fn.__name__)
             return None
  
         try:
-            threading.current_thread().name = "Ranger Action %s (running)" % (fn.__name__)
+            threading.current_thread().name = "Robot Action %s (running)" % (fn.__name__)
             logger.debug("Starting action %s now." % fn.__name__)
             result = fn(*args, **kwargs)
             return result
@@ -45,7 +46,7 @@ def action(fn):
                 for res, wait in fn._locked_res:
                     res.release()
 
-            threading.current_thread().name = "Idle Ranger action thread"
+            threading.current_thread().name = "Idle Robot action thread"
 
 
     lockawarefn.__name__ = fn.__name__
@@ -56,12 +57,10 @@ def action(fn):
     # a future.
     def innerfunc(*args, **kwargs):
 
-        immediate = False
-        if hasattr(args[0], "immediate"): # if args[0] has a 'immediate' member, it's probably the lowlevel robot instance
-            immediate = args[0].immediate
-        else:
+        if not isinstance(args[0], robots.GenericRobot):
             raise Exception("No robot instance passed to the action!")
-
+        
+        robot = args[0]
 
         # we acquire resources *outside the future* (to fail fast)
         # for resources we do not want to wait for.
@@ -73,14 +72,12 @@ def action(fn):
                     if not got_the_lock:
                         raise ResourceLockedError("Required resource <%s> locked while running %s" % ([name for name in globals() if globals()[name] is res][0], fn.__name__))
 
-        if immediate:
+        if robot.immediate:
             res = FakeFuture(lockawarefn(*args, **kwargs))
             return res
 
         else:
-            executor = fn._executor() # weakref!
-            if not executor:
-                raise RuntimeError("Executor deleted while trying to start an action!")
+            executor = robot.executor
 
             if args and kwargs:
                 future = executor.submit(lockawarefn, *args, **kwargs)

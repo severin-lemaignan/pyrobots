@@ -1,33 +1,22 @@
-import logging; logger = logging.getLogger("robot.lowlevel")
+import logging; logger = logging.getLogger("robots.robot")
 
 import weakref
 import pkgutil, sys
 from functools import partial
 
-from ranger.helpers.helpers import valuefilter, enum
-from ranger.helpers.position import PoseManager
-from ranger.introspection import introspection
-from ranger.events import Events
-from ranger.robot_actions import RobotActionExecutor
+from robots.helpers.helpers import valuefilter, enum
+from robots.helpers.position import PoseManager
+from robots.introspection import introspection
+from robots.events import Events
+from robots.robot_actions import RobotActionExecutor
 
 
-_robot = None
-def get_robot(dummy = False, immediate = False):
-    """ Use this function to retrieve the (singleton) low-level
-    robot accessor.
+class State(dict):
+    __getattr__= dict.__getitem__
+    __setattr__= dict.__setitem__
+    __delattr__= dict.__delitem__
 
-    :param immediate: (default: False) in immediate mode, robot's action are not
-    asynchronous. Useful for debugging for instance.
-    """
-    global _robot
-    if not _robot:
-        _robot = RobotLowLevel(dummy, immediate)
-    return _robot
-
-
-
-
-class RobotLowLevel(object):
+class GenericRobot(object):
     """
     This class manages functionalities that are shared across every robot 'backends' (ROS, Aseba,...)
 
@@ -38,19 +27,29 @@ class RobotLowLevel(object):
     - support for introspection (cf README.md for details)
     """
 
-    def __init__(self, actions = None, immediate = False):
+    def __init__(self, actions = None, dummy = False, immediate = False):
         """
         :param list actions: a list of packages that contains modules with
         actions (ie, modules with functions decorated with @action). Proxies to
         these actions are appended to the instance of RobotLowLevel upon
         construction.
+        
+        :param boolean dummy: if True (defults to False), the robot is in
+        'dummy' mode: no actual actions are performed. The exact meaning of
+        'dummy' is left to the subclasses of GenericRobot.
         :param boolean immediate: if True (default to False), actions are
         executed in the main thread instead of their own separate threads.
         Useful for some specific debugging scenarios.
 
         """
 
+        # initially, empty state (a state is actually a simple dictionary, with
+        # direct member accessors). Users are expected to override this member
+        self.state = State()
+
         self.executor = RobotActionExecutor()
+
+        self.dummy = dummy
 
         self.immediate = immediate
 
@@ -67,10 +66,10 @@ class RobotLowLevel(object):
         if not actions:
             logger.error("No action packages specified when creating an instance of RobotLowLevel. Likely an error!")
 
-        for action in self._available_actions(actions):
-            setattr(action, "_executor", weakref.ref(self.executor)) # add a reference to the robot's action executor
-            setattr(self, action.__name__, partial(action, self))
-            logger.info("Added " + action.__name__ + " as available action.")
+        else:
+            for action in self._available_actions(actions):
+                setattr(self, action.__name__, partial(action, self))
+                logger.info("Added " + action.__name__ + " as available action.")
 
         if introspection:
             introspection.ping()
@@ -115,12 +114,20 @@ class RobotLowLevel(object):
         actions = []
 
         for pkg in pkgs:
-            path = sys.modules[pkg].__path__
-            for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
-                m = sys.modules[pkg + "." + module_name]
-                for member in [getattr(m, fn) for fn in dir(m)]:
-                    if hasattr(member, "_action"):
-                        actions.append(member)
+            if isinstance(pkg, str):
+                if pkg in sys.modules:
+                    path = sys.modules[pkg].__path__
+                    for loader, module_name, is_pkg in  pkgutil.walk_packages(path):
+                        m = sys.modules[pkg + "." + module_name]
+                        for member in [getattr(m, fn) for fn in dir(m)]:
+                            if hasattr(member, "_action"):
+                                actions.append(member)
+                else:
+                    raise RuntimeError("While collecting robot actions, I encountered an unknown module <%s>!" % pkg)
+            else:
+                # we assume a list of methods has been passed 
+                if hasattr(pkg, "_action"):
+                    actions.append(pkg)
 
         return actions
 

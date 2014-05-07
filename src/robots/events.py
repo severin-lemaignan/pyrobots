@@ -1,9 +1,9 @@
-import logging; logger = logging.getLogger("ranger.events")
+import logging; logger = logging.getLogger("robots.events")
 import weakref
 
 from robot_actions import PausableThread
 
-from ranger.introspection import introspection
+from robots.introspection import introspection
 
 class Events:
     def __init__(self, robot):
@@ -62,7 +62,7 @@ class EventMonitor:
 
         self.robot = robot
 
-        if var not in robot.STATE:
+        if var not in robot.state:
             raise Exception("%s is not part of the robot state" % var)
 
         self.var = var
