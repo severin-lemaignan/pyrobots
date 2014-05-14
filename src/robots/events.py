@@ -146,6 +146,8 @@ class EventMonitor:
             self.last_value = val
             return True
 
+        return False
+
 
     def _wait_for_condition(self, timeout = None):
 
@@ -153,16 +155,11 @@ class EventMonitor:
             if self.var not in self.robot.state:
                 # value not yet read from the robot.
                 logger.warning("Waiting for %s to be published by the robot..." % self.var)
-                self.robot.update.acquire()
                 while not self.var in self.robot.state:
-                    self.robot.update.wait(1)
-                self.robot.update.release()
+                    self.robot.wait_for_state_update(2)
 
-
-            self.robot.update.acquire()
             while not self._check_condition(self.robot.state[self.var]):
-                self.robot.update.wait(timeout)
-            self.robot.update.release()
+                self.robot.wait_for_state_update(timeout)
 
         logger.info("%s is true" % str(self) + " (dummy mode)" if self.robot.dummy else "")
 

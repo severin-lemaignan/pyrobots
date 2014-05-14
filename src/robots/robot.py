@@ -74,6 +74,9 @@ class GenericRobot(object):
         if introspection:
             introspection.ping()
 
+    def wait_for_state_update(self, timeout = None):
+        raise NotImplementedError()
+
     def __enter__(self):
         return self
 
