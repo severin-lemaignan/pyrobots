@@ -38,6 +38,7 @@ def action(fn):
             threading.current_thread().name = "Robot Action %s (running)" % (fn.__name__)
             logger.debug("Starting action %s now." % fn.__name__)
             result = fn(*args, **kwargs)
+            logger.debug("Action %s done." % fn.__name__)
             return result
         except ActionCancelled:
             logger.warning("Action cancellation ignored by %s. Forced stop!" % fn.__name__)

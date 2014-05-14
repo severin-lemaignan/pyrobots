@@ -135,6 +135,12 @@ class RobotAction(Future):
         while True:
             try:
                 return super(RobotAction, self).result(0.1)
+            except ActionCancelled:
+                # Received an action cancellation signal while waiting for a sub-action ->
+                # propagate the signal to the sub-action and re-raise (to make it possible to further
+                # process the signal in the current action
+                self.cancel()
+                raise
             except TimeoutError:
                 pass
 
