@@ -29,7 +29,11 @@ class PoseManager(object):
     @staticmethod
     def quaternion_from_euler(rx, ry, rz):
         return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
-   
+
+    def euler(self, pose):
+        pose = self.get(pose)
+        return transformations.euler_from_quaternion([pose['qx'], pose['qy'], pose['qz'], pose['qw']], 'sxyz')
+
     def normalizedict(self, pose):
         if not 'x' in pose:
             pose['x'] = 0.0
@@ -127,7 +131,7 @@ class PoseManager(object):
         
         pose = None
         
-        if isinstance(raw, basestring):
+        if isinstance(raw, basestring) or isinstance(raw, int):
             pose = self.getabspose(raw)
             if pose:
                 return self.normalize(pose)
