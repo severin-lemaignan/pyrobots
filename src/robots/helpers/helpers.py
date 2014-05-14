@@ -3,6 +3,8 @@ from collections import deque
 # enums in Python, thanks http://stackoverflow.com/questions/36932
 def enum(*sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
+    enums['values'] = enums.values
+    enums['keys'] = enums.keys
     return type('Enum', (), enums)
 
 class valuefilter:
