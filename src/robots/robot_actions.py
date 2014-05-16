@@ -215,5 +215,34 @@ class RobotActionExecutor():
         """
         for f in self.futures:
             f.cancel()
-
         self.futures = []
+
+    def taskinfo(self, future_id):
+        import os.path
+
+        future = [f for f in self.futures if id(f) == future_id]
+
+        if not future:
+            return "No task with ID %s. Maybe the task is already done?" % future_id
+
+        future = future[0]
+
+        desc = "Task <%s>\n" % future
+
+        thread = future.thread() # weak ref
+        if thread:
+            frame = sys._current_frames()[thread.ident]
+            tb = traceback.extract_stack(frame, limit = 2)
+            for f in tb:
+                file, line, fn, instruction = f
+                desc += " - in <%s> (l.%s of %s): %s\n" % (fn, line, os.path.basename(file), instruction)
+
+            return desc
+        else:
+            return "Task ID %s is already done." % future_id
+
+    def __str__(self):
+        return "Running tasks:\n" + \
+               "\n".join(["Task %s (id: %s)" % (f, id(f)) for f in self.futures]) + \
+               "\n\n(<robot>.taskinfo(<id>) for details)"
+

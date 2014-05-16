@@ -64,6 +64,26 @@ class GenericRobot(object):
 
         # Dynamically add available actions (ie, actions defined with @action in
         # actions/* submodules.
+        self.load_actions(actions)
+
+        if introspection:
+            introspection.ping()
+
+    def loglevel(self, level = logging.INFO):
+        logging.getLogger("robots").setLevel(level)
+
+    def running(self):
+        """ Print the list of running tasks.
+        """
+        logger.info(str(self.executor))
+
+    def taskinfo(self, id):
+        """ Print the list of running tasks.
+        """
+        logger.info(self.executor.taskinfo(id))
+
+
+    def load_actions(self, actions):
         if not actions:
             logger.error("No action packages specified when creating an instance of RobotLowLevel. Likely an error!")
 
@@ -72,8 +92,6 @@ class GenericRobot(object):
                 setattr(self, action.__name__, partial(action, self))
                 logger.info("Added " + action.__name__ + " as available action.")
 
-        if introspection:
-            introspection.ping()
 
     def wait_for_state_update(self, timeout = None):
         raise NotImplementedError()
