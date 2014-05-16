@@ -7,11 +7,11 @@ The main changes are:
 """
 import logging; logger = logging.getLogger("robots.actions")
 
-logger.setLevel(logging.DEBUG)
-
 import sys
 
 MAX_FUTURES = 20
+MAX_TIME_TO_COMPLETE = 1 # sec: time allowed to tasks to complete when cancelled. If they take more than that, force termination.
+ACTIVE_SLEEP_RESOLUTION = 0.1 # sec
 
 try:
     from concurrent.futures import Future, TimeoutError
@@ -121,7 +121,7 @@ class RobotAction(Future):
         if not cancelled: # already running
             thread.cancel()
             try:
-                self.exception(timeout = 1) # waits this amount of time for the task to effectively complete
+                self.exception(timeout = MAX_TIME_TO_COMPLETE) # waits this amount of time for the task to effectively complete
             except TimeoutError:
                 raise RuntimeError("Unable to cancel action %s (still running 1s after cancellation)!" % self.actionname)
 
@@ -134,7 +134,7 @@ class RobotAction(Future):
         # __signal_emitter trace function
         while True:
             try:
-                return super(RobotAction, self).result(0.1)
+                return super(RobotAction, self).result(ACTIVE_SLEEP_RESOLUTION)
             except ActionCancelled:
                 # Received an action cancellation signal while waiting for a sub-action ->
                 # propagate the signal to the sub-action and re-raise (to make it possible to further

@@ -1,5 +1,6 @@
 import logging; logger = logging.getLogger("robots.robot")
 
+import time
 import weakref
 import pkgutil, sys
 from functools import partial
@@ -8,7 +9,7 @@ from robots.helpers.helpers import valuefilter, enum
 from robots.helpers.position import PoseManager
 from robots.introspection import introspection
 from robots.events import Events
-from robots.robot_actions import RobotActionExecutor
+from robots.robot_actions import RobotActionExecutor, ACTIVE_SLEEP_RESOLUTION
 
 
 class State(dict):
@@ -85,6 +86,17 @@ class GenericRobot(object):
 
     def close(self):
         self.events.close()
+
+    def sleep(self, duration):
+        """ Active sleep. Can be used by actions to make sure they can be quickly cancelled.
+        """
+
+        tot_time = 0
+        while tot_time // duration == 0:
+            time.sleep(ACTIVE_SLEEP_RESOLUTION)
+            tot_time += ACTIVE_SLEEP_RESOLUTION
+
+        time.sleep(duration % ACTIVE_SLEEP_RESOLUTION)
 
     def wait(self, var, **kwargs):
         """ Alias to wait on a given condition. Cf EventMonitor for details on
