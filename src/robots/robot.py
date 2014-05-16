@@ -44,6 +44,9 @@ class GenericRobot(object):
 
         """
 
+        # start logging level for all robots at INFO (instead of Python's default of WARNING)
+        self.loglevel(logging.INFO)
+
         # initially, empty state (a state is actually a simple dictionary, with
         # direct member accessors). Users are expected to override this member
         self.state = State()
@@ -103,6 +106,7 @@ class GenericRobot(object):
         self.close()
 
     def close(self):
+        self.cancel_all()
         self.events.close()
 
     def sleep(self, duration):

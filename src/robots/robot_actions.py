@@ -170,12 +170,8 @@ class RobotAction(Future):
     def __ge__(self, other):
         return self.result().__ge__(other)
 
-    def __repr__(self):
-        """ Overrides the representation function to 
-        first wait for the result of the future.
-        """
-        return self.result().__repr__()
-
+    def __str__(self):
+        return self.actionname
 
 class RobotActionExecutor():
 
@@ -187,7 +183,7 @@ class RobotActionExecutor():
     def submit(self, fn, *args, **kwargs):
 
         # remove futures that are completed
-        self.futures = [f for f in self.futures if f]
+        self.futures = [f for f in self.futures if not f.done()]
 
         name = fn.__name__
         if args and not kwargs:
