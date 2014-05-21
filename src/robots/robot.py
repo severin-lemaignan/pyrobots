@@ -26,6 +26,12 @@ class GenericRobot(object):
     - pose management through the 'robot.pose' member
     - event monitoring through the 'robot.on(...).do(...)' interface
     - support for introspection (cf README.md for details)
+
+
+    Main helpers for debugging:
+    - GenericRobot.loglevel(<logging level>): default to INFO. logging.DEBUG can be useful.
+    - GenericRobot.running(): prints the list of running tasks (with their IDs)
+    - GenericRobot.taskinfo(<task id>): give details on a given task, including the exact line being currently executed
     """
 
     def __init__(self, actions = None, dummy = False, immediate = False):
@@ -44,8 +50,14 @@ class GenericRobot(object):
 
         """
 
-        # start logging level for all robots at INFO (instead of Python's default of WARNING)
-        self.loglevel(logging.INFO)
+        self.dummy = dummy
+
+        # normally, start logging level for all robots at INFO (instead of
+        # Python's default of WARNING)
+        if not dummy:
+            self.loglevel(logging.INFO)
+        else:
+            self.loglevel(logging.DEBUG)
 
         # initially, empty state (a state is actually a simple dictionary, with
         # direct member accessors). Users are expected to override this member
@@ -53,7 +65,6 @@ class GenericRobot(object):
 
         self.executor = RobotActionExecutor()
 
-        self.dummy = dummy
 
         self.immediate = immediate
 

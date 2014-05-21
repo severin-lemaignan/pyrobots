@@ -161,6 +161,10 @@ class EventMonitor:
             while not self._check_condition(self.robot.state[self.var]):
                 self.robot.wait_for_state_update(timeout)
 
+        else:
+            #dummy mode. Wait a little bit, and assume the condition is true
+            import time
+            time.sleep(0.2)
         logger.info("%s is true" % str(self) + " (dummy mode)" if self.robot.dummy else "")
 
 

@@ -50,10 +50,9 @@ class PausableThread(threading.Thread):
         """
         if threading._trace_hook is not None:
             self.debugger_trace = threading._trace_hook
-            #logger.warning("Tracing function already registered (debugger?). Task cancellation/pause won't be available.")
         else:
             self.debugger_trace = None
-        #else:
+
         self.__cancel = False
         self.__pause = False
         sys.settrace(self.__signal_emitter)
