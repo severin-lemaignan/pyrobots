@@ -7,6 +7,10 @@ import transformations
 class UnknownFrameError(RuntimeError):
     pass
 
+class InvalidFrameError(RuntimeError):
+    pass
+
+
 
 FRAMES = ["map", "base_link", "eyes_link", "station", "beacon"]
 
