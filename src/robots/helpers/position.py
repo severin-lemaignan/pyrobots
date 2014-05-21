@@ -165,6 +165,70 @@ class PoseManager(object):
                          math.pow(p2["y"] - p1["y"], 2) + \
                          math.pow(p2["z"] - p1["z"], 2))
 
+    def test_angular_distance(self):
+        """ Small regression test for the computation of angular distances
+        """
+        d = self.angular_distance
+
+        assert(abs(d(0.1, -0.1) - (-0.2)) < 0.001)
+        assert(abs(d(2 * math.pi + 0.1, -0.1) - (-0.2)) < 0.001)
+        assert(abs(d(0.1, 2 * math.pi -0.1) - (-0.2)) < 0.001)
+        assert(abs(d(2 * math.pi + 0.1, 2*math.pi -0.1) - (-0.2)) < 0.001)
+
+        assert(abs(d(-0.1, 0.1) - (0.2)) < 0.001)
+        assert(abs(d(2 * math.pi - 0.1, 0.1) - (0.2)) < 0.001)
+        assert(abs(d(-0.1, 2 * math.pi + 0.1) - (0.2)) < 0.001)
+        assert(abs(d(2 * math.pi - 0.1, 2*math.pi + 0.1) - (0.2)) < 0.001)
+
+        assert(abs(d(0.1, math.pi + 0.1) - (math.pi)) < 0.001)
+        assert(abs(d(0, math.pi) - (math.pi)) < 0.001)
+        assert(abs(d(0, -math.pi) - (math.pi)) < 0.001)
+        assert(abs(d(0, -math.pi - 0.1) - (math.pi - 0.1)) < 0.001)
+        assert(abs(d(0, math.pi - 0.1) - (math.pi - 0.1)) < 0.001)
+        assert(abs(d(0, math.pi + 0.1) - (-(math.pi - 0.1))) < 0.001)
+        assert(abs(d(0, -math.pi + 0.1) - (-(math.pi - 0.1))) < 0.001)
+
+        assert(abs(d(-0.1, math.pi) - (-(math.pi - 0.1))) < 0.001)
+        assert(abs(d(-0.1, math.pi - 0.1) - (math.pi)) < 0.001)
+        assert(abs(d(-0.1, math.pi + 0.1) - (-(math.pi-0.2))) < 0.001)
+        assert(abs(d(-0.1, -math.pi + 0.1) - (-(math.pi-0.2))) < 0.001)
+        assert(abs(d(-0.1, -math.pi - 0.1) - (math.pi)) < 0.001)
+
+        assert(abs(d(-math.pi + 0.1, -0.1) - (math.pi-0.2)) < 0.001)
+        assert(abs(d(-math.pi - 0.1, -0.1) - (math.pi)) < 0.001)
+        assert(abs(d(-math.pi, -0.1) - (math.pi - 0.1)) < 0.001)
+
+
+        assert(abs(d(0, -math.pi/2) - (-math.pi/2)) < 0.001)
+        assert(abs(d(0, math.pi/2) - (math.pi/2)) < 0.001)
+
+        assert(abs(d(-math.pi/2, 0) - (math.pi/2)) < 0.001)
+        assert(abs(d(math.pi/2, 0) - (-math.pi/2)) < 0.001)
+
+
+    def angular_distance(self, angle1, angle2):
+        """ Returns the (minimal, oriented) angular distance between two angles
+        *after normalization on the unit circle*.
+
+        Angles are assumed to be radians.
+
+        The result is oriented (from angle1 to angle2) and guaranteed to be in
+        range ]-pi, pi].
+        """
+        angle1 = self.normalize_angle(angle1)
+        angle2 = self.normalize_angle(angle2)
+
+        if abs(abs(angle2 - angle1) - math.pi) < 0.001:
+            # handle the case were angle2 - angle1 = -pi
+            # and account for float approximations
+            return math.pi
+        elif abs(angle2 - angle1) < math.pi:
+            return angle2 - angle1
+        elif angle2 - angle1 > math.pi:
+            return (angle2 - angle1) - 2 * math.pi
+        else: # angle2 - angle1 < -math.pi
+            return (angle2 - angle1) + 2 * math.pi
+  
     def _xyz_to_mat44(self, pos):
         return transformations.translation_matrix((pos['x'], pos['y'], pos['z']))
 
