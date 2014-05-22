@@ -5,6 +5,8 @@
 import logging
 import os
 
+import robots.signals
+
 if os.name == 'nt':
     import ctypes
     import re
@@ -88,7 +90,7 @@ class ColorizingStreamHandler(logging.StreamHandler):
                 self.output_colorized(message)
             stream.write(getattr(self, 'terminator', '\n'))
             self.flush()
-        except (KeyboardInterrupt, SystemExit):
+        except (KeyboardInterrupt, SystemExit, robots.signals.ActionCancelled, robots.signals.ActionPaused):
             raise
         except:
             self.handleError(record)
