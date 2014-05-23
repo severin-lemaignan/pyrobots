@@ -1,4 +1,6 @@
+
 import logging; logger = logging.getLogger("robots.robot")
+logger.addHandler(logging.NullHandler())
 
 import time
 import weakref

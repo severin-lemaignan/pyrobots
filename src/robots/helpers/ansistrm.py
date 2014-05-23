@@ -5,13 +5,26 @@
 import logging
 import os
 
+import threading
+from collections import deque
+import time
+import weakref
+
 import robots.signals
 
 if os.name == 'nt':
     import ctypes
     import re
 
-class ColorizingStreamHandler(logging.StreamHandler):
+class ConcurrentColorizingStreamHandler(logging.StreamHandler):
+    """A log handler that:
+        - (tries to) guarantee strong thread-safety: the threads generating log message
+          can be interrupted at *any* time without causing dead-locks (which is not the
+          case with a regular StreamHandler: the calling thread may be interrupted while it
+          owns a lock on stdout)
+        - propagate pyRobots signals (ActionCancelled, ActionPaused)
+        - colors the output (nice!)
+    """
     # color names to indices
     color_map = {
         'black': 0,
@@ -61,7 +74,10 @@ class ColorizingStreamHandler(logging.StreamHandler):
     reset = '\x1b[0m'
     
     def __init__(self, scheme = None):
-        super(ColorizingStreamHandler,self).__init__()
+        super(ConcurrentColorizingStreamHandler,self).__init__()
+
+        self.msgs = deque()
+
         if scheme == "xmas":
             self.level_map = self.xmas_scheme
         elif scheme == "dark":
@@ -71,11 +87,46 @@ class ColorizingStreamHandler(logging.StreamHandler):
         else:
             self.level_map = self.bright_scheme
     
+        # cool trick to automatically close the 'printer' thread upon destruction
+        # using weak references. Initial idea here: http://stackoverflow.com/questions/8359469/python-threading-thread-scopes-and-garbage-collection
+        self.main_thread = threading.current_thread()
+        self.thread = threading.Thread(target = ConcurrentColorizingStreamHandler.run, 
+                                       name="pyRobots logger", 
+                                       args=(weakref.proxy(self),))
+        self.thread.start()
+
+    def __del__(self):
+        self.thread.join()
+
     @property
     def is_tty(self):
         isatty = getattr(self.stream, 'isatty', None)
         #return False
         return isatty and isatty()
+
+    def handle(self, record):
+        """
+        Override the default handle method to *remove locking*, because Python logging, while thread-safe according to the doc,
+        does not play well with us raising signals (ie exception) at anytime (including while the logging system is locking the output stream).
+        """
+        rv = self.filter(record)
+        if rv:
+            # according to http://bugs.python.org/issue15329, `append` is tomic in CPython (and pypy)
+            self.msgs.append(record)
+        return rv
+
+    def run(self):
+
+        # according to http://bugs.python.org/issue15329, `len` and
+        # `popleft` are atomic in CPython (and pypy)
+        while self.main_thread.is_alive() or len(self.msgs) > 0:
+            try:
+                record = self.msgs.popleft()
+                self.emit(record)
+            except IndexError:
+                pass
+
+                time.sleep(0.01)
 
     def emit(self, record):
         try:
@@ -175,7 +226,7 @@ class ColorizingStreamHandler(logging.StreamHandler):
 def main():
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
-    root.addHandler(ColorizingStreamHandler())
+    root.addHandler(ConcurrentColorizingStreamHandler())
     logging.debug('DEBUG')
     logging.info('INFO')
     logging.warning('WARNING')
