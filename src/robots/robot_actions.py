@@ -4,9 +4,17 @@ Extension of Python futures to support robot action management.
 The main changes are:
  - the use of 'PausableThreads', ie threads in which cancellation and
    pause can be signaled (using custom exceptions as signals).
+
+
+
+Debugging tips:
+>>> sys._current_frames()
+>>> inspect.getouterframes(sys._current_frames()[<id>])[0][0].f_locals
+
 """
 import logging; logger = logging.getLogger("robots.actions")
 
+import time
 import sys
 
 MAX_FUTURES = 20
@@ -20,9 +28,11 @@ except ImportError:
     sys.stderr.write("[error] install python-concurrent.futures\n")
     sys.exit(1)
 
+import os.path #for basename
 import weakref
 import threading 
 import thread # for get_ident
+from collections import deque
 
 import traceback
 
@@ -62,10 +72,26 @@ class PausableThread(threading.Thread):
 
     def __signal_emitter(self, frame, event, arg):
         if self.__cancel:
-            self.__cancel = False
-            logger.debug("Cancelling thread <%s>:" % self.name)
-            logger.debug("".join(traceback.format_stack(frame, limit = 3)))
-            raise ActionCancelled()
+            if frame.f_globals["__name__"] == "threading":
+                # Raising exception at uncontrolled time is a dangerous sport,
+                # especially if the thread is in the middle of locking/unlocking shared resources
+                # like (in our case) setting result in futures and reading them.
+                # After thinking about it for a day, I could not find any good solution except for
+                # postponing raising the signals until out of the threading module. This is not
+                # very nice, but seem to work out well.
+
+                #logger.debug("Thread <%s> in threading module. Postponing cancelation" % self.name)
+                pass
+            else:
+                self.__cancel = False
+                desc = "Cancelling thread <%s>:\n" % self.name
+                tb = traceback.extract_stack(frame, limit = 6)
+                for f in tb:
+                    file, line, fn, instruction = f
+                    desc += " - in <%s> (l.%s of %s): %s\n" % (fn, line, os.path.basename(file), instruction)
+
+                logger.debug(desc)
+                raise ActionCancelled()
         if self.__pause:
             self.__pause = False
             logger.debug("Pausing thread <%s>" % self.name)
@@ -77,8 +103,11 @@ class PausableThread(threading.Thread):
             return self.__signal_emitter
 
 class RobotActionThread(PausableThread):
-    def __init__(self, future, fn, args, kwargs):
+    def __init__(self, future, initialized, fn, args, kwargs):
         PausableThread.__init__(self)
+
+        initialized.set()
+
         self.future = future
         self.fn = fn
         self.args = args
@@ -91,13 +120,13 @@ class RobotActionThread(PausableThread):
 
         try:
             result = self.fn(*self.args, **self.kwargs)
+            self.future.set_result(result)
+            logger.debug("Action <%s>: completed." % self.future.actionname)
         except BaseException:
             e = sys.exc_info()[1]
             logger.error("Exception in action <%s>: %s"%(self.fn.__name__, e))
             logger.error(traceback.format_exc())
             self.future.set_exception(e)
-        else:
-            self.future.set_result(result)
 
 
 class RobotAction(Future):
@@ -105,27 +134,79 @@ class RobotAction(Future):
         Future.__init__(self)
 
         self.actionname = actionname
+
         self.thread = None
+
+        self.subactions = []
+        self.parent_action = None
+
+    def add_subaction(self, action):
+        self.subactions = [a for a in self.subactions if a() is not None and a().thread() is not None]
+        self.subactions.append(action)
+        logger.debug("Added sub-action %s to action %s" % (action().actionname, self.actionname))
+
+    def set_parent(self, action):
+        self.parent_action = action
+
+    def childof(self, action):
+        """ Returns true if this action is a child of the given action, ie, has
+        been spawned from the given action or any of its descendants.
+        """
+        parent = self.parent_action() # weakref!
+        if parent is None:
+            return False
+        if parent is action:
+            return True
+        return parent.childof(action)
 
     def set_thread(self, thread):
         self.thread = thread
 
     def cancel(self):
+        # we do not call the 'standard' Future.cancel method since we do not have a thread pool (ie,
+        # the future can not be 'pending for execution'), which is the only useful usecase (well, with callback on
+        # cancellation, I imagine... so those are not supported for now)
+
         thread = self.thread() # weakref!
-        if self.done() or not thread:
+        if thread is None:
+            logger.debug("Action <%s>: already done" % self)
             return
 
-        cancelled = super(RobotAction, self).cancel()
+        # first, cancel myself (to make sure I won't restart subactions)
+        logger.debug("Action <%s>: signaling cancelation to action's thread" % self)
+        thread.cancel()
 
-        if not cancelled: # already running
-            thread.cancel()
-            try:
-                self.exception(timeout = MAX_TIME_TO_COMPLETE) # waits this amount of time for the task to effectively complete
-            except TimeoutError:
-                raise RuntimeError("Unable to cancel action %s (still running 1s after cancellation)!" % self.actionname)
+        # then, tell all the subactions that they should stop
+        # (can not do that in the thread's cancel (_signal_emitter), because the
+        # thread may hold locks that are not released until the exception is raised and
+        # the context manager are left)
+        logger.debug("Action <%s>: %s subactions to cancel" % (self.actionname, len(self.subactions)))
+
+        for weak_subaction in self.subactions:
+            subaction = weak_subaction()
+            if subaction:
+                logger.debug("Action <%s>: Cancelling subaction %s..." % (self, subaction))
+                subaction.cancel()
+
+
+        # then, make sure everybody actually terminates
+        logger.debug("Action <%s>: now waiting for completion" % self)
+        try:
+            self.exception(timeout = MAX_TIME_TO_COMPLETE) # waits this amount of time for the task to effectively complete
+        except TimeoutError:
+            raise RuntimeError("Unable to cancel action %s (still running %s after cancellation)!" % (self, MAX_TIME_TO_COMPLETE))
+        logger.debug("Action <%s>: successfully cancelled" % self)
+        #t = 0
+        #while t < MAX_TIME_TO_COMPLETE:
+        #    time.sleep(ACTIVE_SLEEP_RESOLUTION)
+        #    t+=ACTIVE_SLEEP_RESOLUTION
+        #    if self.thread() is None:
+        #        logger.debug("Action <%s>: successfully cancelled" % self.actionname)
+        #        return
+        #raise RuntimeError("Unable to cancel action %s (still running %s after cancellation)!" % (self.actionname, MAX_TIME_TO_COMPLETE))
 
     def result(self):
-        threading.current_thread().name = "Action waiting for sub-action %s" % self.actionname
+        threading.current_thread().name = "Action %s (waiting for sub-action %s)" % (self.parent_action(), self)
 
 
         # active wait! Instead of blocking on the condition variable in super.result()
@@ -134,12 +215,6 @@ class RobotAction(Future):
         while True:
             try:
                 return super(RobotAction, self).result(ACTIVE_SLEEP_RESOLUTION)
-            except ActionCancelled:
-                # Received an action cancellation signal while waiting for a sub-action ->
-                # propagate the signal to the sub-action and re-raise (to make it possible to further
-                # process the signal in the current action
-                self.cancel()
-                raise
             except TimeoutError:
                 pass
 
@@ -176,13 +251,16 @@ class RobotActionExecutor():
 
     def __init__(self):
 
+        # Attention, RobotActionExecutor must be thread-safe
         self.futures = []
 
+        self.futures_lock = threading.Lock()
 
     def submit(self, fn, *args, **kwargs):
 
-        # remove futures that are completed
-        self.futures = [f for f in self.futures if not f.done()]
+        with self.futures_lock:
+            self.futures = [f for f in self.futures if not f.done()]
+
 
         name = fn.__name__
         if args and not kwargs:
@@ -193,51 +271,89 @@ class RobotActionExecutor():
             name += "(%s, " % ", ".join([str(a) for a in args[1:]])
             name += "%s)" % ", ".join(["%s=%s" % (str(k), str(v)) for k, v in kwargs.items()])
 
+
         if len(self.futures) > MAX_FUTURES:
             raise RuntimeError("You have more than %s actions running in parallel! Likely a bug in your application logic!" % MAX_FUTURES)
 
         f = RobotAction(name)
 
-        t = RobotActionThread(f, fn, args, kwargs)
-        f.set_thread(weakref.ref(t))
-        t.start()
+        initialized = threading.Event()
 
-        self.futures.append(f)
+        t = RobotActionThread(f, initialized, fn, args, kwargs)
+        f.set_thread(weakref.ref(t))
+
+        t.start()
+        while not initialized.is_set():
+            # waits for the thread to actually start
+            pass
+
+        with self.futures_lock:
+            self.futures.append(f)
+
+        current_action = self.get_current_action()
+        if current_action:
+            f.set_parent(weakref.ref(current_action))
+            current_action.add_subaction(weakref.ref(f))
+
         return f
+
+    def get_current_action(self):
+        """Returns the RobotAction linked to the current thread.
+        """
+
+        thread_id = threading.current_thread().ident
+
+        with self.futures_lock:
+
+            for f in self.futures:
+                if not f.done():
+
+                    thread = f.thread() # weak ref
+                    if thread is not None and thread.ident == thread_id:
+                        return f
+
+        logger.info("The current thread (<%s>) is not a robot action (main thread?)" % threading.current_thread().name)
+        return None
 
     def cancel_all(self):
         """ Blocks until all the currently running actions are actually stopped.
         """
-        for f in self.futures:
-            f.cancel()
-        self.futures = []
+
+        with self.futures_lock:
+            for f in self.futures:
+                if not f.done():
+                    f.cancel()
+
+            self.futures = []
+
 
     def taskinfo(self, future_id):
-        import os.path
 
-        future = [f for f in self.futures if id(f) == future_id]
+        with self.futures_lock:
 
-        if not future:
-            return "No task with ID %s. Maybe the task is already done?" % future_id
+            future = [f for f in self.futures if id(f) == future_id]
 
-        future = future[0]
+            if not future:
+                return "No task with ID %s. Maybe the task is already done?" % future_id
 
-        desc = "Task <%s>\n" % future
+            future = future[0]
 
-        thread = future.thread() # weak ref
-        if thread:
-            frame = sys._current_frames()[thread.ident]
-            tb = traceback.extract_stack(frame, limit = 2)
-            for f in tb:
-                file, line, fn, instruction = f
-                desc += " - in <%s> (l.%s of %s): %s\n" % (fn, line, os.path.basename(file), instruction)
+            desc = "Task <%s>\n" % future
 
-            return desc
-        else:
-            return "Task ID %s is already done." % future_id
+            thread = future.thread() # weak ref
+            if thread:
+                frame = sys._current_frames()[thread.ident]
+                tb = traceback.extract_stack(frame, limit = 6)
+                for f in tb:
+                    file, line, fn, instruction = f
+                    desc += " - in <%s> (l.%s of %s): %s\n" % (fn, line, os.path.basename(file), instruction)
+
+                return desc
+            else:
+                return "Task ID %s is already done." % future_id
 
     def __str__(self):
-        return "Running tasks:\n" + \
-               "\n".join(["Task %s (id: %s)" % (f, id(f)) for f in self.futures]) + \
-               "\n\n(<robot>.taskinfo(<id>) for details)"
+        with self.futures_lock:
+            return "Running tasks:\n" + \
+                    "\n".join(["Task %s (id: %s, thread: <%s>)" % (f, id(f), str(f.thread())) for f in self.futures if not f.done()])
 
