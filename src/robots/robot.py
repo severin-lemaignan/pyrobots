@@ -93,6 +93,10 @@ class GenericRobot(object):
         """
         logger.info(str(self.executor))
 
+    def debug(self):
+        self.loglevel(logging.DEBUG)
+        self.running()
+
     def taskinfo(self, id):
         """ Print the list of running tasks.
         """
