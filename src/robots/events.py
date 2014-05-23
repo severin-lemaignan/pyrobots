@@ -13,10 +13,20 @@ class Events:
 
     def on(self, var, **kwargs):
         """
-        Creates a new EventMonitor to watch a given event model.
+        Creates a new EventMonitor to watch a given event model (on shot).
         :returns: a new instance of EventMonitor for this event.
         """
-        monitor = EventMonitor(self.robot, var, **kwargs)
+        monitor = EventMonitor(self.robot, var, oneshot=True, **kwargs)
+        self.eventmonitors.append(weakref.ref(monitor))
+        return monitor
+
+
+    def every(self, var, **kwargs):
+        """
+        Creates a new EventMonitor to watch continuously a given event model.
+        :returns: a new instance of EventMonitor for this event.
+        """
+        monitor = EventMonitor(self.robot, var, oneshot=False, **kwargs)
         self.eventmonitors.append(weakref.ref(monitor))
         return monitor
 
