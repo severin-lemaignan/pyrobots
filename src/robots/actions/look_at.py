@@ -77,7 +77,7 @@ def lookat(robot, place, callback = None):
 
     elif robot.supports(NAOQI):
         yaw, pitch = robot.poses.ros.xyz2pantilt(robot.poses[place], 
-                                                 headframe="gaze")
+                                                 headframe="HeadPitch_link")
         yaw = clip(yaw, -2.0857, 2.0857)
         pitch = clip(-pitch, -0.6720, 0.5149) #beware the '-pitch'!
         return setpose(robot, {"HEAD": (yaw, pitch)}, relative = True)
