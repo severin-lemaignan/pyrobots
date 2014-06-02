@@ -5,7 +5,7 @@ import logging; logger = logging.getLogger("robot." + __name__)
 from robots.lowlevel import *
 from robots.action import *
 
-class StateManager:
+class StateManager(object):
 
     def __init__(self, robot):
         self.robot = robot
