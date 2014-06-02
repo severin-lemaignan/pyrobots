@@ -1,7 +1,6 @@
 import sys
 import pkgutil
 import time
-
 import logging; robotlog = logging.getLogger("robot." + __name__)
 
 class NullHandler(logging.Handler):
@@ -60,11 +59,13 @@ class Robot(object):
             from lowlevel.ros import ROSActions
             self.rosactions = ROSActions()
             # Using ROS: automatically configure the logging to use
-            # ROS RX Console
+            # ROS RX Console, but first make other handlers quieter
+            for i,handler in enumerate(robotlog.handlers):
+                robotlog.handlers[i].level=logging.WARNING;
             import roslogger
             rxconsole = roslogger.RXConsoleHandler()
             logging.getLogger("robot").addHandler(rxconsole)
-
+                  
         if self.supports(NAOQI):
             from lowlevel._naoqi import NAOqiActions
             self.naoqiactions = NAOqiActions(host, port)
@@ -365,7 +366,6 @@ if not hasattr(main, '__file__'):
     # Running in interactive mode:
     # Add a console logger
     from robots.helpers.ansistrm import ColorizingStreamHandler
-    robotlog.setLevel(logging.INFO)
     console = ColorizingStreamHandler()
     formatter = logging.Formatter('%(name)s: %(message)s')
     console.setFormatter(formatter)
