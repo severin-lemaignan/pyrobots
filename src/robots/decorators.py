@@ -37,7 +37,14 @@ def action(fn):
         try:
             threading.current_thread().name = "Robot Action %s (running)" % (fn.__name__)
             logger.debug("Starting action <%s> now." % fn.__name__)
-            result = fn(*args, **kwargs)
+            try:
+                result = fn(*args, **kwargs)
+            except TypeError:
+                if len(args) == 1 and len(kwargs) == 0:
+                    raise Exception("You forgot to add the parameter 'robot' to action <%s>" % fn.__name__)
+                else:
+                    raise Exception("Wrong number of parameters while invoking action <%s> (maybe you forgot to add the parameter 'robot'?)" % fn.__name__)
+
             logger.debug("Action <%s> returned." % fn.__name__)
             return result
         except ActionCancelled:
@@ -58,7 +65,7 @@ def action(fn):
     # a future.
     def innerfunc(*args, **kwargs):
 
-        if not isinstance(args[0], robots.GenericRobot):
+        if len(args) == 0 or not isinstance(args[0], robots.GenericRobot):
             raise Exception("No robot instance passed to the action!")
         
         robot = args[0]
