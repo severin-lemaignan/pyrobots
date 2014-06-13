@@ -11,6 +11,7 @@ from robots.helpers.helpers import valuefilter, enum
 from robots.helpers.position import PoseManager
 from robots.introspection import introspection
 from robots.events import Events
+from robots.mw import * # ROS, NAOQI...
 from robots.robot_actions import RobotActionExecutor, ACTIVE_SLEEP_RESOLUTION
 
 
@@ -32,17 +33,24 @@ class GenericRobot(object):
 
     Main helpers for debugging:
     - GenericRobot.loglevel(<logging level>): default to INFO. logging.DEBUG can be useful.
+        - GenericRobot.silent(): alias for GenericRobot.loglevel(logging.WARNING)
+        - GenericRobot.info(): alias for GenericRobot.loglevel(logging.INFO)
+        - GenericRobot.debug(): alias for GenericRobot.loglevel(logging.DEBUG)
     - GenericRobot.running(): prints the list of running tasks (with their IDs)
     - GenericRobot.taskinfo(<task id>): give details on a given task, including the exact line being currently executed
-    """
+ """
 
-    def __init__(self, actions = None, dummy = False, immediate = False):
+    def __init__(self, actions = None, supports = 0, dummy = False, immediate = False):
         """
         :param list actions: a list of packages that contains modules with
         actions (ie, modules with functions decorated with @action). Proxies to
-        these actions are appended to the instance of RobotLowLevel upon
+        these actions are appended to the instance of GenericRobot upon
         construction.
-        
+        :param supports: (default: 0) a mask of middlewares the robot
+        supports. Supported middlewares are listed in
+        robots.mw.__init__.py.  For example 'supports = ROS|POCOLIBS'
+        means that both ROS and Pocolibs are supported. This requires the
+        corresponding Python bindings to be available.
         :param boolean dummy: if True (defults to False), the robot is in
         'dummy' mode: no actual actions are performed. The exact meaning of
         'dummy' is left to the subclasses of GenericRobot.
@@ -77,6 +85,28 @@ class GenericRobot(object):
         self.events = Events(self)
         # make the 'Events.on(...)' method available at robot level
         self.on = self.events.on
+        self.every = self.events.every
+
+        ## Initialization of low-level middlewares
+        self.mw = supports
+        if self.supports(ROS):
+            from mw.ros import ROSActions
+            self.rosactions = ROSActions()
+            # Using ROS: automatically configure the logging to use
+            # ROS RX Console, but first make other handlers quieter
+            for i,handler in enumerate(logger.handlers):
+                logger.handlers[i].level=logging.WARNING;
+            import robots.roslogger
+            rxconsole = robots.roslogger.RXConsoleHandler()
+            logging.getLogger("robot").addHandler(rxconsole)
+                  
+        if self.supports(NAOQI):
+            from mw._naoqi import NAOqiActions
+            self.naoqiactions = NAOqiActions()
+
+
+
+
 
         # Dynamically add available actions (ie, actions defined with @action in
         # actions/* submodules.
@@ -88,20 +118,29 @@ class GenericRobot(object):
     def loglevel(self, level = logging.INFO):
         logging.getLogger("robots").setLevel(level)
 
+    def silent(self):
+        self.loglevel(logging.WARNING)
+
+    def info(self):
+        self.loglevel(logging.INFO)
+
+    def debug(self):
+        self.loglevel(logging.DEBUG)
+
+
     def running(self):
         """ Print the list of running tasks.
         """
         logger.info(str(self.executor))
-
-    def debug(self):
-        self.loglevel(logging.DEBUG)
-        self.running()
 
     def taskinfo(self, id):
         """ Print the list of running tasks.
         """
         logger.info(self.executor.taskinfo(id))
 
+
+    def supports(self, middleware):
+        return bool(self.mw & middleware) and not self.dummy
 
     def load_actions(self, actions):
         if not actions:
@@ -125,6 +164,10 @@ class GenericRobot(object):
     def close(self):
         self.cancel_all()
         self.events.close()
+
+        if self.supports(ROS):
+            self.rosactions.close()
+
 
     def sleep(self, duration):
         """ Active sleep. Can be used by actions to make sure they can be quickly cancelled.

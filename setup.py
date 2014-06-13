@@ -15,7 +15,7 @@ setup(name='pyrobots',
       author='Séverin Lemaignan',
       author_email='severin.lemaignan@epfl.ch',
       package_dir = {'': 'src'},
-      packages=['robots', 'robots.helpers'],
+      packages=['robots', 'robots.helpers', 'robots.mw'],
       scripts=['bin/robot_introspection'], 
       data_files=[
                   ('share/doc/pyrobots', ['AUTHORS', 'LICENSE', 'README.md'])]
