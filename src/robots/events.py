@@ -137,8 +137,9 @@ class EventMonitor:
                 introspection.action_event_fired("BROKEN TDB", str(self))
 
             for cb in self.cbs:
-                cb()
+                cb(self.robot)
             if self.oneshot:
+                logger.info("Removing event on %s" % self)
                 return
 
     def stop_monitoring(self):
