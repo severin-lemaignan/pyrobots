@@ -1,6 +1,7 @@
 import logging; logger = logging.getLogger("robots.events")
 import weakref
 
+import threading # for current_thread()
 from robot_actions import PausableThread
 
 from robots.introspection import introspection
@@ -122,13 +123,13 @@ class EventMonitor:
             self.monitoring = True
             self.thread = PausableThread(target=self._monitor)
             self.thread.start()
-            self.thread.name = "Event monitor on %s" % self
 
         self.cbs.append(cb)
         return self # to allow for chaining
 
     def _monitor(self):
 
+        threading.current_thread().name = "Event monitor on %s" % self
         while self.monitoring:
             self._wait_for_condition()
 
