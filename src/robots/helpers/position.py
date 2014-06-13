@@ -100,6 +100,7 @@ class PoseManager(object):
                 qx,qy,qz,qw = self.quaternion_from_euler(rx, ry, rz)
                 return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame': frame})
             else:
+                # otherwise, we assume translation + quaternion
                 x,y,z, qx, qy, qz, qw = pose
                 return self.normalizedict({'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw})
         
@@ -250,6 +251,9 @@ class PoseManager(object):
         quaternions.
         """
         pose = self.get(pose)
+
+        if pose["frame"] == frame:
+            return pose
 
         if pose['frame'] == "map":
             orig = numpy.identity(4)
