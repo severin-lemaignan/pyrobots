@@ -326,6 +326,27 @@ class RobotActionExecutor():
 
             self.futures = []
 
+    def cancel_all_others(self):
+        """ Blocks until all the currently running actions *except the calling
+        one* are actually stopped.
+
+        """
+
+        thread_id = threading.current_thread().ident
+
+        with self.futures_lock:
+            for f in self.futures:
+                if not f.done():
+                    thread = f.thread() # weak ref
+                    if thread is not None and thread.ident == thread_id:
+                        myself = f
+                        continue
+
+                    f.cancel()
+
+            self.futures = [myself]
+
+
 
     def taskinfo(self, future_id):
 

@@ -190,11 +190,28 @@ class GenericRobot(object):
         """ Send a 'cancel' signal (ie, the ActionCancelled exception is raise)
         to all running actions.
 
+        Note that, if called within a running action, this action *is cancelled
+        as well*. If this is not what you want, use
+        :py:meth:`cancel_all_others` instead.
+
         Actions that are not yet started (eg, actions waiting on a resource
         availability) are simply removed for the run queue.
 
         """
         self.executor.cancel_all()
+
+    def cancel_all_others(self):
+        """ Send a 'cancel' signal (ie, the ActionCancelled exception is raise)
+        to all running actions, *except for the action that call
+        'cancel_all_others'* (note that its currently running subactions *will
+        be cancelled*).
+
+        Actions that are not yet started (eg, actions waiting on a resource
+        availability) are simply removed for the run queue.
+
+        """
+        self.executor.cancel_all_others()
+
 
     def filtered(self, name, val):
         """ Helper to easily filter values (uses an accumulator to average a given 'name' quantity)
