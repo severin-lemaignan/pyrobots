@@ -49,6 +49,7 @@ class Events:
 class EventMonitor:
 
     VALUE = "="
+    BECOMES = "becomes"
     ABOVE = ">"
     BELOW = "<"
     INCREASE = "+="
@@ -56,6 +57,7 @@ class EventMonitor:
 
     def __init__(self, robot, var, 
                         value = None, 
+                        becomes = None,
                         above = None, 
                         below = None,
                         increase = None,
@@ -83,12 +85,17 @@ class EventMonitor:
         self.thread = None
 
         # store initial value, used by INCREASE/DECREASE modes
+        # and last value, used by BECOMES modes
         if not self.robot.dummy:
+            self.start_value = self.robot.state[self.var] 
             self.last_value = self.robot.state[self.var] 
 
         if value is not None:
             self.mode = EventMonitor.VALUE
             self.target = value
+        elif becomes is not None:
+            self.mode = EventMonitor.BECOMES
+            self.target = becomes
         elif above is not None:
             self.mode = EventMonitor.ABOVE
             self.target = above
@@ -143,20 +150,25 @@ class EventMonitor:
 
     def _check_condition(self, val):
 
-        if self.mode == EventMonitor.VALUE and val == self.target:
-            return True
-        elif self.mode == EventMonitor.ABOVE and val > self.target:
-            return True
-        elif self.mode == EventMonitor.BELOW and val < self.target:
-            return True
-        elif self.mode == EventMonitor.INCREASE and val > (self.last_value + self.target):
-            self.last_value = val
-            return True
-        elif self.mode == EventMonitor.DECREASE and val < (self.last_value - self.target):
-            self.last_value = val
-            return True
+        ok = False
 
-        return False
+        if self.mode == EventMonitor.VALUE and val == self.target:
+            ok = True
+        elif self.mode == EventMonitor.BECOMES and self.last_value != val and val == self.target:
+            ok = True
+        elif self.mode == EventMonitor.ABOVE and val > self.target:
+            ok = True
+        elif self.mode == EventMonitor.BELOW and val < self.target:
+            ok = True
+        elif self.mode == EventMonitor.INCREASE and val > (self.start_value + self.target):
+            self.start_value = val
+            ok = True
+        elif self.mode == EventMonitor.DECREASE and val < (self.start_value - self.target):
+            self.start_value = val
+            ok = True
+
+        self.last_value = val
+        return ok
 
 
     def _wait_for_condition(self, timeout = None):
