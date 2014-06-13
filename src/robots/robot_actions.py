@@ -206,7 +206,10 @@ class RobotAction(Future):
         #raise RuntimeError("Unable to cancel action %s (still running %s after cancellation)!" % (self.actionname, MAX_TIME_TO_COMPLETE))
 
     def result(self):
-        threading.current_thread().name = "Action %s (waiting for sub-action %s)" % (self.parent_action(), self)
+        if self.parent_action and self.parent_action():
+            threading.current_thread().name = "Action %s (waiting for sub-action %s)" % (self.parent_action(), self)
+        else:
+            threading.current_thread().name = "Main thread (waiting for sub-action %s)" % self
 
 
         # active wait! Instead of blocking on the condition variable in super.result()
