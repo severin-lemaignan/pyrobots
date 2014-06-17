@@ -17,6 +17,9 @@ class ROSActions:
         self.GoalStatus = GoalStatus
         self._pending_ros_actionservers = []
 
+    def is_shutdown(self):
+        return rospy.is_shutdown()
+
     def cancelall(self):
         for client in self._pending_ros_actionservers:
             client.cancel_all_goals()
