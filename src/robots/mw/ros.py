@@ -6,8 +6,14 @@ from actionlib_msgs.msg import GoalStatus
 
 class ROSActions:
 
-    def __init__(self):
-        rospy.init_node('pyrobots')
+    def __init__(self, nodename = None):
+        if not nodename:
+            import sys
+            import os.path
+            nodename = os.path.basename(sys.argv[0])
+            if not nodename:
+                nodename = "pyrobots_repl"
+        rospy.init_node(nodename)
         self.GoalStatus = GoalStatus
         self._pending_ros_actionservers = []
 
