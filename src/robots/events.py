@@ -90,7 +90,8 @@ class EventMonitor:
         # store initial value, used by INCREASE/DECREASE modes
         # and last value, used by BECOMES modes
         if not self.robot.dummy:
-            self.start_value = self.robot.state[self.var] 
+            self.start_inc_value = self.robot.state[self.var] 
+            self.start_dec_value = self.robot.state[self.var] 
             self.last_value = self.robot.state[self.var] 
 
         if value is not None:
@@ -167,12 +168,18 @@ class EventMonitor:
             ok = True
         elif self.mode == EventMonitor.BELOW and val < self.target:
             ok = True
-        elif self.mode == EventMonitor.INCREASE and val > (self.start_value + self.target):
-            self.start_value = val
+        elif self.mode == EventMonitor.INCREASE and val > (self.start_inc_value + self.target):
+            self.start_inc_value = val
             ok = True
-        elif self.mode == EventMonitor.DECREASE and val < (self.start_value - self.target):
-            self.start_value = val
+        elif self.mode == EventMonitor.DECREASE and val < (self.start_dec_value - self.target):
+            self.start_dec_value = val
             ok = True
+
+        # TODO: could be improved with a bit of hysteris filtering
+        if val > self.start_dec_value:
+            self.start_dec_value = val
+        if val < self.start_inc_value:
+            self.start_inc_value = val
 
         self.last_value = val
         return ok
