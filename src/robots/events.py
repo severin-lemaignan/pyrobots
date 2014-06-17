@@ -22,12 +22,12 @@ class Events:
         return monitor
 
 
-    def every(self, var, **kwargs):
+    def every(self, var, max_firing_freq = 0, **kwargs):
         """
         Creates a new EventMonitor to watch continuously a given event model.
         :returns: a new instance of EventMonitor for this event.
         """
-        monitor = EventMonitor(self.robot, var, oneshot=False, **kwargs)
+        monitor = EventMonitor(self.robot, var, oneshot=False, max_firing_freq = max_firing_freq, **kwargs)
         self.eventmonitors.append(weakref.ref(monitor))
         return monitor
 
@@ -63,7 +63,8 @@ class EventMonitor:
                         below = None,
                         increase = None,
                         decrease = None,
-                        oneshot = False):
+                        oneshot = False,
+                        max_firing_freq = 10):
         """
 
         :param oneshot: if true, the event is fired once and then discarded. 
@@ -81,6 +82,7 @@ class EventMonitor:
         self.var = var
 
         self.oneshot = oneshot
+        self.max_firing_freq= max_firing_freq
 
         self.monitoring = False
         self.thread = None
@@ -112,6 +114,7 @@ class EventMonitor:
         else:
             raise Exception("Event created without condition!")
 
+        logger.info("Added new event monitor: %s" % self)
 
     def do(self, cb):
 
@@ -141,6 +144,8 @@ class EventMonitor:
             if self.oneshot:
                 logger.info("Removing event on %s" % self)
                 return
+            else:
+                self.robot.sleep(1./self.max_firing_freq)
 
     def stop_monitoring(self):
         self.monitoring = False
