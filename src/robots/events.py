@@ -2,7 +2,7 @@ import logging; logger = logging.getLogger("robots.events")
 import weakref
 
 import threading # for current_thread()
-from robot_actions import PausableThread
+from robot_actions import PausableThread, ACTIVE_SLEEP_RESOLUTION
 
 from robots.introspection import introspection
 
@@ -173,7 +173,7 @@ class EventMonitor:
         return ok
 
 
-    def _wait_for_condition(self, timeout = None):
+    def _wait_for_condition(self):
 
         if not self.robot.dummy:
             if self.var not in self.robot.state:
@@ -183,7 +183,7 @@ class EventMonitor:
                     self.robot.wait_for_state_update(2)
 
             while not self._check_condition(self.robot.state[self.var]):
-                self.robot.wait_for_state_update(timeout)
+                self.robot.wait_for_state_update(ACTIVE_SLEEP_RESOLUTION)
 
         else:
             #dummy mode. Wait a little bit, and assume the condition is true
@@ -192,15 +192,15 @@ class EventMonitor:
         logger.info("%s is true" % str(self) + " (dummy mode)" if self.robot.dummy else "")
 
 
-    def wait(self, timeout = None):
-        """ Blocks until an event occurs, or the timeout expires.
+    def wait(self):
+        """ Blocks until an event occurs.
         """
 
         if introspection:
             introspection.action_waiting("BROKEN TDB", str(self))
 
 
-        self._wait_for_condition(timeout)
+        self._wait_for_condition()
 
 
         if introspection:
