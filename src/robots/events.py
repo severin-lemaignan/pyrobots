@@ -22,30 +22,49 @@ class Events:
         return monitor
 
 
-    def every(self, var, max_firing_freq = 0, **kwargs):
+    def every(self, var, max_firing_freq = 10, blocking = True, **kwargs):
         """
         Creates a new EventMonitor to watch continuously a given event model.
+
+        :param max_firing_freq: set how many times pe second this event may be
+        triggered (default to 10Hz. 0 means as many as possible)
+        :param blocking: if True, the event callback is blocking, preventing
+        new event to be triggered until the callback has completed (defaults to
+        True).
         :returns: a new instance of EventMonitor for this event.
         """
-        monitor = EventMonitor(self.robot, var, oneshot=False, max_firing_freq = max_firing_freq, **kwargs)
+        monitor = EventMonitor(self.robot, var, oneshot=False, max_firing_freq = max_firing_freq, blocking = blocking, **kwargs)
         self.eventmonitors.append(weakref.ref(monitor))
         return monitor
 
-    def close(self):
+    def stop_all_monitoring(self):
+        """ Stops all event monitoring, but do not interrupt event callbacks,
+        if any is running.
 
-        # first, we tell *all* monitors not to trigger any events anymore
-        # then we actually stop the monitor by interupting the callbacks
-        # they may be processing.
+        You may want to use Events.stop_all instead of Events.cancel_all when
+        you need to prevent new events of being raised *from* an event callback
+        (Events.cancel_all would interrupt this callback as well).
 
+        """
         for m in self.eventmonitors:
             monitor = m() # weakref!
             if monitor:
                 monitor.stop_monitoring()
 
+    def cancel_all(self):
+        # first, we tell *all* monitors not to trigger any events anymore
+        # then we actually stop the monitor by interupting the callbacks
+        # they may be processing.
+        self.stop_all_monitoring()
+
         for m in self.eventmonitors:
             monitor = m() # weakref!
             if monitor:
                 monitor.close()
+
+
+    def close(self):
+        self.cancel_all()
 
 class EventMonitor:
 
@@ -64,7 +83,8 @@ class EventMonitor:
                         increase = None,
                         decrease = None,
                         oneshot = False,
-                        max_firing_freq = 10):
+                        max_firing_freq = 10,
+                        blocking = True):
         """
 
         :param oneshot: if true, the event is fired once and then discarded. 
@@ -83,6 +103,7 @@ class EventMonitor:
 
         self.oneshot = oneshot
         self.max_firing_freq= max_firing_freq
+        self.blocking = blocking
 
         self.monitoring = False
         self.thread = None
@@ -135,18 +156,30 @@ class EventMonitor:
 
         threading.current_thread().name = "Event monitor on %s" % self
         while self.monitoring:
-            self._wait_for_condition()
+            ok = self._wait_for_condition()
+            if not ok: # monitoring has been interrupted!
+                return
 
             if introspection:
                 introspection.action_event_fired("BROKEN TDB", str(self))
 
             for cb in self.cbs:
-                cb(self.robot)
+                if not self.blocking:
+                    cb(self.robot)
+                else:
+                    cb(self.robot).wait()
+
+                    # after a blocking event, reset the reference values for
+                    # events INCREASE and DECREASE
+                    self.start_inc_value = self.robot.state[self.var] 
+                    self.start_dec_value = self.robot.state[self.var] 
+
             if self.oneshot:
                 logger.info("Removing event on %s" % self)
                 return
             else:
-                self.robot.sleep(1./self.max_firing_freq)
+                if self.max_firing_freq > 0:
+                    self.robot.sleep(1./self.max_firing_freq)
 
     def stop_monitoring(self):
         self.monitoring = False
@@ -195,13 +228,17 @@ class EventMonitor:
                     self.robot.wait_for_state_update(2)
 
             while not self._check_condition(self.robot.state[self.var]):
+                if not self.monitoring:
+                    logger.info("<%s> not monitored anymore" % str(self))
+                    return False
                 self.robot.wait_for_state_update(ACTIVE_SLEEP_RESOLUTION)
 
         else:
             #dummy mode. Wait a little bit, and assume the condition is true
             import time
             time.sleep(0.2)
-        logger.info("%s is true" % str(self) + " (dummy mode)" if self.robot.dummy else "")
+        logger.info("%s is true" % str(self) + (" (dummy mode)" if self.robot.dummy else ""))
+        return True
 
 
     def wait(self):
