@@ -25,8 +25,15 @@ def action(fn):
             if hasattr(fn, "_locked_res"):
                 for res, wait in fn._locked_res:
                     if wait:
-                        threading.current_thread().name = "Robot Action %s (waiting on resource %s)" % (fn.__name__, res)
-                        res.acquire(wait)
+                        threading.current_thread().name = "Robot Action %s, waiting on resource %s" % (fn.__name__, res)
+                        need_to_wait = False
+                        if res.owner is not None:
+                            need_to_wait = True
+                            logger.info("Robot action %s is waiting on resource %s" % (fn.__name__, res))
+                        res.acquire(wait, acquirer = fn.__name__)
+                        if need_to_wait:
+                            logger.info("Robot action %s has acquired resource %s" % (fn.__name__, res))
+
         except ActionCancelled:
             # action cancelled while it was waiting for a resource to become
             # available
@@ -40,10 +47,8 @@ def action(fn):
             try:
                 result = fn(*args, **kwargs)
             except TypeError:
-                if len(args) == 1 and len(kwargs) == 0:
-                    raise Exception("You forgot to add the parameter 'robot' to action <%s>" % fn.__name__)
-                else:
-                    raise Exception("Wrong number of parameters while invoking action <%s> (maybe you forgot to add the parameter 'robot'?)" % fn.__name__)
+                logger.error("Exception when invoking action <%s>. Did you forget to add the parameter 'robot'?" % fn.__name__)
+                raise
 
             logger.debug("Action <%s> returned." % fn.__name__)
             return result

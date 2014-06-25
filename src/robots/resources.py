@@ -5,9 +5,10 @@ class Resource:
     def __init__(self, name = ""):
         self.lock = Lock()
         self.name = name
+        self.owner = None
 
     def __str__(self):
-        return self.name
+        return self.name + ((" (currently owned by <%s>)" % self.owner) if self.owner else " (not currently owned)")
 
     def __enter__(self):
         """
@@ -39,29 +40,36 @@ class Resource:
         self.acquire()
         # here, the exception, if any, is automatically propagated
 
-    def acquire(self, wait = True):
+    def acquire(self, wait = True, acquirer = "unknown"):
 
         if not wait:
-            return self.lock.acquire(False)
+            if self.lock.acquire(False):
+                self.owner = acquirer
+                return True
+            else:
+                return False
         else:
             # we need an active wait to make sure we can properly cancel the actions
             # that are waiting for the resource
             while True:
                 if self.lock.acquire(False):
+                    self.owner = acquirer
                     return True
                 time.sleep(0.1)
 
     def release(self):
         self.lock.release()
+        self.owner = None
 
 
 class CompoundResource:
     def __init__(self, *args, **kwargs):
         self.resources = args
         self.name = kwargs.get("name", "")
+        self.owner = None
 
     def __str__(self):
-        return self.name
+        return self.name + ((" (currently owned by <%s>)" % self.owner) if self.owner else " (not currently owned)")
 
 
     def __enter__(self):
@@ -77,13 +85,20 @@ class CompoundResource:
 
 
 
-    def acquire(self, wait = True):
+    def acquire(self, wait = True, acquirer = "unknown"):
+        ok = True
         for res in self.resources:
-            res.acquire(wait)
+            ok = res.acquire(wait, acquirer) and ok
+
+        if not ok:
+            return False
+
+        self.owner = acquirer
 
     def release(self):
         for res in self.resources:
             res.release()
+        self.owner = None
 
 class ResourceLockedError(RuntimeError):
     def __init__(self, value):
