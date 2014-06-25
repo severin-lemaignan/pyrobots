@@ -315,7 +315,7 @@ class RobotActionExecutor():
                     if thread is not None and thread.ident == thread_id:
                         return f
 
-        logger.info("The current thread (<%s>) is not a robot action (main thread?)" % threading.current_thread().name)
+        logger.debug("The current thread (<%s>) is not a robot action (main thread?)" % threading.current_thread().name)
         return None
 
     def cancel_all(self):
