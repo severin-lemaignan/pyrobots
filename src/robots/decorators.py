@@ -80,10 +80,11 @@ def action(fn):
         if hasattr(fn, "_locked_res"):
             for res, wait in fn._locked_res:
                 if not wait:
-                    got_the_lock = res.acquire(False)
+                    got_the_lock = res.acquire(False, acquirer = fn.__name__)
 
                     if not got_the_lock:
-                        raise ResourceLockedError("Required resource <%s> locked while running %s" % ([name for name in globals() if globals()[name] is res][0], fn.__name__))
+                        logger.info("Required resource <%s> locked while attempting to start %s. Cancelling it as required." % (res.name, fn.__name__))
+                        return FakeFuture(None)
 
         if robot.immediate:
             res = FakeFuture(lockawarefn(*args, **kwargs))
@@ -145,3 +146,6 @@ class FakeFuture:
         self._result = result
     def result(self):
         return self._result
+    def wait(self):
+        return self._result
+
