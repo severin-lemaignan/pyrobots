@@ -40,7 +40,12 @@ class GenericRobot(object):
     - GenericRobot.taskinfo(<task id>): give details on a given task, including the exact line being currently executed
  """
 
-    def __init__(self, actions = None, supports = 0, dummy = False, immediate = False):
+    def __init__(self, 
+                 actions = None, 
+                 supports = 0, 
+                 dummy = False, 
+                 immediate = False,
+                 configure_logging = True):
         """
         :param list actions: a list of packages that contains modules with
         actions (ie, modules with functions decorated with @action). Proxies to
@@ -57,10 +62,14 @@ class GenericRobot(object):
         :param boolean immediate: if True (default to False), actions are
         executed in the main thread instead of their own separate threads.
         Useful for some specific debugging scenarios.
-
+        :paran boolean configure_logging: if True (default), configures
+        a default colorized console logging handler.
         """
 
         self.dummy = dummy
+
+        if configure_logging:
+            self.configure_console_logging()
 
         # normally, start logging level for all robots at INFO (instead of
         # Python's default of WARNING)
@@ -138,13 +147,20 @@ class GenericRobot(object):
         """
         logger.info(self.executor.taskinfo(id))
 
+    def configure_console_logging(self):
+        from robots.helpers.ansistrm import ConcurrentColorizingStreamHandler
+
+        console = ConcurrentColorizingStreamHandler()
+        formatter = logging.Formatter('%(asctime)-15s %(name)s: %(levelname)s - %(message)s')
+        console.setFormatter(formatter)
+        logging.getLogger("robots").addHandler(console)
 
     def supports(self, middleware):
         return bool(self.mw & middleware) and not self.dummy
 
     def load_actions(self, actions):
         if not actions:
-            logger.error("No action packages specified when creating an instance of RobotLowLevel. Likely an error!")
+            logger.warning("No action packages specified when creating an instance of GenericRobot. Likely an error!")
 
         else:
             for action in self._available_actions(actions):

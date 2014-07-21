@@ -117,7 +117,7 @@ class PoseManager(object):
         if isinstance(pose, dict):
             return self.normalizedict(pose)
         
-        raise RuntimeError("normalize() takes either lists or dict as input.")
+        raise RuntimeError("normalize() takes either lists or dict as input. Got %s." % pose)
     
     def __getitem__(self, raw):
         """ Implements the PoseManager[] operator as an alias for PoseManager.get()
