@@ -169,7 +169,16 @@ class GenericRobot(object):
 
 
     def wait_for_state_update(self, timeout = None):
-        raise NotImplementedError()
+        """ Blocks until the robot state has been updated.
+
+        This is highly dependent on the low-level mechanisms of your robot, and
+        should almost certainly be overriden in your implementation of a
+        GenericRobot subclass.
+
+        The default implementation simply waits `ACTIVE_SLEEP_RESOLUTION`
+        seconds.
+        """
+        time.sleep(ACTIVE_SLEEP_RESOLUTION)
 
     def __enter__(self):
         return self
