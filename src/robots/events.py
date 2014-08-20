@@ -2,7 +2,7 @@ import logging; logger = logging.getLogger("robots.events")
 import weakref
 
 import threading # for current_thread()
-from robot_actions import PausableThread, ACTIVE_SLEEP_RESOLUTION
+from robot_actions import SignalingThread, ACTIVE_SLEEP_RESOLUTION
 
 from robots.introspection import introspection
 
@@ -146,7 +146,7 @@ class EventMonitor:
         # first add callback? start a thread to monitor the event!
         if not self.thread:
             self.monitoring = True
-            self.thread = PausableThread(target=self._monitor)
+            self.thread = SignalingThread(target=self._monitor)
             self.thread.start()
 
         self.cbs.append(cb)

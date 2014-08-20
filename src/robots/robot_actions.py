@@ -2,7 +2,7 @@
 Extension of Python futures to support robot action management.
 
 The main changes are:
- - the use of 'PausableThreads', ie threads in which cancellation and
+ - the use of 'SignalingThreads', ie threads in which cancellation and
    pause can be signaled (using custom exceptions as signals).
 
 
@@ -39,7 +39,7 @@ import traceback
 from robots.signals import ActionCancelled, ActionPaused
 
 
-class PausableThread(threading.Thread):
+class SignalingThread(threading.Thread):
     """ Based on http://ideone.com/HBvezh
     """
     def __init__(self, *args, **kwargs):
@@ -68,7 +68,7 @@ class PausableThread(threading.Thread):
         sys.settrace(self.__signal_emitter)
 
         self.name = "Ranger action thread (initialization)"
-        super(PausableThread, self)._Thread__bootstrap()
+        super(SignalingThread, self)._Thread__bootstrap()
 
     def __signal_emitter(self, frame, event, arg):
         if self.__cancel:
@@ -102,9 +102,9 @@ class PausableThread(threading.Thread):
         else:
             return self.__signal_emitter
 
-class RobotActionThread(PausableThread):
+class RobotActionThread(SignalingThread):
     def __init__(self, future, initialized, fn, args, kwargs):
-        PausableThread.__init__(self)
+        SignalingThread.__init__(self)
 
         initialized.set()
 
