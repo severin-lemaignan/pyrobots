@@ -23,6 +23,9 @@ class Events:
 
 
     def every(self, var, max_firing_freq = 10, blocking = True, **kwargs):
+        return self.whenever(var, max_firing_freq, blocking, **kwargs)
+
+    def whenever(self, var, max_firing_freq = 10, blocking = True, **kwargs):
         """
         Creates a new EventMonitor to watch continuously a given event model.
 
