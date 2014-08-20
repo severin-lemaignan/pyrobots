@@ -1,4 +1,5 @@
 import logging; logger = logging.getLogger("robots.events")
+import time
 import weakref
 
 import threading # for current_thread()
@@ -99,8 +100,8 @@ class EventMonitor:
 
         self.robot = robot
 
-        if var not in robot.state:
-            raise Exception("%s is not part of the robot state" % var)
+        if var not in robot.state and not callable(var):
+            raise Exception("%s is neither a member of the robot's state or a predicate" % var)
 
         self.var = var
 
@@ -118,26 +119,27 @@ class EventMonitor:
             self.start_dec_value = self.robot.state[self.var] 
             self.last_value = self.robot.state[self.var] 
 
-        if value is not None:
-            self.mode = EventMonitor.VALUE
-            self.target = value
-        elif becomes is not None:
-            self.mode = EventMonitor.BECOMES
-            self.target = becomes
-        elif above is not None:
-            self.mode = EventMonitor.ABOVE
-            self.target = above
-        elif below is not None:
-            self.mode = EventMonitor.BELOW
-            self.target = below
-        elif increase is not None:
-            self.mode = EventMonitor.INCREASE
-            self.target = increase
-        elif decrease is not None:
-            self.mode = EventMonitor.DECREASE
-            self.target = decrease
-        else:
-            raise Exception("Event created without condition!")
+        if not callable(self.var):
+            if value is not None:
+                self.mode = EventMonitor.VALUE
+                self.target = value
+            elif becomes is not None:
+                self.mode = EventMonitor.BECOMES
+                self.target = becomes
+            elif above is not None:
+                self.mode = EventMonitor.ABOVE
+                self.target = above
+            elif below is not None:
+                self.mode = EventMonitor.BELOW
+                self.target = below
+            elif increase is not None:
+                self.mode = EventMonitor.INCREASE
+                self.target = increase
+            elif decrease is not None:
+                self.mode = EventMonitor.DECREASE
+                self.target = decrease
+            else:
+                raise Exception("Event created without condition!")
 
         logger.info("Added new event monitor: %s" % self)
 
@@ -224,17 +226,25 @@ class EventMonitor:
     def _wait_for_condition(self):
 
         if not self.robot.dummy:
-            if self.var not in self.robot.state:
-                # value not yet read from the robot.
-                logger.warning("Waiting for %s to be published by the robot..." % self.var)
-                while not self.var in self.robot.state:
-                    self.robot.wait_for_state_update(2)
 
-            while not self._check_condition(self.robot.state[self.var]):
-                if not self.monitoring:
-                    logger.info("<%s> not monitored anymore" % str(self))
-                    return False
-                self.robot.wait_for_state_update(ACTIVE_SLEEP_RESOLUTION)
+            # predicate-based event
+            if callable(self.var):
+                while not self.var(self.robot):
+                    time.sleep(ACTIVE_SLEEP_RESOLUTION)
+
+            # state-based event
+            else:
+                if self.var not in self.robot.state:
+                    # value not yet read from the robot.
+                    logger.warning("Waiting for %s to be published by the robot..." % self.var)
+                    while not self.var in self.robot.state:
+                        self.robot.wait_for_state_update(2)
+
+                while not self._check_condition(self.robot.state[self.var]):
+                    if not self.monitoring:
+                        logger.info("<%s> not monitored anymore" % str(self))
+                        return False
+                    self.robot.wait_for_state_update(ACTIVE_SLEEP_RESOLUTION)
 
         else:
             #dummy mode. Wait a little bit, and assume the condition is true
