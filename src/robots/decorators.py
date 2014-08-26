@@ -25,36 +25,38 @@ def action(fn):
             if hasattr(fn, "_locked_res"):
                 for res, wait in fn._locked_res:
                     if wait:
-                        threading.current_thread().name = "Robot Action %s, waiting on resource %s" % (fn.__name__, res)
+                        threading.current_thread().name = "Robot Action %s, waiting on resource %s" % (actionname, res) #fn.__name__
                         need_to_wait = False
                         if res.owner is not None:
                             need_to_wait = True
-                            logger.info("Robot action %s is waiting on resource %s" % (fn.__name__, res))
+                            logger.info("Robot action <%s> is waiting on resource %s" % (actionname, res)) #fn.__name__
                         res.acquire(wait, acquirer = fn.__name__)
                         if need_to_wait:
-                            logger.info("Robot action %s has acquired resource %s" % (fn.__name__, res))
+                            logger.info("Robot action <%s> has acquired resource %s" % (actionname, res)) #fn.__name__
+                        else:
+                            logger.info("Robot action <%s> acquired free resource %s  " %(actionname, res))
 
         except ActionCancelled:
             # action cancelled while it was waiting for a resource to become
             # available
             threading.current_thread().name = "Idle Robot action thread"
-            logger.debug("Action %s cancelled while it was waiting for a lock on a resource." % fn.__name__)
+            logger.debug("Action <%s> cancelled while it was waiting for a lock on a resource." % actionname) #fn.__name__
             return None
  
         try:
             future.has_acquired_resource = True
-            threading.current_thread().name = "Robot Action %s (running)" % (fn.__name__)
-            logger.debug("Starting action <%s> now." % fn.__name__)
+            threading.current_thread().name = "Robot Action %s (running)" % (actionname) #fn.__name__
+            logger.debug("Starting action <%s> now." % actionname) #fn.__name__
             try:
                 result = fn(*args, **kwargs)
             except TypeError:
-                logger.error("Exception when invoking action <%s>. Did you forget to add the parameter 'robot'?" % fn.__name__)
+                logger.error("Exception when invoking action <%s>. Did you forget to add the parameter 'robot'?" % actionname) #fn.__name__
                 raise
 
-            logger.debug("Action <%s> returned." % fn.__name__)
+            logger.debug("Action <%s> returned." % actionname) #fn.__name__
             return result
         except ActionCancelled:
-            logger.warning("Action cancellation ignored by %s. Forced stop!" % fn.__name__)
+            logger.warning("Action cancellation ignored by %s. Forced stop!" % actionname) #fn.__name__
         finally:
             if hasattr(fn, "_locked_res"):
                 for res, wait in fn._locked_res:

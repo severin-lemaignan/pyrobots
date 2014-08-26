@@ -123,10 +123,10 @@ class RobotActionThread(SignalingThread):
         try:
             result = self.fn(self.future, str(self.future),*self.args, **self.kwargs)
             self.future.set_result(result)
-            logger.debug("Action <%s>: completed." % self.future.actionname)
+            logger.debug("Action <%s>: completed." % str(self.future))
         except BaseException:
             e = sys.exc_info()[1]
-            logger.error("Exception in action <%s>: %s"%(self.fn.__name__, e))
+            logger.error("Exception in action <%s>: %s"%(str(self.future), e)) #self.fn.__name__
             logger.error(traceback.format_exc())
             self.future.set_exception(e)
 
@@ -185,7 +185,7 @@ class RobotAction(Future):
         # (can not do that in the thread's cancel (_signal_emitter), because the
         # thread may hold locks that are not released until the exception is raised and
         # the context manager are left)
-        logger.debug("Action <%s>: %s subactions to cancel" % (self.actionname, len(self.subactions)))
+        logger.debug("Action <%s>: %s subactions to cancel" % (self, len(self.subactions))) #self.actionname
 
         for weak_subaction in self.subactions:
             subaction = weak_subaction()
