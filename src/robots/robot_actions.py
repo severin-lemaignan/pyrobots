@@ -17,6 +17,8 @@ import logging; logger = logging.getLogger("robots.actions")
 import time
 import sys
 
+import uuid
+
 MAX_FUTURES = 20
 MAX_TIME_TO_COMPLETE = 1 # sec: time allowed to tasks to complete when cancelled. If they take more than that, force termination.
 ACTIVE_SLEEP_RESOLUTION = 0.1 # sec
@@ -136,6 +138,7 @@ class RobotAction(Future):
         self.actionname = actionname
 
         self.thread = None
+        self.id = uuid.uuid4()
 
         self.subactions = []
         self.parent_action = None
@@ -145,7 +148,7 @@ class RobotAction(Future):
     def add_subaction(self, action):
         self.subactions = [a for a in self.subactions if a() is not None and a().thread() is not None]
         self.subactions.append(action)
-        logger.debug("Added sub-action %s to action %s" % (action().actionname, self.actionname))
+        logger.debug("Added sub-action %s to action %s" % (str(action()), str(self)))#.actionname))  1: action().actionname
 
     def set_parent(self, action):
         self.parent_action = action
@@ -249,8 +252,11 @@ class RobotAction(Future):
     def __ge__(self, other):
         return self.result().__ge__(other)
 
+    def __repr__(self):
+        return str(self.id)
+
     def __str__(self):
-        return self.actionname
+        return self.actionname  + "[" + self.__repr__() + "]"
 
 class RobotActionExecutor():
 
@@ -362,6 +368,7 @@ class RobotActionExecutor():
                 return "No task with ID %s. Maybe the task is already done?" % future_id
 
             future = future[0]
+
 
             desc = "Task <%s>\n" % future
 
