@@ -121,7 +121,7 @@ class RobotActionThread(SignalingThread):
             return
 
         try:
-            result = self.fn(*self.args, **self.kwargs)
+            result = self.fn(self.future, str(self.future),*self.args, **self.kwargs)
             self.future.set_result(result)
             logger.debug("Action <%s>: completed." % self.future.actionname)
         except BaseException:

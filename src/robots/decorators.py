@@ -17,7 +17,7 @@ def action(fn):
 
     # wrapper for the original function that locks/unlocks shared
     # resources
-    def lockawarefn(*args, **kwargs):
+    def lockawarefn(future,actionname,*args, **kwargs):
 
         try:
             # we acquire resources *within the future thread* that
