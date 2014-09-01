@@ -123,7 +123,14 @@ class PoseManager(object):
         """ Implements the PoseManager[] operator as an alias for PoseManager.get()
         """
         return self.get(raw)
-        
+    
+    def __contains__(self, raw):
+        try:
+            self.get(raw)
+            return True
+        except UnknownFrameError:
+            return False
+
     def get(self, raw):
         """ takes a loosly defined 'pose' as input and returns a properly formatted
         and normalized pose.
