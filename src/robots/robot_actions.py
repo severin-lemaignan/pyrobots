@@ -292,7 +292,6 @@ class RobotActionExecutor():
 
         with self.futures_lock:
             self.futures.append(f)
-        I use UUID!
 
         current_action = self.get_current_action()
         if current_action:
