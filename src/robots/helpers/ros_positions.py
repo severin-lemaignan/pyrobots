@@ -12,7 +12,7 @@ class ROSFrames(FrameProvider):
         self.tf = tf.TransformListener()
         self.br = tf.TransformBroadcaster()
 
-        if not self.tf.frameExists("/base_link"):
+        if not self.tf.frameExists("base_link"):
             logger.error("base_link does not exist in the TF tree."
                          " Is someone publishing TF tansforms? "
                          "ROS positions won't be available.")
