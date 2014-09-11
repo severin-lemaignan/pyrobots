@@ -12,10 +12,11 @@ class ROSFrames(FrameProvider):
         self.tf = tf.TransformListener()
         self.br = tf.TransformBroadcaster()
 
-        if not self.tf.frameExists("base_link"):
-            logger.error("base_link does not exist in the TF tree."
-                         " Is someone publishing TF tansforms? "
-                         "ROS positions won't be available.")
+        try:
+            self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
+        except tf.Exception: # likely a timeout
+            logger.error("Timeout while waiting for the TF transformation with the map!"
+                         " Is someone publishing TF tansforms?\n ROS positions won't be available.")
             self.tf_running = False
 
     def asROSpose(self, pose):
