@@ -10,11 +10,16 @@ class UnknownFrameError(RuntimeError):
 class InvalidFrameError(RuntimeError):
     pass
 
+class FrameProvider(object):
+
+    def get_transform(self, frame):
+        """ Returns the transformation between this frame and the map.
+
+        If the frame is unknown, raises UnknownFrameError.
+        """
+        raise NotImplementedError
 
 
-FRAMES = ["map", "base_link", "eyes_link", "station", "beacon"]
-
-POS_EPSILON = 0.1 # Min distance in meters from origin to be considered as 'in game'
 
 class PoseManager(object):
     """ A pose is for us a dict {'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame':frame},
@@ -29,7 +34,11 @@ class PoseManager(object):
     
     def __init__(self, robot):
         self.robot = robot
-   
+        self.frame_providers = []
+
+    def add_frame_provider(self, provider):
+        self.frame_providers.append(provider)
+
     @staticmethod
     def quaternion_from_euler(rx, ry, rz):
         return transformations.quaternion_from_euler(rx, ry, rz, 'sxyz')
@@ -144,9 +153,13 @@ class PoseManager(object):
         pose = None
         
         if isinstance(raw, basestring) or isinstance(raw, int):
-            pose = self.getabspose(raw)
-            if pose:
-                return self.normalize(pose)
+
+            for provider in self.frame_providers:
+                try:
+                    pose = provider.get_transform(raw)
+                    return self.normalize(pose)
+                except UnknownFrameError:
+                    pass
         
             raise UnknownFrameError("Unknown object or frame '%s'" % raw)
         
@@ -245,11 +258,6 @@ class PoseManager(object):
 
     def _to_mat4(self, pose):
         return numpy.dot(self._xyz_to_mat44(pose), self._xyzw_to_mat44(pose))
-
-    def getabspose(self, frame):
-        """ This depends on each robot... (does it?)
-        """
-        raise NotImplementedError
 
     def inframe(self, pose, frame):
         """ Transform a pose from one frame to another one.

@@ -108,7 +108,11 @@ class GenericRobot(object):
             import robots.roslogger
             rxconsole = robots.roslogger.RXConsoleHandler()
             logging.getLogger("robot").addHandler(rxconsole)
-                  
+
+            from helpers.ros_positions import ROSFrames
+            self.rosframes = ROSFrames()
+            self.pose.add_frame_provider(self.rosframes)
+
         if self.supports(NAOQI):
             from mw._naoqi import NAOqiActions
             self.naoqiactions = NAOqiActions()
