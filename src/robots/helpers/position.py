@@ -171,7 +171,7 @@ class PoseManager(object):
         Returns the current robot's pose, ie the pose of the ROS TF 'base_link'
         frame.
         """
-        return self.getabspose("/base_link")
+        return self.get("/base_link")
 
     def distance(self, pose1, pose2 = "base_link"):
         """ Returns the euclidian distance between two pyRobots poses.
