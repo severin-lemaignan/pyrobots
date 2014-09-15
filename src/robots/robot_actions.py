@@ -140,6 +140,8 @@ class RobotAction(Future):
         self.subactions = []
         self.parent_action = None
 
+        self.has_acquired_resource = False
+
     def add_subaction(self, action):
         self.subactions = [a for a in self.subactions if a() is not None and a().thread() is not None]
         self.subactions.append(action)
@@ -274,8 +276,7 @@ class RobotActionExecutor():
             name += "(%s, " % ", ".join([str(a) for a in args[1:]])
             name += "%s)" % ", ".join(["%s=%s" % (str(k), str(v)) for k, v in kwargs.items()])
 
-
-        if len(self.futures) > MAX_FUTURES:
+        if len([f for f in self.futures if f.has_acquired_resource]) > MAX_FUTURES:
             raise RuntimeError("You have more than %s actions running in parallel! Likely a bug in your application logic!" % MAX_FUTURES)
 
         f = RobotAction(name)

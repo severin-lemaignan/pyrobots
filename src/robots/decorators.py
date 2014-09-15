@@ -42,6 +42,7 @@ def action(fn):
             return None
  
         try:
+            future.has_acquired_resource = True
             threading.current_thread().name = "Robot Action %s (running)" % (fn.__name__)
             logger.debug("Starting action <%s> now." % fn.__name__)
             try:
