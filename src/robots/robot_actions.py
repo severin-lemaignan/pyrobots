@@ -289,10 +289,19 @@ class RobotActionExecutor():
 
         initialized = threading.Event()
 
+
         t = RobotActionThread(f, initialized, fn, args, kwargs)
         f.set_thread(weakref.ref(t))
 
+
+        current_action = self.get_current_action()
+        if current_action:
+            f.set_parent(weakref.ref(current_action))
+            current_action.add_subaction(weakref.ref(f))
+
+
         t.start()
+
         while not initialized.is_set():
             # waits for the thread to actually start
             pass
@@ -300,17 +309,11 @@ class RobotActionExecutor():
         with self.futures_lock:
             self.futures.append(f)
 
-        current_action = self.get_current_action()
-        if current_action:
-            f.set_parent(weakref.ref(current_action))
-            current_action.add_subaction(weakref.ref(f))
-
         return f
 
     def get_current_action(self):
         """Returns the RobotAction linked to the current thread.
         """
-
         thread_id = threading.current_thread().ident
 
         with self.futures_lock:
