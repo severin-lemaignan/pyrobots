@@ -3,23 +3,6 @@ robots.helpers package
 
 Submodules
 ----------
-
-robots.helpers.ansistrm module
-------------------------------
-
-.. automodule:: robots.helpers.ansistrm
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-robots.helpers.helpers module
------------------------------
-
-.. automodule:: robots.helpers.helpers
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 robots.helpers.position module
 ------------------------------
 
@@ -36,6 +19,15 @@ robots.helpers.ros_positions module
     :undoc-members:
     :show-inheritance:
 
+robots.helpers.helpers module
+-----------------------------
+
+.. automodule:: robots.helpers.helpers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 robots.helpers.transformations module
 -------------------------------------
 
@@ -45,10 +37,12 @@ robots.helpers.transformations module
     :show-inheritance:
 
 
-Module contents
----------------
+robots.helpers.ansistrm module
+------------------------------
 
-.. automodule:: robots.helpers
+.. automodule:: robots.helpers.ansistrm
     :members:
     :undoc-members:
     :show-inheritance:
+
+

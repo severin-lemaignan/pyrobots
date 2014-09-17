@@ -26,9 +26,10 @@ class ROSFrames(FrameProvider):
         """ Returns a ROS PoseStamped from a pyRobots pose.
 
         :param pose: a standard pyRobots pose (SPARK id, TF frame, [x,y,z],
-        [x,y,z,rx,ry,rz], [x,y,z,qx,qy,qw,qz], {'x':..., 'y':...,...})
+          [x,y,z,rx,ry,rz], [x,y,z,qx,qy,qw,qz], {'x':..., 'y':...,...})
 
         :return: the corresponding ROS PoseStamped
+
         """
 
         from geometry_msgs.msg import PoseStamped

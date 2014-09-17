@@ -1,3 +1,7 @@
+"""
+pyRobots' events implementation
+"""
+
 import logging; logger = logging.getLogger("robots.events")
 import time
 import weakref
@@ -8,6 +12,11 @@ from robot_actions import SignalingThread, ACTIVE_SLEEP_RESOLUTION
 from robots.introspection import introspection
 
 class Events:
+    """ Exposes high-level primitives to create and cancel event monitors.
+
+    :class:`robots.robot.GenericRobot` creates and holds an instance of :meth:`Events`
+    that you can use: you should not need to instanciate yourself this class.
+    """
     def __init__(self, robot):
 
         self.robot = robot
@@ -15,8 +24,11 @@ class Events:
 
     def on(self, var, **kwargs):
         """
-        Creates a new EventMonitor to watch a given event model (on shot).
-        :returns: a new instance of EventMonitor for this event.
+        Creates a new :class:`EventMonitor` to watch a given event model (one shot).
+
+        On the first time the event is fired, the monitor is removed.
+
+        :returns: a new instance of :class:`EventMonitor` for this event.
         """
         monitor = EventMonitor(self.robot, var, oneshot=True, **kwargs)
         self.eventmonitors.append(weakref.ref(monitor))
@@ -24,18 +36,48 @@ class Events:
 
 
     def every(self, var, max_firing_freq = 10, blocking = True, **kwargs):
+        """ Alias for :meth:`whenever`.
+        """
         return self.whenever(var, max_firing_freq, blocking, **kwargs)
 
     def whenever(self, var, max_firing_freq = 10, blocking = True, **kwargs):
         """
-        Creates a new EventMonitor to watch continuously a given event model.
+        Creates a new :class:`EventMonitor` to continuously watch a given event.
 
+        ``var`` can either be a predicate or the name of an entry in the robot's
+        state container (``robot.state``). In the later case, a supplementary
+        keyword argument amongst ``value=``, ``become=``, ``above=``,
+        ``below=``, ``increase=``, ``decrease=`` must be provided to define the
+        behaviour of the monitor.
+
+        Example:
+
+        .. code-block:: python
+            
+            # using the robot state:
+            robot.whenever("touch_sensor", value = True).do(on_touched)
+            robot.whenever("sonar", below = 0.4).do(on_obstacle_near)
+            robot.whenever("bumper", becomes = True).do(on_hit_obstacle)
+
+            # using a predicate:
+            def is_tired(robot):
+                # do any computation you want...
+                now = datetime.datetime.now()
+                evening = now.replace(hour=20, minute=0, second=0, microsecond=0)
+                return robot.state["speed"] > 1.0 and now > evening
+
+            robot.whenever(is_tired).do(go_to_sleep)
+    
+        :param var: either a predicate (callable) or one of the key of
+                    ``robot.state``.
         :param max_firing_freq: set how many times pe second this event may be
-        triggered (default to 10Hz. 0 means as many as possible)
-        :param blocking: if True, the event callback is blocking, preventing
-        new event to be triggered until the callback has completed (defaults to
-        True).
-        :returns: a new instance of EventMonitor for this event.
+                                triggered (default to 10Hz. 0 means as many as
+                                possible).
+        :param blocking: if ``True``, the event callback is blocking, preventing
+                         new event to be triggered until the callback has
+                         completed (defaults to ``True``).
+        :param kwargs: the monitor behaviour (cf above)
+        :returns: a new instance of :class:`EventMonitor` for this event.
         """
         monitor = EventMonitor(self.robot, var, oneshot=False, max_firing_freq = max_firing_freq, blocking = blocking, **kwargs)
         self.eventmonitors.append(weakref.ref(monitor))
@@ -45,9 +87,10 @@ class Events:
         """ Stops all event monitoring, but do not interrupt event callbacks,
         if any is running.
 
-        You may want to use Events.stop_all instead of Events.cancel_all when
-        you need to prevent new events of being raised *from* an event callback
-        (Events.cancel_all would interrupt this callback as well).
+        You may want to use :meth:`stop_all_monitoring` instead of
+        :meth:`cancel_all` when you need to prevent new events of being raised
+        *from* an event callback (:meth:`cancel_all` would interrupt this
+        callback as well).
 
         """
         for m in self.eventmonitors:
@@ -56,8 +99,11 @@ class Events:
                 monitor.stop_monitoring()
 
     def cancel_all(self):
+        """ Cancels all event monitors and interrupt running event callbacks (if
+        any).
+        """
         # first, we tell *all* monitors not to trigger any events anymore
-        # then we actually stop the monitor by interupting the callbacks
+        # then we actually stop the monitors by interupting the callbacks
         # they may be processing.
         self.stop_all_monitoring()
 
@@ -89,13 +135,6 @@ class EventMonitor:
                         oneshot = False,
                         max_firing_freq = 10,
                         blocking = True):
-        """
-
-        :param oneshot: if true, the event is fired once and then discarded. 
-        Otherwise, the event remains active.
-
-        """
-
         self.cbs= [] # callbacks
 
         self.robot = robot

@@ -361,7 +361,7 @@ class RobotActionExecutor():
 
 
 
-    def taskinfo(self, future_id):
+    def actioninfo(self, future_id):
 
         with self.futures_lock:
 

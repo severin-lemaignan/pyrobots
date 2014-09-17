@@ -1,7 +1,7 @@
-#
-# Based on https://gist.github.com/758430
-# Copyright (C) 2010-2011 Vinay Sajip. All rights reserved. Licensed under the new BSD license.
-#
+""" An ANSI-based colored console log handler, based on
+https://gist.github.com/758430, and with a few special features
+to make sure it works well in pyRobots' concurrent environment.
+"""
 import logging
 import os
 
@@ -17,13 +17,16 @@ if os.name == 'nt':
     import re
 
 class ConcurrentColorizingStreamHandler(logging.StreamHandler):
-    """A log handler that:
-        - (tries to) guarantee strong thread-safety: the threads generating log message
-          can be interrupted at *any* time without causing dead-locks (which is not the
-          case with a regular StreamHandler: the calling thread may be interrupted while it
-          owns a lock on stdout)
-        - propagate pyRobots signals (ActionCancelled, ActionPaused)
-        - colors the output (nice!)
+    """
+    A log handler that:
+
+    - (tries to) guarantee strong thread-safety: the threads generating log
+      message can be interrupted at *any* time without causing dead-locks (which
+      is not the case with a regular ``StreamHandler``: the calling thread may
+      be interrupted while it owns a lock on stdout)
+    - propagate pyRobots signals (ActionCancelled, ActionPaused)
+    - colors the output (nice!)
+
     """
     # color names to indices
     color_map = {
@@ -86,7 +89,7 @@ class ConcurrentColorizingStreamHandler(logging.StreamHandler):
             self.level_map = self.mono_scheme
         else:
             self.level_map = self.bright_scheme
-    
+
         # cool trick to automatically close the 'printer' thread upon destruction
         # using weak references. Initial idea here: http://stackoverflow.com/questions/8359469/python-threading-thread-scopes-and-garbage-collection
         self.main_thread = threading.current_thread()

@@ -9,10 +9,33 @@ from robots.introspection import introspection
 from robots.signals import ActionCancelled
 
 def action(fn):
-    """
-    When applied to a function, this decorator turns it into
+    """ When applied to a function, this decorator turns it into
     a asynchronous task, starts it in a different thread, and returns
     a 'future' object that can be used to query the result/cancel it/etc.
+
+    Action implementation may want to handle the
+    :class:`robots.signals.ActionCancelled` signal to properly process
+    cancellation requests.
+
+    Usage example:
+
+    .. code-block:: python
+
+        @action
+        def safe_walk(robot):
+        try:
+            robot.walk()
+        except ActionCancelled:
+            robot.go_back_to_rest_pose()
+
+        action = robot.safe_walk()
+        time.sleep(1)
+        action.cancel()
+
+    In this example, after one second, the ``safe_walk`` action is cancelled.
+    This sends the signal :class:`robots.signals.ActionCancelled` to the
+    action, that can appropriately terminate.
+
     """
 
     # wrapper for the original function that locks/unlocks shared
@@ -125,11 +148,44 @@ def lock(res, wait = True):
     Used to define which resources are acquired (and locked)
     by the action.
 
-    :param res: one of the resource defined in resources.py
-    :param wait: (default: true) if true, the action will wait
-    until the resource is available, if false, the action will
-    raise an ResourceLockedError exception if the resource is
-    not available.
+    This decorator may be used as many times as required on the same function
+    to lock several resources.
+
+    Usage example:
+
+    .. code-block:: python
+    
+        L_ARM = Resource()
+        R_ARM = Resource()
+        ARMS = CompoundResource(L_ARM, R_ARM)
+
+        @action
+        @lock(ARMS)
+        def lift_box(robot):
+            #...
+
+        @action
+        @lock(L_ARM)
+        def wave_hand(robot):
+            #...
+
+        @action
+        @lock(L_ARM, wait=False)
+        def scratch_head(robot):
+            #...
+
+        robot.lift_box()
+        robot.wave_hand() # waits until lift_box is over
+        robot.scratch_head() # skipped if lift_box or
+                            # wave_hand are still running
+
+
+
+    :param res: an instance of Resource or CompoundResource
+    :param wait: (default: true) if ``true``, the action will wait
+                 until the resource is available, if ``false``, the action 
+                 is skipped if the resource is not available.
+
     """
     def decorator(fn):
         if hasattr(fn, "_locked_res"):

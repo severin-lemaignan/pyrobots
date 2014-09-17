@@ -21,24 +21,36 @@ class State(dict):
     __delattr__= dict.__delitem__
 
 class GenericRobot(object):
-    """
-    This class manages functionalities that are shared across every robot 'backends' (ROS, Aseba,...)
+    """ This class manages functionalities that are shared across every robot 'backends' (ROS, Aseba,...)
 
     Its main features are:
+
     - automatic addition of proxy methods for the robot actions
     - pose management through the 'robot.pose' member
     - event monitoring through the 'robot.on(...).do(...)' interface
     - support for introspection (cf README.md for details)
 
+    :class:`GenericRobot` defines several important instance variables,
+    documented below.
 
-    Main helpers for debugging:
-    - GenericRobot.loglevel(<logging level>): default to INFO. logging.DEBUG can be useful.
-        - GenericRobot.silent(): alias for GenericRobot.loglevel(logging.WARNING)
-        - GenericRobot.info(): alias for GenericRobot.loglevel(logging.INFO)
-        - GenericRobot.debug(): alias for GenericRobot.loglevel(logging.DEBUG)
-    - GenericRobot.running(): prints the list of running tasks (with their IDs)
-    - GenericRobot.taskinfo(<task id>): give details on a given task, including the exact line being currently executed
- """
+    .. note:: A note on debugging
+    
+        Several methods are there to help with debugging:
+    
+        - :meth:`loglevel`: default to ``INFO``. ``logging.DEBUG`` can be useful.
+    
+          - :meth:`silent`: alias for ``loglevel(logging.WARNING)``
+          - :meth:`info`: alias for ``loglevel(logging.INFO)``
+          - :meth:`debug`: alias for ``loglevel(logging.DEBUG)``
+    
+        - :meth:`running`: prints the list of running tasks (with their IDs)
+        - :meth:`actioninfo`: give details on a given action, including the exact line being currently executed
+    
+    :ivar state: the state vector of the robot. By default, a simple dictionary.
+      You can overwrite it with a custom object, but it is expected to provide a
+      dictionary-like interface.
+    :ivar poses: an instance of :class:`robots.helpers.position.PoseManager`.
+    """
 
     def __init__(self, 
                  actions = None, 
@@ -48,22 +60,22 @@ class GenericRobot(object):
                  configure_logging = True):
         """
         :param list actions: a list of packages that contains modules with
-        actions (ie, modules with functions decorated with @action). Proxies to
-        these actions are appended to the instance of GenericRobot upon
-        construction.
+          actions (ie, modules with functions decorated with ``@action``). Proxies to
+          these actions are appended to the instance of GenericRobot upon
+          construction.
         :param supports: (default: 0) a mask of middlewares the robot
-        supports. Supported middlewares are listed in
-        robots.mw.__init__.py.  For example 'supports = ROS|POCOLIBS'
-        means that both ROS and Pocolibs are supported. This requires the
-        corresponding Python bindings to be available.
-        :param boolean dummy: if True (defults to False), the robot is in
-        'dummy' mode: no actual actions are performed. The exact meaning of
-        'dummy' is left to the subclasses of GenericRobot.
-        :param boolean immediate: if True (default to False), actions are
-        executed in the main thread instead of their own separate threads.
-        Useful for some specific debugging scenarios.
-        :paran boolean configure_logging: if True (default), configures
-        a default colorized console logging handler.
+          supports. Supported middlewares are listed in
+          ``robots.mw.__init__.py``.  For example ``supports = ROS|POCOLIBS``
+          means that both ROS and Pocolibs are supported. This requires the
+          corresponding Python bindings to be available.
+        :param boolean dummy: if ``True`` (defults to ``False``), the robot is in
+          'dummy' mode: no actual actions are performed. The exact meaning of
+          'dummy' is left to the subclasses of GenericRobot.
+        :param boolean immediate: if ``True`` (defaults to ``False``), actions are
+          executed in the main thread instead of their own separate threads.
+          Useful for some specific debugging scenarios.
+        :param boolean configure_logging: if ``True`` (default), configures
+          a default colorized console logging handler.
         """
 
         self.dummy = dummy
@@ -117,10 +129,6 @@ class GenericRobot(object):
             from mw._naoqi import NAOqiActions
             self.naoqiactions = NAOqiActions()
 
-
-
-
-
         # Dynamically add available actions (ie, actions defined with @action in
         # actions/* submodules.
         self.load_actions(actions)
@@ -142,14 +150,15 @@ class GenericRobot(object):
 
 
     def running(self):
-        """ Print the list of running tasks.
+        """ Print the list of running actions.
         """
         logger.info(str(self.executor))
 
-    def taskinfo(self, id):
-        """ Print the list of running tasks.
+    def actioninfo(self, id):
+        """ Print details on a running action (including the current line
+        number).
         """
-        logger.info(self.executor.taskinfo(id))
+        logger.info(self.executor.actioninfo(id))
 
     def configure_console_logging(self):
         from robots.helpers.ansistrm import ConcurrentColorizingStreamHandler
