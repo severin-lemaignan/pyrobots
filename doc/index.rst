@@ -25,13 +25,50 @@ Main features
 -  Robot actions are non-blocking by default: they are instanciated as
    futures (lightweight threads),
 -  Actions can be cancelled at any time via signals (the
-   ``ActionCancelled`` signal is raised).
+   ``ActionCancelled`` signal is raised)::
+
+        @action
+        def safe_walk(robot):
+        try:
+            robot.walk()
+        except ActionCancelled:
+            robot.go_back_to_rest_pose()
+
+        action = robot.safe_walk()
+        time.sleep(1)
+        action.cancel()
+
 -  Lock specific resources with a simple ``@lock(...)`` in front of the
    actions. When starting, actions will wait for resources to be
-   available if needed.
+   available if needed::
+
+        L_ARM = Resource()
+        R_ARM = Resource()
+        ARMS = CompoundResource(L_ARM, R_ARM)
+
+        @action
+        @lock(ARMS)
+        def lift_box(robot):
+            #...
+
+        @action
+        @lock(L_ARM)
+        def wave_hand(robot):
+            #...
+
+        @action
+        @lock(L_ARM, wait=False)
+        def scratch_head(robot):
+            #...
+
+        robot.lift_box()
+        robot.wave_hand() # waits until lift_box is over
+        robot.scratch_head() # skipped if lift_box or
+                            # wave_hand are still running
+
 -  Supports *compound resources* (like ``WHEELS`` == ``LEFTWHEEL`` +
    ``RIGHTWHEEL``)
--  Create event with ``robot.every(<condition>).do(<action>)``
+-  Create event with ``robot.whenever(<condition>).do(<action>)``
 -  Poses are managed explicitely and can easily be transformed from one
    reference frame to another one (integrates with ROS TF when
    available).
@@ -40,6 +77,28 @@ Main features
 Support for a particular robot only require to subclass ``GenericRobot``
 for this robot (and, obviously, to code the actions you want your robot
 to perform).
+
+Code Documentation
+------------------
+
+The documentation is currently sparse. Please fill `bug reports
+<https://github.com/chili-epfl/pyrobots/issues>`_ everytime you can not figure
+out a specific bit.
+
+Main entry points
++++++++++++++++++
+
+- :py:class:`robots.robot.GenericRobot`
+
+
+Full package documentation
+++++++++++++++++++++++++++
+
+.. toctree::
+    :maxdepth: 2
+    
+    api/robots.rst
+
 
 Minimum Working Example
 -----------------------
@@ -116,27 +175,6 @@ Minimum Working Example
                 time.sleep(0.5)
         except KeyboardInterrupt:
             pass
-
-Code Documentation
-------------------
-
-The documentation is currently sparse. Please fill `bug reports
-<https://github.com/chili-epfl/pyrobots/issues>`_ everytime you can not figure
-out a specific bit.
-
-Main entry points
-+++++++++++++++++
-
-- :py:class:`robots.robot.GenericRobot`
-
-
-Full package documentation
-++++++++++++++++++++++++++
-
-.. toctree::
-    :maxdepth: 2
-    
-    api/robots.rst
 
 Indices and tables
 ------------------
