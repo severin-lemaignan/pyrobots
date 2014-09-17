@@ -25,7 +25,9 @@ Main features
 -  Robot actions are non-blocking by default: they are instanciated as
    futures (lightweight threads),
 -  Actions can be cancelled at any time via signals (the
-   ``ActionCancelled`` signal is raised)::
+   ``ActionCancelled`` signal is raised):
+
+   .. code-block:: python
 
         @action
         def safe_walk(robot):
@@ -40,7 +42,9 @@ Main features
 
 -  Lock specific resources with a simple ``@lock(...)`` in front of the
    actions. When starting, actions will wait for resources to be
-   available if needed::
+   available if needed:
+
+   .. code-block:: python
 
         L_ARM = Resource()
         R_ARM = Resource()
