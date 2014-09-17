@@ -246,7 +246,7 @@ class GenericRobot(object):
         should almost certainly be overriden in your implementation of a
         GenericRobot subclass.
 
-        The default implementation simply waits `ACTIVE_SLEEP_RESOLUTION`
+        The default implementation simply waits ``ACTIVE_SLEEP_RESOLUTION``
         seconds.
         """
         time.sleep(ACTIVE_SLEEP_RESOLUTION)
@@ -266,7 +266,8 @@ class GenericRobot(object):
 
 
     def sleep(self, duration):
-        """ Active sleep. Can be used by actions to make sure they can be quickly cancelled.
+        """ Active sleep. Must used by actions to make sure they can be quickly
+        cancelled.
         """
 
         tot_time = 0
@@ -277,18 +278,19 @@ class GenericRobot(object):
         time.sleep(duration % ACTIVE_SLEEP_RESOLUTION)
 
     def wait(self, var, **kwargs):
-        """ Alias to wait on a given condition. Cf EventMonitor for details on
-        the acceptable conditions.
+        """ Alias to wait on a given condition. Cf :class:`robots.events.Events`
+        for details on the acceptable conditions.
         """
         self.on(var, **kwargs).wait()
 
     def cancel_all(self):
-        """ Send a 'cancel' signal (ie, the ActionCancelled exception is raise)
-        to all running actions.
+        """ Sends a 'cancel' signal (ie, the
+        :class:`robots.signals.ActionCancelled` exception is raised) to all
+        running actions.
 
         Note that, if called within a running action, this action *is cancelled
         as well*. If this is not what you want, use
-        :py:meth:`cancel_all_others` instead.
+        :meth:`cancel_all_others` instead.
 
         Actions that are not yet started (eg, actions waiting on a resource
         availability) are simply removed for the run queue.
@@ -297,10 +299,11 @@ class GenericRobot(object):
         self.executor.cancel_all()
 
     def cancel_all_others(self):
-        """ Send a 'cancel' signal (ie, the ActionCancelled exception is raise)
-        to all running actions, *except for the action that call
-        'cancel_all_others'* (note that its currently running subactions *will
-        be cancelled*).
+        """ Sends a 'cancel' signal (ie, the
+        :class:`robots.signals.ActionCancelled` exception is raised) to all
+        running actions, *except for the action that call
+        :meth:`cancel_all_others`* (note that its currently running subactions
+        *will be cancelled*).
 
         Actions that are not yet started (eg, actions waiting on a resource
         availability) are simply removed for the run queue.
@@ -310,7 +313,9 @@ class GenericRobot(object):
 
 
     def filtered(self, name, val):
-        """ Helper to easily filter values (uses an accumulator to average a given 'name' quantity)
+        """ Helper to easily filter values (uses an accumulator to average a
+        given 'name' quantity)
+
         """
 
         filter = self._filteredvalues.setdefault(name, valuefilter())

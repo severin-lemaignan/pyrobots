@@ -1,15 +1,16 @@
 """
-Extension of Python futures to support robot action management.
+Heavily modified Python futures to support robot action management.
 
 The main changes are:
- - the use of 'SignalingThreads', ie threads in which cancellation and
-   pause can be signaled (using custom exceptions as signals).
 
+- the use of :class:`SignalingThread`, ie threads in which cancellation and
+  pause can be signaled (using custom exceptions as signals).
+- instead of an fixed-sized execution pool, we simply spawn one thread per action.
 
+Helpful debugging commands::
 
-Debugging tips:
->>> sys._current_frames()
->>> inspect.getouterframes(sys._current_frames()[<id>])[0][0].f_locals
+    >>> sys._current_frames()
+    >>> inspect.getouterframes(sys._current_frames()[<id>])[0][0].f_locals
 
 """
 import logging; logger = logging.getLogger("robots.actions")
@@ -42,8 +43,6 @@ from robots.signals import ActionCancelled, ActionPaused
 
 
 class SignalingThread(threading.Thread):
-    """ Based on http://ideone.com/HBvezh
-    """
     def __init__(self, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
         self.debugger_trace = None
