@@ -1,10 +1,6 @@
 pyRobots: a toolkit for robot executive control
 ===============================================
 
-As you may well know if you ever tried to use them to implement
-under-specified tasks, state machines are not the best tool to code robot
-controllers.
-
 `pyRobots` provides a set of Python decorators to easily turn standard functions
 into background tasks which can be cancelled at anytime and to make your controller
 *resource aware* (no, a robot can not turn left AND right at the same time).
@@ -35,6 +31,11 @@ Main features
 
 Support for a particular robot only require to subclass `GenericRobot` for this
 robot (and, obviously, to code the actions you want your robot to perform).
+
+Documentation
+-------------
+
+[Head to readthedocs](http://pyrobots.readthedocs.org). Sparse for now.
 
 Minimum Working Example
 -----------------------
@@ -112,9 +113,4 @@ with MyRobot() as robot:
         pass
 
 ```
-
-Documentation
--------------
-
-[Head to readthedocs](http://pyrobots.readthedocs.org). Sparse for now.
 
