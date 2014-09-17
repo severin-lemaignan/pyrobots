@@ -1,6 +1,8 @@
 pyRobots: a toolkit for robot executive control
 ===============================================
 
+[![Documentation Status](https://readthedocs.org/projects/pyrobots/badge/?version=latest)](http://pyrobots.readthedocs.org)
+
 `pyRobots` provides a set of Python decorators to easily turn standard functions
 into background tasks which can be cancelled at anytime and to make your controller
 *resource aware* (no, a robot can not turn left AND right at the same time).
