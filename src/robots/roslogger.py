@@ -1,7 +1,10 @@
 import logging
-import rospy
-from rosgraph_msgs.msg import Log
 
+try:
+    import rospy
+    from rosgraph_msgs.msg import Log
+except ImportError:
+    logging.warning("ROS not available: no ROS logging")
 
 roslevel = {'DEBUG':1, 'INFO':2, 'WARNING':4, 'ERROR':8, 'CRITICAL':16}
 

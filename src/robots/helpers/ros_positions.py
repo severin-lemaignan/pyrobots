@@ -1,7 +1,10 @@
 import logging; logger = logging.getLogger("robots.position.ros")
 
-import rospy
-import tf
+try:
+    import rospy
+    import tf
+except ImportError:
+    logger.warning("No ROS available. You shouldn't be using the ros_positions module")
 
 from robots.helpers.position import FrameProvider, UnknownFrameError
 
