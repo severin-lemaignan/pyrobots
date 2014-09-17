@@ -23,16 +23,78 @@ class State(dict):
 class GenericRobot(object):
     """ This class manages functionalities that are shared across every robot 'backends' (ROS, Aseba,...)
 
+    You are expected to derive your own robot implementation from this class,
+    and it is advised to use instances of :class:`GenericRobot` within a context
+    manager (ie ``with MyRobot as robot: ...`` construct).
+
     Its main features are:
 
     - automatic addition of proxy methods for the robot actions
-    - pose management through the 'robot.pose' member
-    - event monitoring through the 'robot.on(...).do(...)' interface
-    - support for introspection (cf README.md for details)
+    - pose management through the ``robot.poses`` instance variable
+    - event monitoring through the ``robot.on(...).do(...)`` interface
 
     :class:`GenericRobot` defines several important instance variables,
     documented below.
 
+    :ivar state: the state vector of the robot. By default, a simple dictionary.
+      You can overwrite it with a custom object, but it is expected to provide a
+      dictionary-like interface.
+    :ivar poses: an instance of :class:`robots.helpers.position.PoseManager`.
+
+    Example of a custom robot:
+
+    .. code:: python
+    
+        from robots import GenericRobot
+    
+        class MyRobot(GenericRobot):
+    
+            def __init__(self):
+                super(MyRobot, self).__init__()
+    
+                # create (and set) one element in the robot's state. Here a bumper.
+                # (by default, self.state is a dictionary. You can safely
+                # overwrite it with any dict-like object.
+                self.state["my_bumper"] = False
+    
+                # do whatever other initialization you need for your robot
+    
+            # Implement here all the accessors you need to talk to the robot
+            # low-level, like:
+
+            def send_goal(self, pose):
+                # move your robot using your favorite middleware
+                print("Starting to move towards %s" % pose)
+    
+            def stop(self):
+                # stop your robot using your favorite middleware
+                print("Motion stopped")
+    
+            def whatever_other_lowlevel_method_you_need(self):
+                #...
+                pass
+   
+        # create actions
+        @action
+        def move_forward(robot):
+            #...
+            pass
+
+        with MyRobot() as robot:
+    
+            # Turn on DEBUG logging.
+            # Shortcut for logging.getLogger("robots").setLevel(logging.DEBUG)
+            robot.debug()
+    
+            # subscribe to events...
+            robot.whenever("my_bumper", value = True).do(move_forward)
+    
+            try:
+                while True:
+                    time.sleep(0.5)
+            except KeyboardInterrupt:
+                pass
+    
     .. note:: A note on debugging
     
         Several methods are there to help with debugging:
@@ -46,10 +108,6 @@ class GenericRobot(object):
         - :meth:`running`: prints the list of running tasks (with their IDs)
         - :meth:`actioninfo`: give details on a given action, including the exact line being currently executed
     
-    :ivar state: the state vector of the robot. By default, a simple dictionary.
-      You can overwrite it with a custom object, but it is expected to provide a
-      dictionary-like interface.
-    :ivar poses: an instance of :class:`robots.helpers.position.PoseManager`.
     """
 
     def __init__(self, 

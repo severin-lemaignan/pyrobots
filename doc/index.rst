@@ -172,7 +172,7 @@ Minimum Working Example
         # Shortcut for logging.getLogger("robots").setLevel(logging.DEBUG)
         robot.debug()
 
-        robot.every("my_bumper", value = True).do(move_forward)
+        robot.whenever("my_bumper", value = True).do(move_forward)
 
         try:
             while True:
