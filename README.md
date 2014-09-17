@@ -1,5 +1,5 @@
-pyrobots -- Python toolkit for high-level control of robots
-===========================================================
+pyRobots: a toolkit for robot executive control
+===============================================
 
 As you may well know if you ever tried to use them to implement
 under-specified tasks, state machines are not the best tool to code robot
@@ -39,7 +39,7 @@ robot (and, obviously, to code the actions you want your robot to perform).
 Minimum Working Example
 -----------------------
 
-...that includes the creation of a specific robot!
+...that includes the creation of a specific robot
 
 ```python
 import time
@@ -113,4 +113,8 @@ with MyRobot() as robot:
 
 ```
 
+Documentation
+-------------
+
+[Head to readthedocs](http://pyrobots.readthedocs.org). Sparse for now.
 
