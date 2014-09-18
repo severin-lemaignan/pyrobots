@@ -10,7 +10,7 @@ from collections import deque
 import time
 import weakref
 
-import robots.signals
+import robots.concurrency
 
 if os.name == 'nt':
     import ctypes
@@ -144,7 +144,7 @@ class ConcurrentColorizingStreamHandler(logging.StreamHandler):
                 self.output_colorized(message)
             stream.write(getattr(self, 'terminator', '\n'))
             self.flush()
-        except (KeyboardInterrupt, SystemExit, robots.signals.ActionCancelled, robots.signals.ActionPaused):
+        except (KeyboardInterrupt, SystemExit, robots.concurrency.ActionCancelled, robots.concurrency.ActionPaused):
             raise
         except:
             self.handleError(record)

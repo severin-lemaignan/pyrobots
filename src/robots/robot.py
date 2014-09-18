@@ -285,7 +285,7 @@ class GenericRobot(object):
 
     def cancel_all(self):
         """ Sends a 'cancel' signal (ie, the
-        :class:`robots.signals.ActionCancelled` exception is raised) to all
+        :class:`robots.concurrency.ActionCancelled` exception is raised) to all
         running actions.
 
         Note that, if called within a running action, this action *is cancelled
@@ -300,7 +300,7 @@ class GenericRobot(object):
 
     def cancel_all_others(self):
         """ Sends a 'cancel' signal (ie, the
-        :class:`robots.signals.ActionCancelled` exception is raised) to all
+        :class:`robots.concurrency.ActionCancelled` exception is raised) to all
         running actions, *except for the action that call
         :meth:`cancel_all_others`* (note that its currently running subactions
         *will be cancelled*).

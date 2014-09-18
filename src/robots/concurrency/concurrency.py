@@ -43,7 +43,7 @@ from collections import deque
 
 import traceback
 
-from robots.signals import ActionCancelled, ActionPaused
+from .signals import ActionCancelled, ActionPaused
 
 
 class SignalingThread(threading.Thread):
