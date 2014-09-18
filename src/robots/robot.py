@@ -173,8 +173,17 @@ class GenericRobot(object):
         ## Initialization of low-level middlewares
         self.mw = supports
         if self.supports(ROS):
-            from mw.ros import ROSActions
-            self.rosactions = ROSActions()
+            import sys, os.path
+            try:
+                import rospy
+            except ImportError:
+                logger.fatal("ROS support required, but rospy not installed! Quitting.")
+                sys.exit(1)
+            nodename = os.path.basename(sys.argv[0])
+            if not nodename: # robot created from Python REPL
+                nodename = "pyrobots_repl"
+            logger.info("Initializing ROS node <%s>" % nodename)
+            rospy.init_node(nodename, disable_signals=True)
             # Using ROS: automatically configure the logging to use
             # ROS RX Console, but first make other handlers quieter
             for i,handler in enumerate(logger.handlers):
@@ -183,13 +192,9 @@ class GenericRobot(object):
             rxconsole = robots.roslogger.RXConsoleHandler()
             logging.getLogger("robot").addHandler(rxconsole)
 
-            from helpers.ros_positions import ROSFrames
+            from poses.ros_positions import ROSFrames
             self.rosframes = ROSFrames()
-            self.pose.add_frame_provider(self.rosframes)
-
-        if self.supports(NAOQI):
-            from mw._naoqi import NAOqiActions
-            self.naoqiactions = NAOqiActions()
+            self.poses.add_frame_provider(self.rosframes)
 
         # Dynamically add available actions (ie, actions defined with @action in
         # actions/* submodules.
@@ -266,7 +271,7 @@ class GenericRobot(object):
         self.events.close()
 
         if self.supports(ROS):
-            self.rosactions.close()
+            rospy.signal_shutdown("executive controller closing")
 
 
     def sleep(self, duration):
