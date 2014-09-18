@@ -136,7 +136,7 @@ class ConcurrentColorizingStreamHandler(logging.StreamHandler):
         try:
             message = self.format(record)
             # Don't do anything if the StreamHandler does not exist
-            if message == None:
+            if message is None:
                 return
             stream = self.stream
             if not self.is_tty:
@@ -221,7 +221,7 @@ class ConcurrentColorizingStreamHandler(logging.StreamHandler):
         # Catch the case when there is a zombie logger, when re-launching
         #  the simulation with 'p'.
         # This seems to be caused by an incorrect cleaning on the Builder
-        except AttributeError as detail:
+        except AttributeError:
             return None
         if self.is_tty:
             message = self.colorize(message, record)

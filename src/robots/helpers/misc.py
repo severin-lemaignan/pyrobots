@@ -40,9 +40,9 @@ import logging.handlers
 def enable_logger_print():
     def _logger_str(self):
         s = ''
-        if self.parent != None:
+        if self.parent is not None:
             s =  _logger_str(self.parent)
-        s += """\n%s\n""" % (self.name)
+        s += """\n%s\n""" % self.name
         for name,value in self.__dict__.items():
             if name == 'parent': value = value and value.name or 'None'
             if name == 'level': value = '%s (%s)' %(value,logging.getLevelName(value))
@@ -51,7 +51,7 @@ def enable_logger_print():
 
     def _handler_repr(handlername):
         def __repr__(self):
-            s = '\n\t%s\n' % (handlername)
+            s = '\n\t%s\n' % handlername
             for name,value in self.__dict__.items():
                 if name == 'level': value = '%s (%s)' %(value,logging.getLevelName(value))
                 s += '\t    %s = %s\n' % (name,value)

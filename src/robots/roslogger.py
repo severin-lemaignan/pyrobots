@@ -37,11 +37,11 @@ class RXConsoleHandler(logging.Handler):
         else:
             level = 2 # Default to 'INFO'. Should be improved to default to closest 'symbolic' level
 
-        log = Log(level = level, \
-                  name = record.name, \
-                  msg = record.msg, \
-                  file = record.filename, \
-                  function = record.funcName, \
+        log = Log(level = level,
+                  name = record.name,
+                  msg = record.msg,
+                  file = record.filename,
+                  function = record.funcName,
                   line = record.lineno)
         log.header.stamp = rospy.rostime.Time.now()
 

@@ -36,19 +36,19 @@ class ROSFrames(FrameProvider):
         from geometry_msgs.msg import PoseStamped
         import rospy
 
-        poseStamped = PoseStamped()
+        pose_stamped = PoseStamped()
 
-        poseStamped.header.frame_id = pose["frame"]
-        poseStamped.header.stamp = self.tf.getLatestCommonTime("/map", pose["frame"])
-        poseStamped.pose.position.x = pose["x"]
-        poseStamped.pose.position.y = pose["y"]
-        poseStamped.pose.position.z = pose["z"]
-        poseStamped.pose.orientation.x = pose["qx"]
-        poseStamped.pose.orientation.y = pose["qy"]
-        poseStamped.pose.orientation.z = pose["qz"]
-        poseStamped.pose.orientation.w = pose["qw"]
+        pose_stamped.header.frame_id = pose["frame"]
+        pose_stamped.header.stamp = self.tf.getLatestCommonTime("/map", pose["frame"])
+        pose_stamped.pose.position.x = pose["x"]
+        pose_stamped.pose.position.y = pose["y"]
+        pose_stamped.pose.position.z = pose["z"]
+        pose_stamped.pose.orientation.x = pose["qx"]
+        pose_stamped.pose.orientation.y = pose["qy"]
+        pose_stamped.pose.orientation.z = pose["qz"]
+        pose_stamped.pose.orientation.w = pose["qw"]
 
-        return poseStamped
+        return pose_stamped
 
     def publish_transform(self, name, pose):
         """
@@ -70,10 +70,10 @@ class ROSFrames(FrameProvider):
             raise UnknownFrameError("TF not running")
 
 
-        poseStamped = self.asROSpose(pose)
-        if self.tf.frameExists(frame) and self.tf.frameExists(poseStamped.header.frame_id):
+        pose_stamped = self.asROSpose(pose)
+        if self.tf.frameExists(frame) and self.tf.frameExists(pose_stamped.header.frame_id):
 
-            newPoseStamped = self.tf.transformPose(frame, poseStamped)
+            newPoseStamped = self.tf.transformPose(frame, pose_stamped)
 
             return {"x":newPoseStamped.pose.position.x,
                     "y":newPoseStamped.pose.position.y,
@@ -84,7 +84,7 @@ class ROSFrames(FrameProvider):
                     "qw":newPoseStamped.pose.orientation.w,
                     "frame": frame}
 
-        logger.error("Could not transform the pose from %s to %s." % (poseStamped.header.frame_id, frame))
+        logger.error("Could not transform the pose from %s to %s." % (pose_stamped.header.frame_id, frame))
         raise UnknownFrameError("Frame %s not known by TF" % frame)
 
     def get_transform(self, frame):

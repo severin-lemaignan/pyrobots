@@ -20,7 +20,6 @@ Helpful debugging commands::
 """
 import logging; logger = logging.getLogger("robots.actions")
 
-import time
 import sys
 
 import uuid

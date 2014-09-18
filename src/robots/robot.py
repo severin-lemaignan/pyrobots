@@ -3,11 +3,10 @@ import logging; logger = logging.getLogger("robots.robot")
 logger.addHandler(logging.NullHandler())
 
 import time
-import weakref
 import pkgutil, sys
 from functools import partial
 
-from robots.helpers.misc import valuefilter, enum
+from robots.helpers.misc import valuefilter
 from robots.poses import PoseManager
 from robots.introspection import introspection
 from robots.events import Events
@@ -187,12 +186,12 @@ class GenericRobot(object):
             # Using ROS: automatically configure the logging to use
             # ROS RX Console, but first make other handlers quieter
             for i,handler in enumerate(logger.handlers):
-                logger.handlers[i].level=logging.WARNING;
+                logger.handlers[i].level=logging.WARNING
             import robots.roslogger
             rxconsole = robots.roslogger.RXConsoleHandler()
             logging.getLogger("robot").addHandler(rxconsole)
 
-            from poses.ros_positions import ROSFrames
+            from .poses import ROSFrames
             self.rosframes = ROSFrames()
             self.poses.add_frame_provider(self.rosframes)
 

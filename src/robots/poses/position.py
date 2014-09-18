@@ -284,10 +284,10 @@ class PoseManager(object):
         else:
             dest = numpy.linalg.inv(self._to_mat4(self.get(frame)))
 
-        poseMatrix = self._to_mat4(pose)
+        pose_matrix = self._to_mat4(pose)
 
         transf = numpy.dot(dest, orig)
-        transformedPose = numpy.dot(transf, poseMatrix)
+        transformedPose = numpy.dot(transf, pose_matrix)
 
         qx,qy,qz,qw = transformations.quaternion_from_matrix(transformedPose)
         x,y,z = transformations.translation_from_matrix(transformedPose)
@@ -314,7 +314,7 @@ class PoseManager(object):
         pose = self.inframe(pose, ref)
         pan = self.normalize_angle(numpy.arctan2(pose['y'], pose['x']))
         tilt = self.normalize_angle(numpy.arctan2(pose['z'], pose['x']))
-        return (pan,tilt)
+        return pan,tilt
 
     @staticmethod
     def normalize_angle(angle):
