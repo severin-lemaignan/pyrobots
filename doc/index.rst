@@ -25,7 +25,7 @@ Main features
 -  Robot actions are non-blocking by default: they are instanciated as
    futures (lightweight threads),
 -  Actions can be cancelled at any time via signals (the
-   ``ActionCancelled`` signal is raised):
+   :class:`.ActionCancelled` signal is raised):
 
    .. code-block:: python
 
@@ -78,9 +78,9 @@ Main features
    available).
 -  Extensive logging support to debug and replay experiments.
 
-Support for a particular robot only require to subclass ``GenericRobot``
-for this robot (and, obviously, to code the actions you want your robot
-to perform).
+Support for a particular robot only require to subclass :class:`.GenericRobot`
+for this robot (and, obviously, to code the actions you want your robot to
+perform).
 
 Code Documentation
 ------------------

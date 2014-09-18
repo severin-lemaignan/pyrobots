@@ -3,6 +3,7 @@
 Concurrency support for pyRobot.
 
 This module provides:
+
 - an implementation of :class:`SignalingThread` (threads that explicitely
   handle signals like cancelation)
 - heavily modified Python futures to support robot action management.
@@ -10,7 +11,7 @@ This module provides:
   a thread pool.
 
 These objects should not be directly used. Users should instead rely on the
-:meth:`robots.concurrency.action` decorator.
+:meth:`~robots.concurrency.action.action` decorator.
 
 Helpful debugging commands::
 

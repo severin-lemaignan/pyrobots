@@ -39,8 +39,8 @@ class GenericRobot(object):
     :ivar state: the state vector of the robot. By default, a simple dictionary.
       You can overwrite it with a custom object, but it is expected to provide a
       dictionary-like interface.
-    :ivar poses: an instance of :class:`robots.poses.PoseManager`.
-    :ivar executor: instance of :class:`robots.concurrency.RobotActionExecutor`
+    :ivar poses: an instance of :class:`.PoseManager`.
+    :ivar executor: instance of :class:`.RobotActionExecutor`
       responsible for spawning and starting threads for the robot actions. You
       should not need to access it directly.
 
@@ -295,7 +295,7 @@ class GenericRobot(object):
 
     def cancel_all(self):
         """ Sends a 'cancel' signal (ie, the
-        :class:`robots.concurrency.ActionCancelled` exception is raised) to all
+        :class:`.ActionCancelled` exception is raised) to all
         running actions.
 
         Note that, if called within a running action, this action *is cancelled
@@ -310,7 +310,7 @@ class GenericRobot(object):
 
     def cancel_all_others(self):
         """ Sends a 'cancel' signal (ie, the
-        :class:`robots.concurrency.ActionCancelled` exception is raised) to all
+        :class:`.ActionCancelled` exception is raised) to all
         running actions, *except for the action that call
         :meth:`cancel_all_others`* (note that its currently running subactions
         *will be cancelled*).

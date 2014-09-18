@@ -19,21 +19,24 @@ class Resource:
         lock ownership to a sub-action:
 
         For instance:
+        
+        .. code-block::python
 
-        @action
-        @lock(WHEELS)
-        def move(...):
-            ...
+            @action
+            @lock(WHEELS)
+            def move(...):
+                ...
 
-        @action
-        @lock(WHEELS)
-        def goto(...):
+            @action
+            @lock(WHEELS)
+            def goto(...):
 
-            with WHEELS:
-                move(...)
+                with WHEELS:
+                    move(...)
 
-        Here, goto() calls move() by first releasing the lock on WHEELS, executing move() and reacquiring the lock,
-        also if move() raises an exception.
+        Here, ``goto()`` calls ``move()`` by first releasing the lock on
+        ``WHEELS``, executing ``move()`` and reacquiring the lock, also if
+        ``move()`` raises an exception.
         """
         self.release()
 

@@ -5,13 +5,13 @@ Subpackages
 -----------
 
 .. toctree::
-    :maxdepth: 1
 
-    robots.helpers
+    robots.concurrency
+    robots.events
+    robots.poses
+    robots.resources
     robots.mw
-
-Submodules
-----------
+    robots.helpers
 
 robots.robot module
 -------------------
@@ -22,34 +22,10 @@ robots.robot module
     :show-inheritance:
 
 
-robots.decorators module
-------------------------
-
-.. automodule:: robots.decorators
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-robots.events module
---------------------
-
-.. automodule:: robots.events
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-robots.resources module
------------------------
-
-.. automodule:: robots.resources
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-robots.robot_actions module
+robots.introspection module
 ---------------------------
 
-.. automodule:: robots.robot_actions
+.. automodule:: robots.introspection
     :members:
     :undoc-members:
     :show-inheritance:
@@ -61,21 +37,4 @@ robots.roslogger module
     :members:
     :undoc-members:
     :show-inheritance:
-
-robots.signals module
----------------------
-
-.. automodule:: robots.signals
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-robots.introspection module
----------------------------
-
-.. automodule:: robots.introspection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 

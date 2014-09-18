@@ -23,15 +23,16 @@ class FrameProvider(object):
 
 
 class PoseManager(object):
-    """ A pose is for us a dict {'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame':frame},
+    """ A pose is for us a dict ``{'x':x, 'y':y, 'z':z, 'qx':qx, 'qy':qy, 'qz':qz, 'qw':qw, 'frame':frame}``,
     ie a (x, y, z) cartesian pose in meter interpreted in a specific reference 
     frame, and a quaternion describing the orientation of the object in radians.
     
     This class helps with:
-     * converting from other convention to our convention,
-     * converting back to other conventions.
+
+    - converting from other convention to our convention,
+    - converting back to other conventions.
      
-     """
+    """
     
     def __init__(self, robot):
         self.robot = robot

@@ -14,15 +14,13 @@ def action(fn):
     a 'future' object that can be used to query the result/cancel it/etc.
 
     The main methods available on these 'future' object include
-    :meth:`robots.concurrency.RobotAction.wait` to wait until the action
-    completes, and :meth:`robots.concurrency.RobotAction.cancel` to request the
-    action to stop (ie, it raises an :class:`robots.concurrency.ActionCancelled`
-    signal within the action thread). See
-    :class:`robots.concurrency.RobotAction` for the full list of available
-    methods.
+    :meth:`.RobotAction.wait` to wait until the action completes, and
+    :meth:`.RobotAction.cancel` to request the action to stop (ie, it raises an
+    :class:`.ActionCancelled` signal within the action thread). See
+    :class:`.RobotAction` for the full list of available methods.
 
     Action implementation may want to handle the
-    :class:`robots.concurrency.ActionCancelled` signal to properly process
+    :class:`.ActionCancelled` signal to properly process
     cancellation requests.
 
     Usage example:
@@ -41,7 +39,7 @@ def action(fn):
         action.cancel()
 
     In this example, after one second, the ``safe_walk`` action is cancelled.
-    This sends the signal :class:`robots.concurrency.ActionCancelled` to the
+    This sends the signal :class:`.ActionCancelled` to the
     action, that can appropriately terminate.
 
     """
