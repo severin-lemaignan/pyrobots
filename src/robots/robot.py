@@ -8,7 +8,7 @@ import pkgutil, sys
 from functools import partial
 
 from robots.helpers.helpers import valuefilter, enum
-from robots.helpers.position import PoseManager
+from robots.poses import PoseManager
 from robots.introspection import introspection
 from robots.events import Events
 from robots.mw import * # ROS, NAOQI...

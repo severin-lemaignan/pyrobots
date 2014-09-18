@@ -6,7 +6,7 @@ try:
 except ImportError:
     logger.warning("No ROS available. You shouldn't be using the ros_positions module")
 
-from robots.helpers.position import FrameProvider, UnknownFrameError
+from robots.poses import FrameProvider, UnknownFrameError
 
 class ROSFrames(FrameProvider):
     def __init__(self):
