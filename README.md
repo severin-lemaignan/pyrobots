@@ -14,6 +14,15 @@ It finally provides a library of convenient tools to manage poses in a uniform w
 (quaternions, Euler angles and 4D matrices, I look at you) and to interface with
 existing middlewares (ROS, naoqi, aseba...).
 
+Installation
+------------
+
+```
+$ pip install pyRobots
+```
+
+(or, of course, from the source)
+
 Main features
 -------------
 
