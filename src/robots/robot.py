@@ -12,7 +12,7 @@ from robots.helpers.position import PoseManager
 from robots.introspection import introspection
 from robots.events import Events
 from robots.mw import * # ROS, NAOQI...
-from robots.robot_actions import RobotActionExecutor, ACTIVE_SLEEP_RESOLUTION
+from robots.concurrency import RobotActionExecutor, ACTIVE_SLEEP_RESOLUTION
 
 
 class State(dict):

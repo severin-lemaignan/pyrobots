@@ -7,7 +7,7 @@ import time
 import weakref
 
 import threading # for current_thread()
-from robot_actions import SignalingThread, ACTIVE_SLEEP_RESOLUTION
+from concurrency import SignalingThread, ACTIVE_SLEEP_RESOLUTION
 
 from robots.introspection import introspection
 

@@ -1,11 +1,15 @@
 """
-Heavily modified Python futures to support robot action management.
+Concurrency support for pyRobot.
 
-The main changes are:
+This module provides:
+- an implementation of :class:`SignalingThread` (threads that explicitely
+  handle signals like cancelation)
+- heavily modified Python futures to support robot action management.
+- A future executor that simply spawn one thread per future (action) instead of
+  a thread pool.
 
-- the use of :class:`SignalingThread`, ie threads in which cancellation and
-  pause can be signaled (using custom exceptions as signals).
-- instead of an fixed-sized execution pool, we simply spawn one thread per action.
+These objects should not be directly used. Users should instead rely on the
+:meth:`robots.concurrency.action` decorator.
 
 Helpful debugging commands::
 
@@ -256,6 +260,17 @@ class RobotAction(Future):
 
     def __str__(self):
         return self.actionname  + "[" + self.__repr__() + "]"
+
+class FakeFuture:
+    """ Used in the 'immediate' mode.
+    """
+
+    def __init__(self, result):
+        self._result = result
+    def result(self):
+        return self._result
+    def wait(self):
+        return self._result
 
 class RobotActionExecutor():
 
