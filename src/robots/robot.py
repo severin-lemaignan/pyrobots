@@ -7,7 +7,7 @@ import weakref
 import pkgutil, sys
 from functools import partial
 
-from robots.helpers.helpers import valuefilter, enum
+from robots.helpers.misc import valuefilter, enum
 from robots.poses import PoseManager
 from robots.introspection import introspection
 from robots.events import Events
