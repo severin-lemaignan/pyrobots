@@ -227,7 +227,8 @@ class GenericRobot(object):
         """
         logger.info(self.executor.actioninfo(id))
 
-    def configure_console_logging(self):
+    @staticmethod
+    def configure_console_logging():
         from robots.helpers.ansistrm import ConcurrentColorizingStreamHandler
 
         console = ConcurrentColorizingStreamHandler()
@@ -274,7 +275,8 @@ class GenericRobot(object):
             rospy.signal_shutdown("executive controller closing")
 
 
-    def sleep(self, duration):
+    @staticmethod
+    def sleep(duration):
         """ Active sleep. Must used by actions to make sure they can be quickly
         cancelled.
         """
@@ -331,7 +333,8 @@ class GenericRobot(object):
         filter.append(val)
         return filter.get()
 
-    def _available_actions(self, pkgs):
+    @staticmethod
+    def _available_actions(pkgs):
         """ Iterate over all loaded modules, and retrieve actions (ie functions
         with the @action decorator).
         """

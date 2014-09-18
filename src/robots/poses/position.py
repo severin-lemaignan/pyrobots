@@ -48,7 +48,8 @@ class PoseManager(object):
         pose = self.get(pose)
         return transformations.euler_from_quaternion([pose['qx'], pose['qy'], pose['qz'], pose['qw']], 'sxyz')
 
-    def normalizedict(self, pose):
+    @staticmethod
+    def normalizedict(pose):
         if not 'x' in pose:
             pose['x'] = 0.0
         else:
@@ -251,10 +252,12 @@ class PoseManager(object):
         else: # angle2 - angle1 < -math.pi
             return (angle2 - angle1) + 2 * math.pi
   
-    def _xyz_to_mat44(self, pos):
+    @staticmethod
+    def _xyz_to_mat44(pos):
         return transformations.translation_matrix((pos['x'], pos['y'], pos['z']))
 
-    def _xyzw_to_mat44(self, ori):
+    @staticmethod
+    def _xyzw_to_mat44(ori):
         return transformations.quaternion_matrix((ori['qx'], ori['qy'], ori['qz'], ori['qw']))
 
     def _to_mat4(self, pose):
@@ -317,11 +320,12 @@ class PoseManager(object):
     def normalize_angle(angle):
         """ Returns equivalent angle such as  -pi < angle <= pi
         """
-        angle = angle % (2 * math.pi) # => angle > 0
+        angle %= 2 * math.pi# => angle > 0
         return float(angle if angle <= math.pi else (-math.pi + angle % math.pi))
 
 
-    def isin(self, point,polygon):
+    @staticmethod
+    def isin(point,polygon):
         """
         Determines if a 2D point is inside a given 2D polygon or not.
         
