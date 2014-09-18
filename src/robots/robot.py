@@ -27,9 +27,10 @@ class GenericRobot(object):
     and it is advised to use instances of :class:`GenericRobot` within a context
     manager (ie ``with MyRobot as robot: ...`` construct).
 
-    Its main features are:
+    Its role comprises of:
 
     - automatic addition of proxy methods for the robot actions
+    - actions execution (spawning threads for actions via ``self.executor``
     - pose management through the ``robot.poses`` instance variable
     - event monitoring through the ``robot.on(...).do(...)`` interface
 
@@ -39,7 +40,10 @@ class GenericRobot(object):
     :ivar state: the state vector of the robot. By default, a simple dictionary.
       You can overwrite it with a custom object, but it is expected to provide a
       dictionary-like interface.
-    :ivar poses: an instance of :class:`robots.helpers.position.PoseManager`.
+    :ivar poses: an instance of :class:`robots.poses.PoseManager`.
+    :ivar executor: instance of :class:`robots.concurrency.RobotActionExecutor`
+      responsible for spawning and starting threads for the robot actions. You
+      should not need to access it directly.
 
     Example of a custom robot:
 
