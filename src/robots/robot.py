@@ -163,7 +163,7 @@ class GenericRobot(object):
 
         self._filteredvalues = {} # holds the filters for sensors that need filtering (like scale, IR sensors...)
 
-        self.pose = PoseManager(self)
+        self.poses = PoseManager(self)
 
         self.events = Events(self)
         # make the 'Events.on(...)' method available at robot level
