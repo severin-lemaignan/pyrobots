@@ -8,12 +8,20 @@ from distutils.core import setup
 execfile('src/robots/__init__.py')
 
 
-setup(name='pyrobots',
+setup(name='pyRobots',
       version=__version__,
       license='ISC',
-      description='A collection of Python scripts to execute and manages tasks for robots',
+      description='A Python toolset for event-based, asynchronous programming of robot controllers',
+      classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: ISC License (ISCL)',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Scientific/Engineering',
+      ],
       author='Séverin Lemaignan',
       author_email='severin.lemaignan@epfl.ch',
+      url='https://github.com/chili-epfl/pyrobots',
       install_requires=["futures", "numpy"],
       package_dir = {'': 'src'},
       packages=['robots', 'robots.helpers', 'robots.mw', 'robots.concurrency', 'robots.events', 'robots.poses', 'robots.resources'],
