@@ -14,8 +14,9 @@ setup(name='pyrobots',
       description='A collection of Python scripts to execute and manages tasks for robots',
       author='Séverin Lemaignan',
       author_email='severin.lemaignan@epfl.ch',
+      install_requires=["futures", "numpy"],
       package_dir = {'': 'src'},
-      packages=['robots', 'robots.helpers', 'robots.mw'],
+      packages=['robots', 'robots.helpers', 'robots.mw', 'robots.concurrency', 'robots.events', 'robots.poses', 'robots.resources'],
       scripts=['bin/robot_introspection'], 
       data_files=[
                   ('share/doc/pyrobots', ['AUTHORS', 'LICENSE', 'README.md'])]
