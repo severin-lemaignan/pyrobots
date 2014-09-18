@@ -1,3 +1,4 @@
+# coding=utf-8
 """ An ANSI-based colored console log handler, based on
 https://gist.github.com/758430, and with a few special features
 to make sure it works well in pyRobots' concurrent environment.

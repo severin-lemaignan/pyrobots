@@ -1,3 +1,4 @@
+# coding=utf-8
 import logging; logger = logging.getLogger("robots.actions")
 import time
 

@@ -1,4 +1,4 @@
-
+# coding=utf-8
 def lock(res, wait = True):
     """
     Used to define which resources are acquired (and locked)

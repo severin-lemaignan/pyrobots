@@ -1,3 +1,4 @@
+# coding=utf-8
 from collections import deque
 
 # enums in Python, thanks http://stackoverflow.com/questions/36932

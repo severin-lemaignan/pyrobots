@@ -1,3 +1,4 @@
+# coding=utf-8
 ROS=1
 POCOLIBS=2
 NAOQI=4
