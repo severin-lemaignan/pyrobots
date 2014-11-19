@@ -7,6 +7,7 @@ import threading
 import robots
 from robots.introspection import introspection
 from .signals import ActionCancelled
+from .concurrency import FakeFuture
 
 def action(fn):
     """ When applied to a function, this decorator turns it into
