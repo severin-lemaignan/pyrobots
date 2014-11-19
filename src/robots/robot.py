@@ -167,7 +167,7 @@ class GenericRobot(object):
         self.events = Events(self)
         # make the 'Events.on(...)' method available at robot level
         self.on = self.events.on
-        self.every = self.events.every
+        self.whenever = self.events.whenever
 
         ## Initialization of low-level middlewares
         self.mw = supports

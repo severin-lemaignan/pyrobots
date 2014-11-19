@@ -14,6 +14,9 @@ It finally provides a library of convenient tools to manage poses in a uniform w
 (quaternions, Euler angles and 4D matrices, I look at you) and to interface with
 existing middlewares (ROS, naoqi, aseba...).
 
+`pyRobots` took some inspiration from the
+[URBI](https://github.com/aldebaran/urbi) language.
+
 Installation
 ------------
 
@@ -35,7 +38,7 @@ Main features
 - Lock specific resources with a simple `@lock(...)` in front of the actions.
   When starting, actions will wait for resources to be available if needed.
 - Supports *compound resources* (like `WHEELS` == `LEFTWHEEL` + `RIGHTWHEEL`)
-- Create event with `robot.every(<condition>).do(<action>)`
+- Create event with `robot.whenever(<condition>).do(<action>)`
 - Poses are managed explicitely and can easily be transformed from one reference
   frame to another one (integrates with ROS TF when available).
 - Extensive logging support to debug and replay experiments.
@@ -115,7 +118,7 @@ with MyRobot() as robot:
     # Shortcut for logging.getLogger("robots").setLevel(logging.DEBUG)
     robot.debug()
 
-    robot.every("my_bumper", value = True).do(move_forward)
+    robot.whenever("my_bumper", value = True).do(move_forward)
 
     try:
         while True:
