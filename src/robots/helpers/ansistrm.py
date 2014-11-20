@@ -78,7 +78,7 @@ class ConcurrentColorizingStreamHandler(logging.StreamHandler):
     reset = '\x1b[0m'
     
     def __init__(self, scheme = None):
-        super(ConcurrentColorizingStreamHandler,self).__init__()
+        logging.StreamHandler.__init__(self) # call the parent constructor in a way that is compatible with py 2.6
 
         self.msgs = deque()
 
