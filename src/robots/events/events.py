@@ -154,7 +154,7 @@ class EventMonitor:
 
         # store initial value, used by INCREASE/DECREASE modes
         # and last value, used by BECOMES modes
-        if (not self.robot.dummy) and (not callable(self.var)):
+        if not self.robot.dummy and not callable(self.var):
             self.start_inc_value = self.robot.state[self.var]
             self.start_dec_value = self.robot.state[self.var] 
             self.last_value = self.robot.state[self.var] 
@@ -181,8 +181,8 @@ class EventMonitor:
             else:
                 raise Exception("Event created without condition!")
         else:
-            self.mode = ""
-            self.target= ""
+            self.mode = None
+            self.target= None
 
 
         logger.info("Added new event monitor: %s" % self)
@@ -242,8 +242,6 @@ class EventMonitor:
     def _check_condition(self, val):
 
         ok = False
-        self.start_dec_value = 0
-        self.start_inc_value = 0
 
         if self.mode == EventMonitor.VALUE and val == self.target:
             ok = True
