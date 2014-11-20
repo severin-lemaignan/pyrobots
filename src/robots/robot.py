@@ -1,6 +1,7 @@
 # coding=utf-8
 import logging; logger = logging.getLogger("robots.robot")
-logger.addHandler(logging.NullHandler())
+if (hasattr(logging, "NullHandler")): # python >= 2.7
+	logger.addHandler(logging.NullHandler())
 
 import time
 import pkgutil, sys
