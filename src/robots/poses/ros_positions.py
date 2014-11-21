@@ -17,7 +17,7 @@ class ROSFrames(FrameProvider):
         self.br = tf.TransformBroadcaster()
 
         try:
-            self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(1.0))
+            self.tf.waitForTransform("/base_link", "/map", rospy.Time(), rospy.Duration(5.0))
         except tf.Exception: # likely a timeout
             logger.error("Timeout while waiting for the TF transformation with the map!"
                          " Is someone publishing TF tansforms?\n ROS positions won't be available.")
@@ -92,7 +92,7 @@ class ROSFrames(FrameProvider):
         if not self.tf_running:
             raise UnknownFrameError("TF not running")
 
-        if self.tf.frameExists(frame) and self.tf.frameExists("/map"):
+        if self.tf.frameExists(frame) and self.tf.frameExists("map"):
             t = self.tf.getLatestCommonTime("/map", frame)
             position, quaternion = self.tf.lookupTransform("/map", frame, t)
             return dict(zip(["x","y","z","qx","qy","qz","qw","frame"], position + quaternion + ("map",)))
