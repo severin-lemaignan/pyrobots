@@ -182,6 +182,9 @@ class GenericRobot(object):
             nodename = os.path.basename(sys.argv[0])
             if not nodename: # robot created from Python REPL
                 nodename = "pyrobots_repl"
+            else:
+                # replace dot (like in 'toto.py') by underscore to be valid ROS id
+                nodename = nodename.replace(".","_")
             logger.info("Initializing ROS node <%s>" % nodename)
             rospy.init_node(nodename, disable_signals=True)
             # Using ROS: automatically configure the logging to use
@@ -272,6 +275,7 @@ class GenericRobot(object):
         self.events.close()
 
         if self.supports(ROS):
+            import rospy
             rospy.signal_shutdown("executive controller closing")
 
 
