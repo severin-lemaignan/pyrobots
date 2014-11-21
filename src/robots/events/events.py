@@ -140,8 +140,17 @@ class EventMonitor:
 
         self.robot = robot
 
-        if var not in robot.state and not callable(var):
-            raise Exception("%s is neither a member of the robot's state or a predicate" % var)
+        self.valid = False
+
+        if not callable(var):
+            if var not in robot.state:
+                raise Exception("%s is neither a member of the robot's state or a predicate" % var)
+
+            if robot.state[var] is None:
+                logger.error("'%s' does not seem to be published yet! Can not create the event monitor." % var)
+                return
+
+        self.valid = True
 
         self.var = var
 
@@ -151,6 +160,7 @@ class EventMonitor:
 
         self.monitoring = False
         self.thread = None
+
 
         # store initial value, used by INCREASE/DECREASE modes
         # and last value, used by BECOMES modes
@@ -188,6 +198,9 @@ class EventMonitor:
         logger.info("Added new event monitor: %s" % self)
 
     def do(self, cb):
+
+        if not self.valid:
+            return self
 
         if introspection:
             introspection.action_subscribe_event("BROKEN TDB", str(self))
@@ -235,7 +248,7 @@ class EventMonitor:
         self.monitoring = False
 
     def close(self):
-         if self.thread and self.thread.is_alive:
+         if self.valid and self.thread and self.thread.is_alive:
             self.thread.cancel()
             self.thread.join()
 
