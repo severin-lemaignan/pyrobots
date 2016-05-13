@@ -1,0 +1,13 @@
+If you use pyRobots for your academic work, please cite this paper:
+
+Lemaignan, Hosseini, Dillenbourg, "pyRobots: a Toolset for Robot Executive Control". IROS 2015.
+
+For LaTeX users, you can use this BibTeX entry:
+
+@inproceedings{lemaignan2015pyrobots,
+    author = {S\'everin Lemaignan and Anahita Hosseini and Pierre Dillenbourg},
+    title = {pyRobots: a Toolset for Robot Executive Control},
+    booktitle = {Proceedings of the 2015 IEEE/RSJ International Conference on Intelligent Robots and Systems},
+    year = {2015},
+    url = {https://github.com/chili-epfl/pyrobots}
+}
