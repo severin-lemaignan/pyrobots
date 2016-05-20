@@ -1,6 +1,6 @@
 pyRobots: a toolkit for robot executive control
 ===============================================
-
+[![DOI](https://zenodo.org/badge/983/chili-epfl/pyrobots.svg)](https://zenodo.org/badge/latestdoi/983/chili-epfl/pyrobots)
 [![Documentation Status](https://readthedocs.org/projects/pyrobots/badge/?version=latest)](http://pyrobots.readthedocs.org)
 
 `pyRobots` provides a set of Python decorators to easily turn standard functions
