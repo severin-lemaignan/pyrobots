@@ -1,5 +1,5 @@
 # coding=utf-8
-__version__="2.0"
+__version__="2.2"
 
 try:
     from robots.robot import GenericRobot
