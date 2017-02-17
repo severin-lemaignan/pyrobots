@@ -85,6 +85,9 @@ Support for a particular robot only require to subclass :class:`.GenericRobot`
 for this robot (and, obviously, to code the actions you want your robot to
 perform).
 
+:doc:`Combined with a knowledge base <kb>`, ``pyRobots`` makes an interesting
+starting point for a high-level cognitive controller for robots.
+
 Code Documentation
 ------------------
 
