@@ -123,21 +123,23 @@ class GenericRobot(object):
         """
         :param list actions: a list of packages that contains modules with
           actions (ie, modules with functions decorated with ``@action``). Proxies to
-          these actions are appended to the instance of GenericRobot upon
-          construction.
+          these actions are appended to the instance of :class:`.GenericRobot` upon
+          construction and become available as ``myrobot.goto(...)``,
+          ``myrobot.lookat(...)``, etc.
         :param supports: (default: 0) a mask of middlewares the robot
           supports. Supported middlewares are listed in
           ``robots.mw.__init__.py``.  For example ``supports = ROS|POCOLIBS``
           means that both ROS and Pocolibs are supported. This requires the
           corresponding Python bindings to be available.
-        :param boolean dummy: if ``True`` (defults to ``False``), the robot is in
+        :param boolean dummy: (default: ``False``) if ``True``, the robot is in
           'dummy' mode: no actual actions are performed. The exact meaning of
-          'dummy' is left to the subclasses of GenericRobot.
-        :param boolean immediate: if ``True`` (defaults to ``False``), actions are
+          'dummy' is left to the subclasses of :class:`.GenericRobot`.
+        :param boolean immediate: (default: ``False``) if ``True``, actions are
           executed in the main thread instead of their own separate threads.
           Useful for some specific debugging scenarios.
         :param boolean configure_logging: if ``True`` (default), configures
-          a default colorized console logging handler.
+          a default colorized console logging handler. Otherwise, you need to
+          configure yourself the Python logger.
         """
 
         self.dummy = dummy
@@ -316,9 +318,9 @@ class GenericRobot(object):
     def cancel_all_others(self):
         """ Sends a 'cancel' signal (ie, the
         :class:`.ActionCancelled` exception is raised) to all
-        running actions, *except for the action that call
-        :meth:`cancel_all_others`* (note that its currently running subactions
-        *will be cancelled*).
+        running actions, *except for the action that call*
+        :meth:`cancel_all_others` (note that its currently running subactions
+        *will be however cancelled*).
 
         Actions that are not yet started (eg, actions waiting on a resource
         availability) are simply removed for the run queue.
@@ -328,8 +330,11 @@ class GenericRobot(object):
 
 
     def filtered(self, name, val):
-        """ Helper to easily filter values (uses an accumulator to average a
-        given 'name' quantity)
+        """ Adds a value to a labelled data serie and returns the temporal
+        average of the data serie values.
+
+        The averaging window size is set in
+        :data:`helpers.misc.valuefilter.MAX_LENGTH`.
 
         """
 
