@@ -17,6 +17,9 @@ existing middlewares (ROS, naoqi, aseba...).
 `pyRobots` took some inspiration from the
 [URBI](https://github.com/aldebaran/urbi) language.
 
+
+If you use this code for your academic work, please [cite it](CITATION)!
+
 Installation
 ------------
 
