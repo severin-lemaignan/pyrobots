@@ -5,7 +5,7 @@ import os
 from distutils.core import setup
 
 #import __version__
-execfile('src/robots/__init__.py')
+exec(open('src/robots/__init__.py').read())
 
 
 setup(name='pyRobots',
